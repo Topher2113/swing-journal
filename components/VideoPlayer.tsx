@@ -26,7 +26,7 @@ export function VideoPlayer({ uri, style }: Props) {
       <VideoView
         player={player}
         style={styles.video}
-        contentFit="cover"
+        contentFit="contain"
         nativeControls={false}
       />
       {!isPlaying && (
@@ -43,7 +43,7 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.card,
     overflow: 'hidden',
     backgroundColor: '#000',
-    aspectRatio: 16 / 9,
+    aspectRatio: 1,
     width: '100%',
   },
   video: {
