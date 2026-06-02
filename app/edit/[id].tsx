@@ -12,9 +12,11 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useMove } from '@/hooks/useMove';
 import { useVideoRecorder } from '@/hooks/useVideoRecorder';
+import { useMotionRecorder } from '@/hooks/useMotionRecorder';
 import { saveMove } from '@/storage/moves';
 import { SegmentedControl } from '@/components/SegmentedControl';
 import { VideoPickerButtons } from '@/components/VideoPickerButtons';
+import { MotionRecorderButton } from '@/components/MotionRecorderButton';
 import { CATEGORIES, DIFFICULTIES, CATEGORY_SHORT, Category, Difficulty } from '@/types/Move';
 import { C, RADIUS } from '@/constants/theme';
 
@@ -25,6 +27,7 @@ export default function EditMoveScreen() {
   const router = useRouter();
   const { move } = useMove(id);
   const { recordVideo, pickVideo } = useVideoRecorder();
+  const { isRecording, frames, start: startMotion, stop: stopMotion, seed: seedMotion, clear: clearMotion } = useMotionRecorder();
 
   const [name, setName] = useState('');
   const [category, setCategory] = useState<Category>('Footwork');
@@ -42,7 +45,8 @@ export default function EditMoveScreen() {
     setDifficulty(move.difficulty);
     setNotes(move.notes);
     setVideoUri(move.videoUri);
-  }, [move]);
+    seedMotion(move.motionData ?? null);
+  }, [move, seedMotion]);
 
   const handleCategoryChange = (label: string) => {
     const full = CATEGORIES[CATEGORY_LABELS.indexOf(label)];
@@ -63,7 +67,15 @@ export default function EditMoveScreen() {
     if (!move || !name.trim()) return;
     setSaving(true);
     try {
-      await saveMove({ ...move, name: name.trim(), category, difficulty, notes, videoUri });
+      await saveMove({
+        ...move,
+        name: name.trim(),
+        category,
+        difficulty,
+        notes,
+        videoUri,
+        motionData: frames,
+      });
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       router.back();
     } finally {
@@ -125,6 +137,15 @@ export default function EditMoveScreen() {
             onRecord={handleRecord}
             onPick={handlePick}
             onClear={() => setVideoUri(null)}
+          />
+
+          <Text style={styles.label}>Motion Capture (optional)</Text>
+          <MotionRecorderButton
+            isRecording={isRecording}
+            frames={frames}
+            onStart={startMotion}
+            onStop={stopMotion}
+            onDiscard={clearMotion}
           />
 
           <Pressable

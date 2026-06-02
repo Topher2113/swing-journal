@@ -9,13 +9,14 @@ import {
   Text,
   TextInput,
 } from 'react-native';
-import { useRouter } from 'expo-router';
-import { useFocusEffect } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useMoves } from '@/hooks/useMoves';
 import { useVideoRecorder } from '@/hooks/useVideoRecorder';
+import { useMotionRecorder } from '@/hooks/useMotionRecorder';
 import { SegmentedControl } from '@/components/SegmentedControl';
 import { VideoPickerButtons } from '@/components/VideoPickerButtons';
+import { MotionRecorderButton } from '@/components/MotionRecorderButton';
 import { CATEGORIES, DIFFICULTIES, CATEGORY_SHORT, Category, Difficulty } from '@/types/Move';
 import { C, RADIUS } from '@/constants/theme';
 
@@ -25,6 +26,7 @@ export default function AddMoveScreen() {
   const router = useRouter();
   const { addMove } = useMoves();
   const { recordVideo, pickVideo } = useVideoRecorder();
+  const { isRecording, frames, start: startMotion, stop: stopMotion, clear: clearMotion } = useMotionRecorder();
 
   const [name, setName] = useState('');
   const [category, setCategory] = useState<Category>('Footwork');
@@ -40,7 +42,8 @@ export default function AddMoveScreen() {
       setDifficulty('Beginner');
       setNotes('');
       setVideoUri(null);
-    }, [])
+      clearMotion();
+    }, [clearMotion])
   );
 
   const handleCategoryChange = (label: string) => {
@@ -67,7 +70,14 @@ export default function AddMoveScreen() {
     }
     setSaving(true);
     try {
-      const move = await addMove({ name: name.trim(), category, difficulty, notes, videoUri });
+      const move = await addMove({
+        name: name.trim(),
+        category,
+        difficulty,
+        notes,
+        videoUri,
+        motionData: frames,
+      });
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       router.push({ pathname: '/move/[id]', params: { id: move.id } });
     } finally {
@@ -127,6 +137,15 @@ export default function AddMoveScreen() {
           onRecord={handleRecord}
           onPick={handlePick}
           onClear={handleClear}
+        />
+
+        <Text style={styles.label}>Motion Capture (optional)</Text>
+        <MotionRecorderButton
+          isRecording={isRecording}
+          frames={frames}
+          onStart={startMotion}
+          onStop={stopMotion}
+          onDiscard={clearMotion}
         />
 
         <Pressable

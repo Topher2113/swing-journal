@@ -9,6 +9,9 @@ A personal dance move journal for swing dancers. Log moves you've learned, categ
 - expo-video
 - expo-haptics
 - expo-crypto
+- expo-sensors
+- expo-gl
+- expo-three
 
 
 ## HIG & Material Design
@@ -27,3 +30,4 @@ A personal dance move journal for swing dancers. Log moves you've learned, categ
 
 - I first built the basic app with general functionality. I was able to get the video importing and taking working. Next I'm working on some more design and some more video clipping. 
 - Got the videoclipping working. I was able to make it so you can clip the video before uploading it. Very convenient. Next I will work on the hand movements with the phone in hand.
+- 

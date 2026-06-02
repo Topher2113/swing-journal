@@ -5,6 +5,7 @@ import { saveMove } from '@/storage/moves';
 import { VideoPlayer } from '@/components/VideoPlayer';
 import { DifficultyBadge } from '@/components/DifficultyBadge';
 import { PracticeCounter } from '@/components/PracticeCounter';
+import { MotionTrailViewer } from '@/components/MotionTrailViewer';
 import { C, RADIUS } from '@/constants/theme';
 
 export default function MoveDetailScreen() {
@@ -41,6 +42,10 @@ export default function MoveDetailScreen() {
             ) : null}
 
             <PracticeCounter count={move.practiceCount} onIncrement={handleIncrement} />
+
+            {move.motionData && move.motionData.length >= 2 && (
+              <MotionTrailViewer frames={move.motionData} />
+            )}
           </>
         )}
       </ScrollView>

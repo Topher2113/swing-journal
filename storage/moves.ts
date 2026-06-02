@@ -14,7 +14,10 @@ function enqueue(fn: () => Promise<void>): Promise<void> {
 
 export async function getAllMoves(): Promise<Move[]> {
   const json = await AsyncStorage.getItem(KEY);
-  return json ? JSON.parse(json) : [];
+  if (!json) return [];
+  const moves: Move[] = JSON.parse(json);
+  // Backward compat: moves saved before Phase 2 lack motionData
+  return moves.map((m) => ({ ...m, motionData: m.motionData ?? null }));
 }
 
 export async function getMove(id: string): Promise<Move | null> {
