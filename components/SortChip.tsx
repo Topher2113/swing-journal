@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { C, RADIUS } from '@/constants/theme';
 import { SortDir } from '@/hooks/useSortedMoves';
@@ -13,11 +13,14 @@ type Props = {
 export function SortChip({ label, active, direction, onPress }: Props) {
   return (
     <Pressable
-      style={[styles.chip, active && styles.chipActive]}
+      hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+      style={({ pressed }) => [styles.chip, active && styles.chipActive, { opacity: pressed ? 0.75 : 1 }]}
       android_ripple={{ color: 'transparent' }}
       onPress={onPress}
     >
-      <Text style={[styles.label, active && styles.labelActive]}>{label}</Text>
+      <Text style={[styles.label, active && styles.labelActive]}>
+        {label}{active ? (direction === 'asc' ? ' ↑' : ' ↓') : ''}
+      </Text>
       {active && (
         <Ionicons
           name={direction === 'asc' ? 'chevron-up' : 'chevron-down'}
@@ -34,12 +37,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
     borderRadius: RADIUS.chip,
     borderWidth: 0.5,
     borderColor: '#3C3C43',
-    minHeight: 44,
     justifyContent: 'center',
   },
   chipActive: {
@@ -47,7 +49,7 @@ const styles = StyleSheet.create({
     borderColor: C.accent,
   },
   label: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '500',
     color: C.textSecondary,
   },

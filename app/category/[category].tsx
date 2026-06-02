@@ -1,29 +1,14 @@
 import { useCallback, useState } from 'react';
-import {
-  FlatList,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-  ScrollView,
-} from 'react-native';
+import { FlatList, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useFocusEffect } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { useMoves } from '@/hooks/useMoves';
 import { useSortedMoves, SortKey, SortDir } from '@/hooks/useSortedMoves';
 import { MoveCard } from '@/components/MoveCard';
-import { SortChip } from '@/components/SortChip';
+import { SortDropdown } from '@/components/SortDropdown';
 import { EmptyState } from '@/components/EmptyState';
-import { Category } from '@/types/Move';
 import { C, RADIUS } from '@/constants/theme';
-import { Ionicons } from '@expo/vector-icons';
-
-const SORT_OPTIONS: { key: SortKey; label: string }[] = [
-  { key: 'name', label: 'A–Z' },
-  { key: 'difficulty', label: 'Difficulty' },
-  { key: 'practiceCount', label: 'Practice' },
-  { key: 'createdAt', label: 'Date added' },
-];
 
 function HeaderTitle({ category, count }: { category: string; count: number }) {
   return (
@@ -52,13 +37,9 @@ export default function CategoryDetailScreen() {
   const categoryMoves = moves.filter((m) => m.category === category);
   const sorted = useSortedMoves(categoryMoves, sortKey, sortDir, search);
 
-  const handleChipPress = (key: SortKey) => {
-    if (key === sortKey) {
-      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
-    } else {
-      setSortKey(key);
-      setSortDir('asc');
-    }
+  const handleSort = (key: SortKey, dir: SortDir) => {
+    setSortKey(key);
+    setSortDir(dir);
   };
 
   return (
@@ -83,21 +64,7 @@ export default function CategoryDetailScreen() {
           />
         </View>
 
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.chipsRow}
-        >
-          {SORT_OPTIONS.map(({ key, label }) => (
-            <SortChip
-              key={key}
-              label={label}
-              active={sortKey === key}
-              direction={sortDir}
-              onPress={() => handleChipPress(key)}
-            />
-          ))}
-        </ScrollView>
+        <SortDropdown sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
 
         <FlatList
           data={sorted}
@@ -142,7 +109,8 @@ const styles = StyleSheet.create({
     backgroundColor: C.surface,
     borderRadius: RADIUS.control,
     marginHorizontal: 16,
-    marginTop: 10,
+    marginTop: 12,
+    marginBottom: 8,
     paddingHorizontal: 12,
     paddingVertical: 10,
     minHeight: 44,
@@ -152,14 +120,9 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: C.textPrimary,
   },
-  chipsRow: {
-    flexDirection: 'row',
-    gap: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-  },
   list: {
     paddingHorizontal: 16,
+    paddingTop: 8,
     paddingBottom: 32,
   },
   headerTitle: {

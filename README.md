@@ -19,3 +19,7 @@ A personal dance move journal for swing dancers. Log moves you've learned, categ
 ## Design & Prototypes
 
 ![Mockup Images](assets/readme/Mockups.png)
+
+
+## Process
+

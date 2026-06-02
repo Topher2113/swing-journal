@@ -19,7 +19,9 @@ export function SegmentedControl({ options, value, onChange }: Props) {
             android_ripple={{ color: 'transparent' }}
             onPress={() => onChange(opt)}
           >
-            <Text style={[styles.label, active && styles.labelActive]}>{opt}</Text>
+            <Text style={[styles.label, active && styles.labelActive]} numberOfLines={1}>
+              {opt}
+            </Text>
           </Pressable>
         );
       })}
@@ -30,7 +32,7 @@ export function SegmentedControl({ options, value, onChange }: Props) {
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    backgroundColor: C.surface,
+    backgroundColor: '#2C2C2E',
     borderRadius: 10,
     padding: 3,
     gap: 2,
@@ -38,20 +40,20 @@ const styles = StyleSheet.create({
   option: {
     flex: 1,
     alignItems: 'center',
-    paddingVertical: 8,
+    paddingVertical: 11,
     borderRadius: 8,
-    minHeight: 36,
+    minHeight: 42,
     justifyContent: 'center',
   },
   optionActive: {
-    backgroundColor: C.accent,
+    backgroundColor: '#3B82F6',
   },
   label: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '600',
-    color: C.textSecondary,
+    color: '#8A8A8E',
   },
   labelActive: {
-    color: C.textPrimary,
+    color: '#FFFFFF',
   },
 });

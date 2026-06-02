@@ -1,7 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { MoveCard } from './MoveCard';
-import { EmptyState } from './EmptyState';
 import { Move, Category } from '@/types/Move';
 import { C } from '@/constants/theme';
 
@@ -24,6 +23,7 @@ export function CategorySection({
   onEditMove,
   onDeleteMove,
 }: Props) {
+  const isEmpty = moves.length === 0;
   const sorted = [...moves].sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
@@ -32,21 +32,26 @@ export function CategorySection({
 
   return (
     <View style={styles.section}>
-      <Pressable
-        style={({ pressed }) => [styles.header, { opacity: pressed ? 0.7 : 1 }]}
-        android_ripple={{ color: 'transparent' }}
-        onPress={onPressHeader}
-      >
-        <Text style={styles.categoryName}>{category}</Text>
-        <View style={styles.headerRight}>
-          <Text style={styles.count}>{moves.length}</Text>
-          <Ionicons name="chevron-forward" size={14} color={C.accent} />
+      {isEmpty ? (
+        <View style={[styles.header, styles.headerDisabled]}>
+          <Text style={[styles.categoryName, styles.categoryNameDisabled]}>{category}</Text>
+          <Text style={styles.countDisabled}>0</Text>
         </View>
-      </Pressable>
-
-      {moves.length === 0 ? (
-        <EmptyState message={`No ${category.toLowerCase()} moves yet`} />
       ) : (
+        <Pressable
+          style={({ pressed }) => [styles.header, { opacity: pressed ? 0.7 : 1 }]}
+          android_ripple={{ color: 'transparent' }}
+          onPress={onPressHeader}
+        >
+          <Text style={styles.categoryName}>{category}</Text>
+          <View style={styles.headerRight}>
+            <Text style={styles.count}>{moves.length}</Text>
+            <Ionicons name="chevron-forward" size={14} color={C.accent} />
+          </View>
+        </Pressable>
+      )}
+
+      {!isEmpty && (
         <>
           {preview.map((move) => (
             <MoveCard
@@ -84,12 +89,18 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     minHeight: 44,
   },
+  headerDisabled: {
+    opacity: 0.35,
+  },
   categoryName: {
     fontSize: 11,
     fontWeight: '600',
     color: C.textSecondary,
     letterSpacing: 0.7,
     textTransform: 'uppercase',
+  },
+  categoryNameDisabled: {
+    color: C.textSecondary,
   },
   headerRight: {
     flexDirection: 'row',
@@ -100,6 +111,11 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '500',
     color: C.accent,
+  },
+  countDisabled: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: C.textSecondary,
   },
   moreRow: {
     alignItems: 'center',

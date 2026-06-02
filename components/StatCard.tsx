@@ -17,16 +17,17 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: C.surface,
     borderRadius: RADIUS.card,
-    padding: 16,
+    padding: 20,
   },
   value: {
-    fontSize: 32,
+    fontSize: 36,
     fontWeight: '500',
     color: C.accent,
-    marginBottom: 4,
+    marginBottom: 6,
   },
   label: {
-    fontSize: 12,
+    fontSize: 15,
+    fontWeight: '500',
     color: C.textSecondary,
   },
 });
