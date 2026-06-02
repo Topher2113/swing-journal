@@ -1,39 +1,35 @@
-import { useRef, useState } from 'react';
 import { Pressable, StyleSheet, View, ViewStyle } from 'react-native';
-import { Video, ResizeMode } from 'expo-av';
+import { VideoView, useVideoPlayer } from 'expo-video';
+import { useEvent } from 'expo';
 import { Ionicons } from '@expo/vector-icons';
 import { RADIUS } from '@/constants/theme';
 
 type Props = { uri: string; style?: ViewStyle };
 
 export function VideoPlayer({ uri, style }: Props) {
-  const videoRef = useRef<Video>(null);
-  const [playing, setPlaying] = useState(false);
+  const player = useVideoPlayer(uri, (p) => {
+    p.loop = true;
+  });
 
-  const toggle = async () => {
-    if (!videoRef.current) return;
-    if (playing) {
-      await videoRef.current.pauseAsync();
+  const { isPlaying } = useEvent(player, 'playingChange', { isPlaying: false });
+
+  const toggle = () => {
+    if (isPlaying) {
+      player.pause();
     } else {
-      await videoRef.current.playAsync();
+      player.play();
     }
-    setPlaying((p) => !p);
   };
 
   return (
     <Pressable onPress={toggle} style={[styles.container, style]}>
-      <Video
-        ref={videoRef}
-        source={{ uri }}
+      <VideoView
+        player={player}
         style={styles.video}
-        resizeMode={ResizeMode.COVER}
-        shouldPlay={false}
-        isLooping
-        onPlaybackStatusUpdate={(status) => {
-          if (status.isLoaded) setPlaying(status.isPlaying);
-        }}
+        contentFit="cover"
+        nativeControls={false}
       />
-      {!playing && (
+      {!isPlaying && (
         <View style={styles.overlay}>
           <Ionicons name="play-circle" size={56} color="rgba(255,255,255,0.85)" />
         </View>

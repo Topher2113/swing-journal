@@ -86,7 +86,7 @@ export default function EditMoveScreen() {
             style={styles.input}
             value={name}
             onChangeText={setName}
-            placeholder="e.g. Sugarfoot"
+            placeholder="e.g. Triple Dip"
             placeholderTextColor={C.textSecondary}
             returnKeyType="done"
           />
@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 15,
     fontWeight: '600',
-    color: C.textSecondary,
+    color: C.textPrimary,
     marginTop: 6,
     marginBottom: 2,
   },
