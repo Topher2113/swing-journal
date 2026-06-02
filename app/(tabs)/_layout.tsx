@@ -1,0 +1,63 @@
+import { Tabs } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { TextStyle, ViewStyle } from 'react-native';
+import { C } from '@/constants/theme';
+
+type TabIconProps = { color: string; size: number };
+
+const ListIcon = ({ color, size }: TabIconProps) => <Ionicons name="list" size={size} color={color} />;
+const AddIcon = ({ color, size }: TabIconProps) => <Ionicons name="add-circle" size={size} color={color} />;
+const BarChartIcon = ({ color, size }: TabIconProps) => <Ionicons name="bar-chart" size={size} color={color} />;
+
+const headerStyle = { backgroundColor: C.bg };
+
+// Apple HIG Tab Bars: icon + label stacked, ~49pt content height, short single-word labels
+// https://developer.apple.com/design/human-interface-guidelines/tab-bars
+const tabBarStyle: ViewStyle = {
+  backgroundColor: C.surface,
+  borderTopColor: C.border,
+  borderTopWidth: 0.5,
+  // No explicit height — let React Navigation include the safe area inset
+  // automatically so content is never clipped by the home indicator.
+};
+
+const tabBarItemStyle: ViewStyle = {
+  paddingTop: 8,
+  paddingBottom: 4,
+};
+
+// HIG: labels use a small system font (~10pt), same active color as icon
+const tabBarLabelStyle: TextStyle = {
+  fontSize: 10,
+  fontWeight: '500',
+  marginTop: 2,
+};
+
+export default function TabLayout() {
+  return (
+    <Tabs
+      screenOptions={{
+        headerStyle,
+        headerTintColor: C.textPrimary,
+        tabBarStyle,
+        tabBarItemStyle,
+        tabBarLabelStyle,
+        tabBarActiveTintColor: C.accent,
+        tabBarInactiveTintColor: C.textSecondary,
+      }}
+    >
+      <Tabs.Screen
+        name="index"
+        options={{ title: 'Moves', tabBarIcon: ListIcon }}
+      />
+      <Tabs.Screen
+        name="add"
+        options={{ title: 'Add', tabBarIcon: AddIcon }}
+      />
+      <Tabs.Screen
+        name="stats"
+        options={{ title: 'Stats', tabBarIcon: BarChartIcon }}
+      />
+    </Tabs>
+  );
+}

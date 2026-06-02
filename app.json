@@ -4,6 +4,7 @@
     "slug": "swing-journal",
     "version": "1.0.0",
     "orientation": "portrait",
+    "backgroundColor": "#0F0F0F",
     "icon": "./assets/images/icon.png",
     "scheme": "swingjournal",
     "userInterfaceStyle": "automatic",
@@ -27,6 +28,7 @@
     },
     "plugins": [
       "expo-router",
+      "expo-image-picker",
       [
         "expo-splash-screen",
         {
@@ -38,7 +40,8 @@
             "backgroundColor": "#000000"
           }
         }
-      ]
+      ],
+      "expo-video"
     ],
     "experiments": {
       "typedRoutes": true,

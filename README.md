@@ -1,50 +1,29 @@
-# Welcome to your Expo app 👋
+# Swing Journal
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A personal dance move journal for swing dancers. Log moves you've learned, categorize them, record short video clips, and rate difficulty. The goal is to be able to keep track of all the moves you've learned so you don't forget them!
 
-## Get started
 
-1. Install dependencies
+## Expo Packages
 
-   ```bash
-   npm install
-   ```
+- expo-image-picker
+- expo-video
+- expo-haptics
+- expo-crypto
 
-2. Start the app
 
-   ```bash
-   npx expo start
-   ```
+## HIG & Material Design
 
-In the output, you'll find options to open the app in a
+- Lists: Following https://m3.material.io/components/lists/specs and https://developer.apple.com/design/human-interface-guidelines/lists-and-tables, On the Moves page (far left tab), I designed list items that followed the general leading slot, content slot, and trailing slot format. I made sure not to have multiple selection styles, and used label text above with supporting text below. I also keep the margin measurements correct. I also used the right arrow icon from IOS.
+- Dark Mode: My app is in a natural dark mode, so I followed https://developer.apple.com/design/human-interface-guidelines/dark-mode to design the right colors. I chose an electric blue as the highlight color, which pair well with the dark grey background. I also found out you have to specifically set the status bar to "light" if you want to be able to see the time and battery etc. 
+- Tabs: Used https://developer.apple.com/design/human-interface-guidelines/tab-bars to design the tabs. Originally I was going to only include the icon, but everything I found included the tab names as well. Also, I tried to do a similar style, but without the liquid glass. 
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## Design & Prototypes
 
-## Get a fresh project
+![Mockup Images](assets/readme/Mockups.png)
 
-When you're ready, run:
 
-```bash
-npm run reset-project
-```
+## Process
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- I first built the basic app with general functionality. I was able to get the video importing and taking working. Next I'm working on some more design and some more video clipping. 
+- Got the videoclipping working. I was able to make it so you can clip the video before uploading it. Very convenient. Next I will work on the hand movements with the phone in hand.
