@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -32,9 +32,11 @@ export default function EditMoveScreen() {
   const [notes, setNotes] = useState('');
   const [videoUri, setVideoUri] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const seeded = useRef(false);
 
   useEffect(() => {
-    if (!move) return;
+    if (!move || seeded.current) return;
+    seeded.current = true;
     setName(move.name);
     setCategory(move.category);
     setDifficulty(move.difficulty);

@@ -58,6 +58,8 @@ export default function AddMoveScreen() {
     if (uri) setVideoUri(uri);
   };
 
+  const handleClear = useCallback(() => setVideoUri(null), []);
+
   const handleSave = async () => {
     if (!name.trim()) {
       Alert.alert('Name required', 'Please enter a move name before saving.');
@@ -124,7 +126,7 @@ export default function AddMoveScreen() {
           videoUri={videoUri}
           onRecord={handleRecord}
           onPick={handlePick}
-          onClear={() => setVideoUri(null)}
+          onClear={handleClear}
         />
 
         <Pressable

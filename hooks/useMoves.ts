@@ -18,7 +18,7 @@ export function useMoves() {
     reload();
   }, [reload]);
 
-  const addMove = async (
+  const addMove = useCallback(async (
     fields: Omit<Move, 'id' | 'practiceCount' | 'createdAt'>
   ): Promise<Move> => {
     const move: Move = {
@@ -30,17 +30,17 @@ export function useMoves() {
     await saveMove(move);
     setMoves((prev) => [...prev, move]);
     return move;
-  };
+  }, []);
 
-  const updateMove = async (move: Move): Promise<void> => {
+  const updateMove = useCallback(async (move: Move): Promise<void> => {
     await saveMove(move);
     setMoves((prev) => prev.map((m) => (m.id === move.id ? move : m)));
-  };
+  }, []);
 
-  const deleteMove = async (id: string): Promise<void> => {
+  const deleteMove = useCallback(async (id: string): Promise<void> => {
     await deleteMoveById(id);
     setMoves((prev) => prev.filter((m) => m.id !== id));
-  };
+  }, []);
 
   return { moves, loading, reload, addMove, updateMove, deleteMove };
 }

@@ -1,4 +1,5 @@
 import { Stack } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import * as SystemUI from 'expo-system-ui';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { C } from '@/constants/theme';
@@ -7,11 +8,13 @@ SystemUI.setBackgroundColorAsync(C.bg);
 
 const headerStyle = { backgroundColor: C.bg };
 const contentStyle = { backgroundColor: C.bg };
+const rootStyle = { flex: 1 };
 
 export default function RootLayout() {
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-    <Stack
+    <GestureHandlerRootView style={rootStyle}>
+      <StatusBar style="light" />
+      <Stack
       screenOptions={{
         headerStyle,
         headerTintColor: C.textPrimary,

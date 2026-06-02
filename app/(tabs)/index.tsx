@@ -1,7 +1,6 @@
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Stack, useRouter } from 'expo-router';
-import { useFocusEffect } from 'expo-router';
+import { Stack, useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useMoves } from '@/hooks/useMoves';
 import { CategorySection } from '@/components/CategorySection';
@@ -25,6 +24,11 @@ export default function MovesScreen() {
     useCallback(() => {
       reload();
     }, [reload])
+  );
+
+  const byCategory = useMemo(
+    () => Object.fromEntries(CATEGORIES.map((cat) => [cat, moves.filter((m) => m.category === cat)])),
+    [moves]
   );
 
   if (moves.length === 0) {
@@ -62,7 +66,7 @@ export default function MovesScreen() {
           <CategorySection
             key={cat}
             category={cat}
-            moves={moves.filter((m) => m.category === cat)}
+            moves={byCategory[cat]}
             onPressHeader={() =>
               router.push({
                 pathname: '/category/[category]',
@@ -75,7 +79,7 @@ export default function MovesScreen() {
             onEditMove={(id) =>
               router.push({ pathname: '/edit/[id]', params: { id } })
             }
-            onDeleteMove={(id) => deleteMove(id)}
+            onDeleteMove={deleteMove}
           />
         ))}
       </ScrollView>

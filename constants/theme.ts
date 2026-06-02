@@ -5,7 +5,7 @@ export const C = {
   accent: '#3B82F6',
   accentDark: '#1D4ED8',
   textPrimary: '#FFFFFF',
-  textSecondary: '#8A8A8E',
+  textSecondary: '#AEAEB2',
   beginner: { bg: '#14532D', text: '#86EFAC' },
   intermediate: { bg: '#78350F', text: '#FCD34D' },
   advanced: { bg: '#7F1D1D', text: '#FCA5A5' },

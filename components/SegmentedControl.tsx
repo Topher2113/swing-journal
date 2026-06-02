@@ -32,7 +32,7 @@ export function SegmentedControl({ options, value, onChange }: Props) {
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    backgroundColor: '#2C2C2E',
+    backgroundColor: C.border,
     borderRadius: 10,
     padding: 3,
     gap: 2,
@@ -46,14 +46,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   optionActive: {
-    backgroundColor: '#3B82F6',
+    backgroundColor: C.accent,
   },
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#8A8A8E',
+    color: C.textSecondary,
   },
   labelActive: {
-    color: '#FFFFFF',
+    color: C.textPrimary,
   },
 });

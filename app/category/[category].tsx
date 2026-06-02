@@ -1,7 +1,6 @@
 import { useCallback, useState } from 'react';
 import { FlatList, StyleSheet, Text, TextInput, View } from 'react-native';
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { useFocusEffect } from 'expo-router';
+import { Stack, useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useMoves } from '@/hooks/useMoves';
 import { useSortedMoves, SortKey, SortDir } from '@/hooks/useSortedMoves';

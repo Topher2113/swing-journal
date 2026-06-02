@@ -7,7 +7,7 @@ type Props = { count: number; onIncrement: () => void };
 export function PracticeCounter({ count, onIncrement }: Props) {
   const handlePress = () => {
     onIncrement();
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
   };
 
   return (

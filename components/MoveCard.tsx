@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { Swipeable } from 'react-native-gesture-handler';
+import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import { Ionicons } from '@expo/vector-icons';
 import { DifficultyBadge } from './DifficultyBadge';
 import { Move } from '@/types/Move';
@@ -37,7 +37,7 @@ function RightActions({ onEdit, onDelete }: { onEdit: () => void; onDelete: () =
 
 export function MoveCard({ move, onPress, onEdit, onDelete }: Props) {
   return (
-    <Swipeable
+    <ReanimatedSwipeable
       renderRightActions={() => <RightActions onEdit={onEdit} onDelete={onDelete} />}
       overshootRight={false}
     >
@@ -54,9 +54,9 @@ export function MoveCard({ move, onPress, onEdit, onDelete }: Props) {
             <Text style={styles.practice}>↻ {move.practiceCount}</Text>
           </View>
         </View>
-        <Ionicons name="chevron-forward" size={16} color="#3C3C43" />
+        <Ionicons name="chevron-forward" size={16} color="#636366" />
       </Pressable>
-    </Swipeable>
+    </ReanimatedSwipeable>
   );
 }
 
@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
   },
   name: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '600',
     color: C.textPrimary,
   },
   meta: {

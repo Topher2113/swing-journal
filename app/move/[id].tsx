@@ -1,5 +1,5 @@
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { Stack, useLocalSearchParams } from 'expo-router';
 import { useMove } from '@/hooks/useMove';
 import { saveMove } from '@/storage/moves';
 import { VideoPlayer } from '@/components/VideoPlayer';

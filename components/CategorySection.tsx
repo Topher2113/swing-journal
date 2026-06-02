@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { MoveCard } from './MoveCard';
@@ -24,8 +25,9 @@ export function CategorySection({
   onDeleteMove,
 }: Props) {
   const isEmpty = moves.length === 0;
-  const sorted = [...moves].sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  const sorted = useMemo(
+    () => [...moves].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+    [moves]
   );
   const preview = sorted.slice(0, PREVIEW_COUNT);
   const remaining = moves.length - PREVIEW_COUNT;
@@ -93,11 +95,9 @@ const styles = StyleSheet.create({
     opacity: 0.35,
   },
   categoryName: {
-    fontSize: 11,
+    fontSize: 15,
     fontWeight: '600',
-    color: C.textSecondary,
-    letterSpacing: 0.7,
-    textTransform: 'uppercase',
+    color: C.textPrimary,
   },
   categoryNameDisabled: {
     color: C.textSecondary,
