@@ -54,7 +54,7 @@ export function MoveCard({ move, onPress, onEdit, onDelete }: Props) {
             <Text style={styles.practice}>↻ {move.practiceCount}</Text>
           </View>
         </View>
-        <Ionicons name="chevron-forward" size={16} color="#636366" />
+        <Ionicons name="chevron-forward" size={20} color="#636366" />
       </Pressable>
     </ReanimatedSwipeable>
   );
@@ -66,24 +66,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: C.surface,
     borderRadius: RADIUS.card,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
     marginBottom: 6,
-    gap: 10,
-    minHeight: 56,
+    gap: 12,
+    minHeight: 68,
   },
   dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
     flexShrink: 0,
   },
   info: {
     flex: 1,
-    gap: 4,
+    gap: 6,
   },
   name: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '600',
     color: C.textPrimary,
   },
@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   practice: {
-    fontSize: 11,
+    fontSize: 13,
     color: C.textSecondary,
   },
   actions: {

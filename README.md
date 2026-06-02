@@ -6,14 +6,16 @@ A personal dance move journal for swing dancers. Log moves you've learned, categ
 ## Expo Packages
 
 - expo-image-picker
-- expo-av
+- expo-video
 - expo-haptics
-- expo/vector-icons
+- expo-crypto
 
 
 ## HIG & Material Design
 
-- 
+- Lists: Following https://m3.material.io/components/lists/specs and https://developer.apple.com/design/human-interface-guidelines/lists-and-tables, On the Moves page (far left tab), I designed list items that followed the general leading slot, content slot, and trailing slot format. I made sure not to have multiple selection styles, and used label text above with supporting text below. I also keep the margin measurements correct. I also used the right arrow icon from IOS.
+- Dark Mode: My app is in a natural dark mode, so I followed https://developer.apple.com/design/human-interface-guidelines/dark-mode to design the right colors. I chose an electric blue as the highlight color, which pair well with the dark grey background. I also found out you have to specifically set the status bar to "light" if you want to be able to see the time and battery etc. 
+- Tabs: Used https://developer.apple.com/design/human-interface-guidelines/tab-bars to design the tabs. Originally I was going to only include the icon, but everything I found included the tab names as well. Also, I tried to do a similar style, but without the liquid glass. 
 
 
 ## Design & Prototypes
@@ -23,3 +25,4 @@ A personal dance move journal for swing dancers. Log moves you've learned, categ
 
 ## Process
 
+- I first built the basic app with general functionality. I was able to get the video importing, taking, and clipping working. Next I will work on the hand movements with the phone in hand. 

@@ -48,7 +48,7 @@ export function CategorySection({
           <Text style={styles.categoryName}>{category}</Text>
           <View style={styles.headerRight}>
             <Text style={styles.count}>{moves.length}</Text>
-            <Ionicons name="chevron-forward" size={14} color={C.accent} />
+            <Ionicons name="chevron-forward" size={18} color={C.accent} />
           </View>
         </Pressable>
       )}
@@ -81,21 +81,21 @@ export function CategorySection({
 
 const styles = StyleSheet.create({
   section: {
-    marginBottom: 8,
+    marginBottom: 14,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 4,
+    paddingHorizontal: 8,
     paddingVertical: 10,
-    minHeight: 44,
+    minHeight: 52,
   },
   headerDisabled: {
     opacity: 0.35,
   },
   categoryName: {
-    fontSize: 15,
+    fontSize: 17,
     fontWeight: '600',
     color: C.textPrimary,
   },
@@ -108,13 +108,13 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   count: {
-    fontSize: 13,
-    fontWeight: '500',
+    fontSize: 15,
+    fontWeight: '600',
     color: C.accent,
   },
   countDisabled: {
-    fontSize: 13,
-    fontWeight: '500',
+    fontSize: 15,
+    fontWeight: '600',
     color: C.textSecondary,
   },
   moreRow: {
@@ -124,7 +124,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   moreText: {
-    fontSize: 12,
+    fontSize: 14,
     color: C.accent,
     opacity: 0.8,
   },

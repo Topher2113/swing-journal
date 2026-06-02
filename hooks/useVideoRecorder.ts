@@ -13,6 +13,7 @@ export function useVideoRecorder() {
       mediaTypes: ['videos'],
       allowsEditing: true,
       videoMaxDuration: 30,
+      videoExportPreset: ImagePicker.VideoExportPreset.MediumQuality,
     });
     if (result.canceled) return null;
     return result.assets[0].uri;
@@ -28,6 +29,7 @@ export function useVideoRecorder() {
       mediaTypes: ['videos'],
       allowsEditing: true,
       videoMaxDuration: 30,
+      videoExportPreset: ImagePicker.VideoExportPreset.MediumQuality,
     });
     if (result.canceled) return null;
     return result.assets[0].uri;
