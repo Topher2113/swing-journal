@@ -30,4 +30,5 @@ A personal dance move journal for swing dancers. Log moves you've learned, categ
 
 - I first built the basic app with general functionality. I was able to get the video importing and taking working. Next I'm working on some more design and some more video clipping. 
 - Got the videoclipping working. I was able to make it so you can clip the video before uploading it. Very convenient. Next I will work on the hand movements with the phone in hand.
-- 
+- I have been working on the motion tracking. I got it to track something and put it kinda on the screen. Now I just need to fine tune it
+- I got it to show the general pattern a lot better and it seems to be working in general. The movements are still a bit off and jagged, but I think I can smooth it out and make the visual work a lot better

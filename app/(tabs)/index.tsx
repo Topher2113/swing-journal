@@ -1,20 +1,13 @@
 import { useCallback, useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+
 import { Stack, useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useMoves } from '@/hooks/useMoves';
 import { CategorySection } from '@/components/CategorySection';
+import { MovesHeader } from '@/components/MovesHeader';
 import { CATEGORIES } from '@/types/Move';
 import { C, RADIUS } from '@/constants/theme';
-
-function MovesHeader({ count }: { count: number }) {
-  return (
-    <View style={styles.headerTitle}>
-      <Text style={styles.title}>My Moves</Text>
-      <Text style={styles.subtitle}>{count} move{count !== 1 ? 's' : ''} logged</Text>
-    </View>
-  );
-}
 
 export default function MovesScreen() {
   const router = useRouter();
@@ -95,19 +88,6 @@ const styles = StyleSheet.create({
   content: {
     padding: 20,
     paddingBottom: 32,
-  },
-  headerTitle: {
-    alignItems: 'flex-start',
-  },
-  title: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: C.textPrimary,
-  },
-  subtitle: {
-    fontSize: 12,
-    color: C.textSecondary,
-    marginTop: 1,
   },
   fullEmpty: {
     flex: 1,

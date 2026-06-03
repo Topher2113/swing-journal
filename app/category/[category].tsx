@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { FlatList, StyleSheet, Text, TextInput, View } from 'react-native';
+import { FlatList, StyleSheet, TextInput, View } from 'react-native';
 import { Stack, useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useMoves } from '@/hooks/useMoves';
@@ -7,16 +7,8 @@ import { useSortedMoves, SortKey, SortDir } from '@/hooks/useSortedMoves';
 import { MoveCard } from '@/components/MoveCard';
 import { SortDropdown } from '@/components/SortDropdown';
 import { EmptyState } from '@/components/EmptyState';
+import { CategoryHeaderTitle } from '@/components/CategoryHeaderTitle';
 import { C, RADIUS } from '@/constants/theme';
-
-function HeaderTitle({ category, count }: { category: string; count: number }) {
-  return (
-    <View>
-      <Text style={styles.headerTitle}>{category}</Text>
-      <Text style={styles.headerSubtitle}>{count} move{count !== 1 ? 's' : ''}</Text>
-    </View>
-  );
-}
 
 export default function CategoryDetailScreen() {
   const { category } = useLocalSearchParams<{ category: string }>();
@@ -46,7 +38,7 @@ export default function CategoryDetailScreen() {
       <Stack.Screen
         options={{
           headerTitle: () => (
-            <HeaderTitle category={category} count={categoryMoves.length} />
+            <CategoryHeaderTitle category={category} count={categoryMoves.length} />
           ),
         }}
       />
@@ -123,15 +115,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 8,
     paddingBottom: 32,
-  },
-  headerTitle: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: C.textPrimary,
-  },
-  headerSubtitle: {
-    fontSize: 12,
-    color: C.textSecondary,
-    marginTop: 1,
   },
 });
