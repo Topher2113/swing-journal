@@ -1,15 +1,16 @@
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { useMove } from '@/hooks/useMove';
 import { saveMove } from '@/storage/moves';
 import { VideoPlayer } from '@/components/VideoPlayer';
 import { DifficultyBadge } from '@/components/DifficultyBadge';
 import { PracticeCounter } from '@/components/PracticeCounter';
-import { MotionTrailViewer } from '@/components/MotionTrailViewer';
 import { C, RADIUS } from '@/constants/theme';
 
 export default function MoveDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const router = useRouter();
   const { move, setMove } = useMove(id);
 
   const handleIncrement = async () => {
@@ -44,7 +45,15 @@ export default function MoveDetailScreen() {
             <PracticeCounter count={move.practiceCount} onIncrement={handleIncrement} />
 
             {move.motionData && move.motionData.length >= 2 && (
-              <MotionTrailViewer frames={move.motionData} />
+              <Pressable
+                style={({ pressed }) => [styles.motionBtn, { opacity: pressed ? 0.8 : 1 }]}
+                android_ripple={{ color: 'transparent' }}
+                onPress={() => router.push({ pathname: '/motion-trail/[id]', params: { id } })}
+              >
+                <Ionicons name="analytics-outline" size={20} color={C.accent} />
+                <Text style={styles.motionBtnText}>View Motion Trail</Text>
+                <Ionicons name="chevron-forward" size={16} color={C.textSecondary} style={styles.motionChevron} />
+              </Pressable>
             )}
           </>
         )}
@@ -102,5 +111,23 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: C.textPrimary,
     lineHeight: 22,
+  },
+  motionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: C.surface,
+    borderRadius: RADIUS.card,
+    padding: 16,
+    minHeight: 56,
+  },
+  motionBtnText: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: '600',
+    color: C.textPrimary,
+  },
+  motionChevron: {
+    marginLeft: 'auto' as any,
   },
 });

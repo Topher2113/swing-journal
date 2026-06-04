@@ -5,23 +5,18 @@ import { Ionicons } from '@expo/vector-icons';
 import { MotionFrame } from '@/types/Move';
 import { C, RADIUS } from '@/constants/theme';
 
-type Props = { frames: MotionFrame[] };
+type Props = { frames: MotionFrame[]; fullScreen?: boolean };
 
-// Visually amplify the orientation deltas so small wrist movements
-// (5–15°) are clearly visible in the 3D scene.
 const AMPLIFY = 5.0;
 
 const toRad = (d: number) => d * (Math.PI / 180);
-
-// Keep alpha deltas in [-180, 180] to handle the 0°/360° wrap.
 const wrapDelta = (d: number) => ((d + 540) % 360) - 180;
 
-// Red (#FF4444) → Blue (#3B82F6) gradient for t ∈ [0, 1].
 function trailRGB(t: number): [number, number, number] {
   return [
-    1.0   - 0.769 * t,   // R: 1.0   → 0.231
-    0.267 + 0.243 * t,   // G: 0.267 → 0.510
-    0.267 + 0.698 * t,   // B: 0.267 → 0.965
+    1.0   - 0.769 * t,
+    0.267 + 0.243 * t,
+    0.267 + 0.698 * t,
   ];
 }
 
@@ -65,7 +60,7 @@ function m4Mul(a: Float32Array, b: Float32Array): Float32Array {
 
 // ───────────────────────────────────────────────────────────────────────────
 
-export function MotionTrailViewer({ frames }: Props) {
+export function MotionTrailViewer({ frames, fullScreen = false }: Props) {
   const [isReplaying, setIsReplaying] = useState(false);
   const [ready, setReady] = useState(false);
 
@@ -73,20 +68,19 @@ export function MotionTrailViewer({ frames }: Props) {
   const glProg = useRef<any>(null);
   const glBuf  = useRef<any>(null);
   const rafRef = useRef<number | null>(null);
-  const nRef   = useRef(frames.length); // currently visible frame count
+  const nRef   = useRef(frames.length);
   const mounted = useRef(true);
 
-  // Orbit camera state (all in refs — no React re-render needed for GL)
-  const az = useRef(0.35);  // azimuth  (~20°)
-  const el = useRef(0.52);  // elevation (~30°)
-  const zm = useRef(2.5);   // camera distance — overwritten by autoZoom
+  const az = useRef(0.35);
+  const el = useRef(0.52);
+  const zm = useRef(2.5);
 
   if (frames.length < 2) return null;
 
   const f0 = frames[0];
   const duration = frames[frames.length - 1].t - f0.t;
 
-  // Auto-zoom: set camera distance so the full trail fits within ~70% of the viewport.
+  // Auto-zoom: tan(58°) puts the camera closer so the trail fills more of the viewport
   const autoZoom = useMemo(() => {
     let maxExt = 0.001;
     for (const f of frames) {
@@ -95,15 +89,11 @@ export function MotionTrailViewer({ frames }: Props) {
       const z = toRad(wrapDelta(f.alpha - f0.alpha)) * AMPLIFY;
       maxExt = Math.max(maxExt, Math.sqrt(x * x + y * y + z * z));
     }
-    // tan(42°) ≈ 70% of the 60° FOV half-angle; clamp to sensible range
-    return Math.max(0.4, Math.min(8, maxExt / Math.tan(toRad(42))));
+    return Math.max(0.3, Math.min(6, maxExt / Math.tan(toRad(58))));
   }, [frames]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Sync autoZoom into the ref whenever it changes
   useEffect(() => { zm.current = autoZoom; }, [autoZoom]);
 
-  // Build interleaved [x, y, z, r, g, b, ...] for the first `n` frames.
-  // x = roll delta, y = pitch delta, z = wrist-twist delta (all amplified)
   function buildVerts(n: number): Float32Array {
     const v = new Float32Array(n * 6);
     for (let i = 0; i < n; i++) {
@@ -119,8 +109,6 @@ export function MotionTrailViewer({ frames }: Props) {
     return v;
   }
 
-  // Render the current scene into the GL context.
-  // Uses only refs so it is safe to call from any closure.
   function draw(n?: number): void {
     const g = glCtx.current;
     if (!g || !glProg.current || !glBuf.current) return;
@@ -130,18 +118,16 @@ export function MotionTrailViewer({ frames }: Props) {
     g.clearColor(0.059, 0.059, 0.059, 1.0);
     g.clear(g.COLOR_BUFFER_BIT | g.DEPTH_BUFFER_BIT);
 
-    // Upload vertex data
     g.bindBuffer(g.ARRAY_BUFFER, glBuf.current);
     g.bufferData(g.ARRAY_BUFFER, buildVerts(count), g.DYNAMIC_DRAW);
 
-    // Build MVP: Perspective × Translate(back) × RotX(elevation) × RotY(azimuth)
     const mvp = m4Mul(
       m4Mul(m4Persp(toRad(60), 0.1, 100), m4Trans(0, 0, -zm.current)),
       m4Mul(m4RotX(el.current), m4RotY(az.current))
     );
     g.uniformMatrix4fv(g.getUniformLocation(glProg.current, 'uMVP'), false, mvp);
 
-    const STRIDE = 24; // 6 floats × 4 bytes
+    const STRIDE = 24;
     const posLoc = g.getAttribLocation(glProg.current, 'aPos');
     const colLoc = g.getAttribLocation(glProg.current, 'aCol');
     g.vertexAttribPointer(posLoc, 3, g.FLOAT, false, STRIDE, 0);
@@ -149,9 +135,9 @@ export function MotionTrailViewer({ frames }: Props) {
     g.vertexAttribPointer(colLoc, 3, g.FLOAT, false, STRIDE, 12);
     g.enableVertexAttribArray(colLoc);
 
-    g.drawArrays(g.LINE_STRIP, 0, count);   // trail line
-    g.drawArrays(g.POINTS, 0, 1);           // start dot (red)
-    g.drawArrays(g.POINTS, count - 1, 1); // end dot (blue)
+    g.drawArrays(g.LINE_STRIP, 0, count);
+    g.drawArrays(g.POINTS, 0, 1);
+    g.drawArrays(g.POINTS, count - 1, 1);
 
     g.endFrameEXP();
   }
@@ -193,12 +179,10 @@ export function MotionTrailViewer({ frames }: Props) {
     setReady(true);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Draw once the GL context is ready
   useEffect(() => {
     if (ready) draw(nRef.current);
   }, [ready]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Real-time replay driven by actual recorded timestamps
   const handleReplay = useCallback(() => {
     if (isReplaying) return;
     setIsReplaying(true);
@@ -211,18 +195,14 @@ export function MotionTrailViewer({ frames }: Props) {
 
     const tick = () => {
       const elapsed = performance.now() - startWall;
-
-      // Binary search: last frame whose t is at or before elapsed
       let lo = 0, hi = total - 1;
       while (lo < hi) {
         const mid = (lo + hi + 1) >> 1;
         if ((frames[mid].t - tOffset) <= elapsed) lo = mid;
         else hi = mid - 1;
       }
-
       nRef.current = lo + 1;
       draw(lo + 1);
-
       if (lo < total - 1) {
         rafRef.current = requestAnimationFrame(tick);
       } else {
@@ -240,21 +220,60 @@ export function MotionTrailViewer({ frames }: Props) {
     };
   }, []);
 
-  // Orbit controls via PanResponder — created once, reads refs via closure
+  // Drag sensitivity reduced to 0.006 for slower, more controlled orbiting
   const pan = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onPanResponderMove: (_, g) => {
-        az.current += g.dx * 0.012;
-        el.current  = Math.max(-1.4, Math.min(1.4, el.current - g.dy * 0.012));
+        az.current += g.dx * 0.006;
+        el.current  = Math.max(-1.4, Math.min(1.4, el.current - g.dy * 0.006));
         draw();
       },
     })
   ).current;
 
+  // ── Full-screen layout ────────────────────────────────────────────────────
+  if (fullScreen) {
+    return (
+      <View style={styles.fullRoot} {...pan.panHandlers}>
+        <GLView style={StyleSheet.absoluteFill} onContextCreate={onContextCreate} />
+        {!ready && (
+          <View style={styles.loading}>
+            <Text style={styles.loadingTxt}>Loading 3D viewer…</Text>
+          </View>
+        )}
+        <View style={styles.overlay}>
+          <Pressable
+            style={({ pressed }) => [styles.replayBtn, { opacity: pressed || isReplaying ? 0.6 : 1 }]}
+            android_ripple={{ color: 'transparent' }}
+            onPress={handleReplay}
+            disabled={isReplaying}
+          >
+            <Ionicons name="play" size={13} color={C.accent} />
+            <Text style={styles.replayTxt}>{isReplaying ? 'Playing…' : 'Replay'}</Text>
+          </Pressable>
+          <View style={styles.legendRow}>
+            <View style={styles.legendItem}>
+              <View style={[styles.dot, { backgroundColor: '#FF4444' }]} />
+              <Text style={styles.legendTxt}>Start</Text>
+            </View>
+            <View style={styles.legendItem}>
+              <View style={[styles.dot, { backgroundColor: '#3B82F6' }]} />
+              <Text style={styles.legendTxt}>End</Text>
+            </View>
+            <Text style={[styles.axisHint, { marginLeft: 'auto' as any }]}>← Roll  ↑ Pitch  ⊙ Twist</Text>
+          </View>
+          <Text style={styles.sub}>
+            {frames.length} frames · {(duration / 1000).toFixed(1)}s · Drag to orbit
+          </Text>
+        </View>
+      </View>
+    );
+  }
+
+  // ── Card layout (default — embedded in scroll view) ───────────────────────
   return (
     <View style={styles.card}>
-      {/* Header */}
       <View style={styles.header}>
         <View>
           <Text style={styles.title}>Motion Trail — 3D</Text>
@@ -263,10 +282,7 @@ export function MotionTrailViewer({ frames }: Props) {
           </Text>
         </View>
         <Pressable
-          style={({ pressed }) => [
-            styles.replayBtn,
-            { opacity: pressed || isReplaying ? 0.6 : 1 },
-          ]}
+          style={({ pressed }) => [styles.replayBtn, { opacity: pressed || isReplaying ? 0.6 : 1 }]}
           android_ripple={{ color: 'transparent' }}
           onPress={handleReplay}
           disabled={isReplaying}
@@ -276,7 +292,6 @@ export function MotionTrailViewer({ frames }: Props) {
         </Pressable>
       </View>
 
-      {/* 3D canvas */}
       <View style={styles.canvas} {...pan.panHandlers}>
         <GLView style={StyleSheet.absoluteFill} onContextCreate={onContextCreate} />
         {!ready && (
@@ -286,7 +301,6 @@ export function MotionTrailViewer({ frames }: Props) {
         )}
       </View>
 
-      {/* Legend */}
       <View style={styles.legend}>
         <View style={styles.legendRow}>
           <View style={styles.legendItem}>
@@ -305,6 +319,23 @@ export function MotionTrailViewer({ frames }: Props) {
 }
 
 const styles = StyleSheet.create({
+  // ── Full-screen styles ───────────────────────────────────────────────────
+  fullRoot: {
+    flex: 1,
+    backgroundColor: C.bg,
+  },
+  overlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 20,
+    paddingBottom: 40,
+    gap: 10,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+
+  // ── Card styles (default) ────────────────────────────────────────────────
   card: {
     backgroundColor: C.surface,
     borderRadius: RADIUS.card,
@@ -318,7 +349,23 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
   },
   title: { fontSize: 15, fontWeight: '600', color: C.textPrimary },
-  sub:   { fontSize: 11, color: C.textSecondary, marginTop: 2 },
+  canvas: {
+    height: 300,
+    marginHorizontal: 14,
+    borderRadius: RADIUS.control,
+    backgroundColor: C.bg,
+    overflow: 'hidden',
+  },
+  legend: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 12,
+    paddingTop: 10,
+  },
+
+  // ── Shared styles ────────────────────────────────────────────────────────
+  sub: { fontSize: 11, color: C.textSecondary, marginTop: 2 },
   replayBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -327,15 +374,9 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     backgroundColor: C.border,
     borderRadius: RADIUS.badge,
+    alignSelf: 'flex-start',
   },
   replayTxt: { fontSize: 12, fontWeight: '600', color: C.accent },
-  canvas: {
-    height: 300,
-    marginHorizontal: 14,
-    borderRadius: RADIUS.control,
-    backgroundColor: C.bg,
-    overflow: 'hidden',
-  },
   loading: {
     ...StyleSheet.absoluteFillObject,
     alignItems: 'center',
@@ -343,14 +384,7 @@ const styles = StyleSheet.create({
     backgroundColor: C.bg,
   },
   loadingTxt: { fontSize: 13, color: C.textSecondary },
-  legend: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 12,
-    paddingTop: 10,
-  },
-  legendRow: { flexDirection: 'row', gap: 12 },
+  legendRow: { flexDirection: 'row', gap: 12, alignItems: 'center' },
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   dot: { width: 8, height: 8, borderRadius: 4 },
   legendTxt: { fontSize: 11, color: C.textSecondary },
