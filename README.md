@@ -9,6 +9,9 @@ A personal dance move journal for swing dancers. Log moves you've learned, categ
 - expo-video
 - expo-haptics
 - expo-crypto
+- expo-sensors
+- expo-gl
+- expo-three
 
 
 ## HIG & Material Design
@@ -27,3 +30,7 @@ A personal dance move journal for swing dancers. Log moves you've learned, categ
 
 - I first built the basic app with general functionality. I was able to get the video importing and taking working. Next I'm working on some more design and some more video clipping. 
 - Got the videoclipping working. I was able to make it so you can clip the video before uploading it. Very convenient. Next I will work on the hand movements with the phone in hand.
+- I have been working on the motion tracking. I got it to track something and put it kinda on the screen. Now I just need to fine tune it
+- I got it to show the general pattern a lot better and it seems to be working in general. The movements are still a bit off and jagged, but I think I can smooth it out and make the visual work a lot better
+- I got the line to look a lot better than before. I also moved it to its own page and that it working a lot better too. I definitely need to fix a few more things, but it is actually kind of working now!
+- Slowed down the replay and got the motion to appear a bit better still. The actual tracking is not going great. No matter what I do, it adds random artifacts to the motion trail and random things. I have tried really hard to figure out how to get the trail to track better. But I have run into a bit of a wall. It tracks the general motion alright, but not the exact motion. It also can't help but flattening the motion, so It can't really tell direction changes very well

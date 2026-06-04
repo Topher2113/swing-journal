@@ -1,6 +1,5 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import {
-  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -9,13 +8,14 @@ import {
   Text,
   TextInput,
 } from 'react-native';
-import { useRouter } from 'expo-router';
-import { useFocusEffect } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useMoves } from '@/hooks/useMoves';
 import { useVideoRecorder } from '@/hooks/useVideoRecorder';
+import { useMotionRecorder } from '@/hooks/useMotionRecorder';
 import { SegmentedControl } from '@/components/SegmentedControl';
 import { VideoPickerButtons } from '@/components/VideoPickerButtons';
+import { MotionRecorderButton } from '@/components/MotionRecorderButton';
 import { CATEGORIES, DIFFICULTIES, CATEGORY_SHORT, Category, Difficulty } from '@/types/Move';
 import { C, RADIUS } from '@/constants/theme';
 
@@ -23,10 +23,13 @@ const CATEGORY_LABELS = CATEGORIES.map((c) => CATEGORY_SHORT[c]);
 
 export default function AddMoveScreen() {
   const router = useRouter();
+  const scrollRef = useRef<ScrollView>(null);
   const { addMove } = useMoves();
   const { recordVideo, pickVideo } = useVideoRecorder();
+  const { isRecording, frames, start: startMotion, stop: stopMotion, clear: clearMotion } = useMotionRecorder();
 
   const [name, setName] = useState('');
+  const [nameError, setNameError] = useState<string | null>(null);
   const [category, setCategory] = useState<Category>('Footwork');
   const [difficulty, setDifficulty] = useState<Difficulty>('Beginner');
   const [notes, setNotes] = useState('');
@@ -36,11 +39,13 @@ export default function AddMoveScreen() {
   useFocusEffect(
     useCallback(() => {
       setName('');
+      setNameError(null);
       setCategory('Footwork');
       setDifficulty('Beginner');
       setNotes('');
       setVideoUri(null);
-    }, [])
+      clearMotion();
+    }, [clearMotion])
   );
 
   const handleCategoryChange = (label: string) => {
@@ -62,14 +67,23 @@ export default function AddMoveScreen() {
 
   const handleSave = async () => {
     if (!name.trim()) {
-      Alert.alert('Name required', 'Please enter a move name before saving.');
+      setNameError('Move name is required');
+      scrollRef.current?.scrollTo({ y: 0, animated: true });
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
       return;
     }
     setSaving(true);
     try {
-      const move = await addMove({ name: name.trim(), category, difficulty, notes, videoUri });
+      await addMove({
+        name: name.trim(),
+        category,
+        difficulty,
+        notes,
+        videoUri,
+        motionData: frames,
+      });
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      router.push({ pathname: '/move/[id]', params: { id: move.id } });
+      router.replace('/(tabs)/');
     } finally {
       setSaving(false);
     }
@@ -81,19 +95,21 @@ export default function AddMoveScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView
+        ref={scrollRef}
         style={styles.container}
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
       >
         <Text style={styles.label}>Move name</Text>
         <TextInput
-          style={styles.input}
+          style={[styles.input, nameError ? styles.inputError : null]}
           value={name}
-          onChangeText={setName}
+          onChangeText={(t) => { setName(t); if (nameError) setNameError(null); }}
           placeholder="e.g. Triple Dip"
           placeholderTextColor={C.textSecondary}
           returnKeyType="done"
         />
+        {nameError && <Text style={styles.fieldError}>{nameError}</Text>}
 
         <Text style={styles.label}>Category</Text>
         <SegmentedControl
@@ -129,15 +145,24 @@ export default function AddMoveScreen() {
           onClear={handleClear}
         />
 
+        <Text style={styles.label}>Motion Capture (optional)</Text>
+        <MotionRecorderButton
+          isRecording={isRecording}
+          frames={frames}
+          onStart={startMotion}
+          onStop={stopMotion}
+          onDiscard={clearMotion}
+        />
+
         <Pressable
           style={({ pressed }) => [
             styles.saveBtn,
-            (saving || !name.trim()) && styles.saveBtnDisabled,
+            saving && styles.saveBtnDisabled,
             { opacity: pressed ? 0.85 : 1 },
           ]}
           android_ripple={{ color: 'transparent' }}
           onPress={handleSave}
-          disabled={saving || !name.trim()}
+          disabled={saving}
         >
           <Text style={styles.saveBtnText}>{saving ? 'Saving…' : 'Save Move'}</Text>
         </Pressable>
@@ -175,6 +200,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: C.textPrimary,
     minHeight: 50,
+  },
+  inputError: {
+    borderWidth: 1.5,
+    borderColor: '#EF4444',
+  },
+  fieldError: {
+    fontSize: 12,
+    color: '#EF4444',
+    marginTop: -6,
   },
   multiline: {
     minHeight: 120,

@@ -9,14 +9,22 @@ export function useVideoRecorder() {
       Alert.alert('Permission required', 'Camera access is needed to record a clip.');
       return null;
     }
-    const result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ['videos'],
-      allowsEditing: true,
-      videoMaxDuration: 30,
-      videoExportPreset: ImagePicker.VideoExportPreset.MediumQuality,
-    });
-    if (result.canceled) return null;
-    return result.assets[0].uri;
+    try {
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ['videos'],
+        allowsEditing: true,
+        videoMaxDuration: 30,
+        videoExportPreset: ImagePicker.VideoExportPreset.MediumQuality,
+      });
+      if (result.canceled) return null;
+      return result.assets[0].uri;
+    } catch {
+      Alert.alert(
+        'Camera unavailable',
+        'This device does not support video recording. Use "From library" instead.'
+      );
+      return null;
+    }
   }, []);
 
   const pickVideo = useCallback(async (): Promise<string | null> => {
@@ -25,14 +33,19 @@ export function useVideoRecorder() {
       Alert.alert('Permission required', 'Photo library access is needed to choose a clip.');
       return null;
     }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['videos'],
-      allowsEditing: true,
-      videoMaxDuration: 30,
-      videoExportPreset: ImagePicker.VideoExportPreset.MediumQuality,
-    });
-    if (result.canceled) return null;
-    return result.assets[0].uri;
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['videos'],
+        allowsEditing: true,
+        videoMaxDuration: 30,
+        videoExportPreset: ImagePicker.VideoExportPreset.MediumQuality,
+      });
+      if (result.canceled) return null;
+      return result.assets[0].uri;
+    } catch {
+      Alert.alert('Library unavailable', 'Could not open the photo library on this device.');
+      return null;
+    }
   }, []);
 
   return { recordVideo, pickVideo };
