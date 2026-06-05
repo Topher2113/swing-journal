@@ -1,5 +1,5 @@
 import { useCallback, useRef } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import { Ionicons } from '@expo/vector-icons';
 import { DifficultyBadge } from './DifficultyBadge';
@@ -46,10 +46,21 @@ export function MoveCard({ move, onPress, onEdit, onDelete }: Props) {
     onEdit();
   }, [onEdit]);
 
+  const handleDelete = useCallback(() => {
+    Alert.alert(
+      'Delete Move',
+      `Delete "${move.name}"? This cannot be undone.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete', style: 'destructive', onPress: onDelete },
+      ]
+    );
+  }, [move.name, onDelete]);
+
   return (
     <ReanimatedSwipeable
       ref={swipeableRef}
-      renderRightActions={() => <RightActions onEdit={handleEdit} onDelete={onDelete} />}
+      renderRightActions={() => <RightActions onEdit={handleEdit} onDelete={handleDelete} />}
       overshootRight={false}
     >
       <Pressable
@@ -65,7 +76,10 @@ export function MoveCard({ move, onPress, onEdit, onDelete }: Props) {
             <Text style={styles.practice}>↻ {move.practiceCount}</Text>
           </View>
         </View>
-        <Ionicons name="chevron-forward" size={20} color="#636366" />
+        <View style={styles.trailingIcons}>
+          <Ionicons name="ellipsis-horizontal" size={16} color={C.textSecondary} />
+          <Ionicons name="chevron-forward" size={20} color="#636366" />
+        </View>
       </Pressable>
     </ReanimatedSwipeable>
   );
@@ -124,6 +138,11 @@ const styles = StyleSheet.create({
   },
   deleteBtn: {
     backgroundColor: C.deleteSwipe,
+  },
+  trailingIcons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   actionLabel: {
     fontSize: 11,

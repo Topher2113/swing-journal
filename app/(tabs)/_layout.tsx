@@ -22,15 +22,14 @@ const tabBarStyle: ViewStyle = {
 };
 
 const tabBarItemStyle: ViewStyle = {
-  paddingTop: 8,
-  paddingBottom: 4,
+  paddingTop: 4,
+  paddingBottom: 2,
 };
 
 // HIG: labels use a small system font (~10pt), same active color as icon
 const tabBarLabelStyle: TextStyle = {
   fontSize: 10,
   fontWeight: '500',
-  marginTop: 2,
 };
 
 export default function TabLayout() {
@@ -52,7 +51,7 @@ export default function TabLayout() {
       />
       <Tabs.Screen
         name="add"
-        options={{ title: 'Add', tabBarIcon: AddIcon }}
+        options={{ title: 'Add', tabBarIcon: AddIcon, headerShown: false }}
       />
       <Tabs.Screen
         name="stats"

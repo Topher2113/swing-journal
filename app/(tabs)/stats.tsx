@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { useFocusEffect } from 'expo-router';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { useMoves } from '@/hooks/useMoves';
 import { useStats } from '@/hooks/useStats';
 import { StatCard } from '@/components/StatCard';
@@ -14,6 +14,7 @@ const DIFFICULTY_COLORS: Record<Difficulty, string> = {
 };
 
 export default function StatsScreen() {
+  const router = useRouter();
   const { moves, reload } = useMoves();
   const { totalMoves, totalPractices, byCategory, byDifficulty, maxCategoryCount } =
     useStats(moves);
@@ -34,7 +35,12 @@ export default function StatsScreen() {
       <Text style={styles.sectionTitle}>By Category</Text>
       <View style={styles.card}>
         {byCategory.map(({ category, count }) => (
-          <View key={category} style={styles.catItem}>
+          <Pressable
+            key={category}
+            style={({ pressed }) => [styles.catItem, { opacity: pressed ? 0.7 : 1 }]}
+            android_ripple={{ color: 'transparent' }}
+            onPress={() => router.push({ pathname: '/category/[category]', params: { category } })}
+          >
             <View style={styles.catRow}>
               <Text style={styles.catName}>{category}</Text>
               <Text style={styles.catCount}>{count} moves</Text>
@@ -47,7 +53,7 @@ export default function StatsScreen() {
                 ]}
               />
             </View>
-          </View>
+          </Pressable>
         ))}
       </View>
 

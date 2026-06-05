@@ -101,6 +101,8 @@ export default function AddMoveScreen() {
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
       >
+        <Text style={styles.pageTitle}>Add Move</Text>
+
         <Text style={styles.label}>Move name</Text>
         <TextInput
           style={[styles.input, nameError ? styles.inputError : null]}
@@ -189,6 +191,12 @@ const styles = StyleSheet.create({
     padding: 20,
     gap: 12,
     paddingBottom: 40,
+  },
+  pageTitle: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: C.textPrimary,
+    marginBottom: 4,
   },
   label: {
     fontSize: 15,
