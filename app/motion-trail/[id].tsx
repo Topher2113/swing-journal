@@ -3,12 +3,13 @@ import { Stack, useLocalSearchParams } from 'expo-router';
 import { useMove } from '@/hooks/useMove';
 import { MotionTrailViewer } from '@/components/MotionTrailViewer';
 import { C } from '@/constants/theme';
+import { MOTION_TRACKING_ENABLED } from '@/constants/features';
 
 export default function MotionTrailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { move } = useMove(id);
 
-  if (!move?.motionData || move.motionData.length < 2) return null;
+  if (!MOTION_TRACKING_ENABLED || !move?.motionData || move.motionData.length < 2) return null;
 
   return (
     <>

@@ -18,6 +18,7 @@ import { VideoPickerButtons } from '@/components/VideoPickerButtons';
 import { MotionRecorderButton } from '@/components/MotionRecorderButton';
 import { CATEGORIES, DIFFICULTIES, CATEGORY_SHORT, Category, Difficulty } from '@/types/Move';
 import { C, RADIUS } from '@/constants/theme';
+import { MOTION_TRACKING_ENABLED } from '@/constants/features';
 
 const CATEGORY_LABELS = CATEGORIES.map((c) => CATEGORY_SHORT[c]);
 
@@ -80,7 +81,7 @@ export default function AddMoveScreen() {
         difficulty,
         notes,
         videoUri,
-        motionData: frames,
+        motionData: MOTION_TRACKING_ENABLED ? frames : null,
       });
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       router.replace('/(tabs)/');
@@ -145,14 +146,18 @@ export default function AddMoveScreen() {
           onClear={handleClear}
         />
 
-        <Text style={styles.label}>Motion Capture (optional)</Text>
-        <MotionRecorderButton
-          isRecording={isRecording}
-          frames={frames}
-          onStart={startMotion}
-          onStop={stopMotion}
-          onDiscard={clearMotion}
-        />
+        {MOTION_TRACKING_ENABLED && (
+          <>
+            <Text style={styles.label}>Motion Capture (optional)</Text>
+            <MotionRecorderButton
+              isRecording={isRecording}
+              frames={frames}
+              onStart={startMotion}
+              onStop={stopMotion}
+              onDiscard={clearMotion}
+            />
+          </>
+        )}
 
         <Pressable
           style={({ pressed }) => [

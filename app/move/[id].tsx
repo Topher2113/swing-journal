@@ -7,6 +7,7 @@ import { VideoPlayer } from '@/components/VideoPlayer';
 import { DifficultyBadge } from '@/components/DifficultyBadge';
 import { PracticeCounter } from '@/components/PracticeCounter';
 import { C, RADIUS } from '@/constants/theme';
+import { MOTION_TRACKING_ENABLED } from '@/constants/features';
 
 export default function MoveDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -44,7 +45,7 @@ export default function MoveDetailScreen() {
 
             <PracticeCounter count={move.practiceCount} onIncrement={handleIncrement} />
 
-            {move.motionData && move.motionData.length >= 2 && (
+            {MOTION_TRACKING_ENABLED && move.motionData && move.motionData.length >= 2 && (
               <Pressable
                 style={({ pressed }) => [styles.motionBtn, { opacity: pressed ? 0.8 : 1 }]}
                 android_ripple={{ color: 'transparent' }}

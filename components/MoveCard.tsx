@@ -1,3 +1,4 @@
+import { useCallback, useRef } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import { Ionicons } from '@expo/vector-icons';
@@ -36,9 +37,19 @@ function RightActions({ onEdit, onDelete }: { onEdit: () => void; onDelete: () =
 }
 
 export function MoveCard({ move, onPress, onEdit, onDelete }: Props) {
+  const swipeableRef = useRef<any>(null);
+
+  // Close the swipeable before navigating so the card is in its resting state
+  // when the user returns from the Edit screen.
+  const handleEdit = useCallback(() => {
+    swipeableRef.current?.close();
+    onEdit();
+  }, [onEdit]);
+
   return (
     <ReanimatedSwipeable
-      renderRightActions={() => <RightActions onEdit={onEdit} onDelete={onDelete} />}
+      ref={swipeableRef}
+      renderRightActions={() => <RightActions onEdit={handleEdit} onDelete={onDelete} />}
       overshootRight={false}
     >
       <Pressable
