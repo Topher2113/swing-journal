@@ -23,7 +23,19 @@ export default function MoveDetailScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ title: move?.name ?? '…' }} />
+      <Stack.Screen
+        options={{
+          title: move?.name ?? '…',
+          headerRight: () => (
+            <Pressable
+              onPress={() => router.push({ pathname: '/edit/[id]', params: { id } })}
+              style={({ pressed }) => ({ opacity: pressed ? 0.5 : 1, paddingHorizontal: 8 })}
+            >
+              <Ionicons name="pencil-outline" size={20} color={C.textPrimary} />
+            </Pressable>
+          ),
+        }}
+      />
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
         {move?.videoUri && <VideoPlayer uri={move.videoUri} />}
 

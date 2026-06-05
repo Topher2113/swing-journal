@@ -95,8 +95,8 @@ const styles = StyleSheet.create({
     opacity: 0.35,
   },
   categoryName: {
-    fontSize: 17,
-    fontWeight: '600',
+    fontSize: 20,
+    fontWeight: '700',
     color: C.textPrimary,
   },
   categoryNameDisabled: {
