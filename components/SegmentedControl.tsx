@@ -15,7 +15,7 @@ export function SegmentedControl({ options, value, onChange }: Props) {
         return (
           <Pressable
             key={opt}
-            style={[styles.option, active && styles.optionActive]}
+            style={[styles.option, active ? styles.optionActive : styles.optionInactive]}
             android_ripple={{ color: 'transparent' }}
             onPress={() => onChange(opt)}
           >
@@ -47,6 +47,9 @@ const styles = StyleSheet.create({
   },
   optionActive: {
     backgroundColor: C.accent,
+  },
+  optionInactive: {
+    backgroundColor: 'transparent',
   },
   label: {
     fontSize: 14,
