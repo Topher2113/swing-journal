@@ -8,7 +8,7 @@ import {
   Text,
   TextInput,
 } from 'react-native';
-import { useRouter, useFocusEffect } from 'expo-router';
+import { Stack, useRouter, useFocusEffect } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useMoves } from '@/hooks/useMoves';
 import { useVideoRecorder } from '@/hooks/useVideoRecorder';
@@ -84,25 +84,25 @@ export default function AddMoveScreen() {
         motionData: MOTION_TRACKING_ENABLED ? frames : null,
       });
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      router.replace('/(tabs)/');
+      router.replace('/(tabs)');
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.flex}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
+    <>
+      <Stack.Screen options={{ headerTitle: 'Add Move' }} />
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
       <ScrollView
         ref={scrollRef}
         style={styles.container}
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
       >
-        <Text style={styles.pageTitle}>Add Move</Text>
-
         <Text style={styles.label}>Move name</Text>
         <TextInput
           style={[styles.input, nameError ? styles.inputError : null]}
@@ -174,7 +174,8 @@ export default function AddMoveScreen() {
           <Text style={styles.saveBtnText}>{saving ? 'Saving…' : 'Save Move'}</Text>
         </Pressable>
       </ScrollView>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </>
   );
 }
 
@@ -191,12 +192,6 @@ const styles = StyleSheet.create({
     padding: 20,
     gap: 12,
     paddingBottom: 40,
-  },
-  pageTitle: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: C.textPrimary,
-    marginBottom: 4,
   },
   label: {
     fontSize: 15,

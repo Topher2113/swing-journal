@@ -51,7 +51,7 @@ export default function TabLayout() {
       />
       <Tabs.Screen
         name="add"
-        options={{ title: 'Add', tabBarIcon: AddIcon, headerShown: false }}
+        options={{ title: 'Add', tabBarIcon: AddIcon }}
       />
       <Tabs.Screen
         name="stats"
