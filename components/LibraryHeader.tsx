@@ -1,13 +1,13 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { C } from '@/constants/theme';
 
-type Props = { count: number };
+type Props = { title: string; count: number; label: string };
 
-export function MovesHeader({ count }: Props) {
+export function LibraryHeader({ title, count, label }: Props) {
   return (
     <View style={styles.wrap}>
-      <Text style={styles.title}>My Moves</Text>
-      <Text style={styles.subtitle}>{count} move{count !== 1 ? 's' : ''} logged</Text>
+      <Text style={styles.title}>{title}</Text>
+      <Text style={styles.subtitle}>{count} {label}{count !== 1 ? 's' : ''} logged</Text>
     </View>
   );
 }

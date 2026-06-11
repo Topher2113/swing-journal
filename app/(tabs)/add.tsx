@@ -1,5 +1,6 @@
 import { useCallback, useRef, useState } from 'react';
 import {
+  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -7,28 +8,44 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  View,
 } from 'react-native';
+import { Image } from 'expo-image';
+import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter, useFocusEffect } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useMoves } from '@/hooks/useMoves';
+import { useSongs } from '@/hooks/useSongs';
+import { useSongSearch } from '@/hooks/useSongSearch';
 import { useVideoRecorder } from '@/hooks/useVideoRecorder';
 import { useMotionRecorder } from '@/hooks/useMotionRecorder';
 import { SegmentedControl } from '@/components/SegmentedControl';
+import { SongSearchResultRow } from '@/components/SongSearchResultRow';
+import { ComingSoon } from '@/components/ComingSoon';
 import { VideoPickerButtons } from '@/components/VideoPickerButtons';
 import { MotionRecorderButton } from '@/components/MotionRecorderButton';
 import { CATEGORIES, DIFFICULTIES, CATEGORY_SHORT, Category, Difficulty } from '@/types/Move';
+import { SpotifyTrackResult } from '@/types/Song';
 import { C, RADIUS } from '@/constants/theme';
 import { MOTION_TRACKING_ENABLED } from '@/constants/features';
 
 const CATEGORY_LABELS = CATEGORIES.map((c) => CATEGORY_SHORT[c]);
+const ADD_SEGMENTS = ['Move', 'Line Dance', 'Song'];
+type AddSegment = 'Move' | 'Line Dance' | 'Song';
 
-export default function AddMoveScreen() {
+export default function AddScreen() {
   const router = useRouter();
-  const scrollRef = useRef<ScrollView>(null);
   const { addMove } = useMoves();
+  const { addSong } = useSongs();
+  const { search: searchSpotify, loading: searchLoading } = useSongSearch();
   const { recordVideo, pickVideo } = useVideoRecorder();
-  const { isRecording, frames, start: startMotion, stop: stopMotion, clear: clearMotion } = useMotionRecorder();
+  const { isRecording, frames, start: startMotion, stop: stopMotion, clear: clearMotion } =
+    useMotionRecorder();
 
+  const [segment, setSegment] = useState<AddSegment>('Move');
+
+  // Move form state
+  const scrollRef = useRef<ScrollView>(null);
   const [name, setName] = useState('');
   const [nameError, setNameError] = useState<string | null>(null);
   const [category, setCategory] = useState<Category>('Footwork');
@@ -36,6 +53,14 @@ export default function AddMoveScreen() {
   const [notes, setNotes] = useState('');
   const [videoUri, setVideoUri] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+
+  // Song form state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<SpotifyTrackResult[]>([]);
+  const [attachedTrack, setAttachedTrack] = useState<SpotifyTrackResult | null>(null);
+  const [songNotes, setSongNotes] = useState('');
+  const [songSaving, setSongSaving] = useState(false);
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -46,8 +71,17 @@ export default function AddMoveScreen() {
       setNotes('');
       setVideoUri(null);
       clearMotion();
+      setSearchQuery('');
+      setSearchResults([]);
+      setAttachedTrack(null);
+      setSongNotes('');
+      return () => {
+        if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+      };
     }, [clearMotion])
   );
+
+  // ── Move handlers ────────────────────────────────────────────────────────────
 
   const handleCategoryChange = (label: string) => {
     const full = CATEGORIES[CATEGORY_LABELS.indexOf(label)];
@@ -90,91 +124,257 @@ export default function AddMoveScreen() {
     }
   };
 
+  // ── Song handlers ────────────────────────────────────────────────────────────
+
+  const handleSearchChange = (text: string) => {
+    setSearchQuery(text);
+    if (attachedTrack) setAttachedTrack(null);
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    if (text.trim()) {
+      searchDebounceRef.current = setTimeout(async () => {
+        const results = await searchSpotify(text);
+        setSearchResults(results);
+      }, 400);
+    } else {
+      setSearchResults([]);
+    }
+  };
+
+  const handleAttachTrack = (track: SpotifyTrackResult) => {
+    setAttachedTrack(track);
+    setSearchResults([]);
+  };
+
+  const handleSaveSong = async () => {
+    if (!attachedTrack) return;
+    setSongSaving(true);
+    try {
+      await addSong({
+        title: attachedTrack.name,
+        artist: attachedTrack.artists.map((a) => a.name).join(', '),
+        albumArtUrl: attachedTrack.album.images[0]?.url ?? null,
+        spotifyUrl: attachedTrack.external_urls.spotify,
+        spotifyTrackId: attachedTrack.id,
+        notes: songNotes.trim(),
+      });
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      router.replace('/(tabs)');
+    } finally {
+      setSongSaving(false);
+    }
+  };
+
+  // ── Derived ──────────────────────────────────────────────────────────────────
+
+  const headerTitle =
+    segment === 'Move' ? 'Add Move' : segment === 'Song' ? 'Add Song' : 'Add Line Dance';
+  const attachedArtUrl = attachedTrack?.album.images[0]?.url ?? null;
+
   return (
     <>
-      <Stack.Screen options={{ headerTitle: 'Add Move' }} />
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
-      <ScrollView
-        ref={scrollRef}
-        style={styles.container}
-        contentContainerStyle={styles.content}
-        keyboardShouldPersistTaps="handled"
-      >
-        <Text style={styles.label}>Move name</Text>
-        <TextInput
-          style={[styles.input, nameError ? styles.inputError : null]}
-          value={name}
-          onChangeText={(t) => { setName(t); if (nameError) setNameError(null); }}
-          placeholder="e.g. Triple Dip"
-          placeholderTextColor={C.textSecondary}
-          returnKeyType="done"
-        />
-        {nameError && <Text style={styles.fieldError}>{nameError}</Text>}
+      <Stack.Screen options={{ headerTitle }} />
+      <View style={styles.flex}>
+        <View style={styles.segmentWrap}>
+          <SegmentedControl
+            options={ADD_SEGMENTS}
+            value={segment}
+            onChange={(v) => setSegment(v as AddSegment)}
+          />
+        </View>
 
-        <Text style={styles.label}>Category</Text>
-        <SegmentedControl
-          options={CATEGORY_LABELS}
-          value={CATEGORY_SHORT[category]}
-          onChange={handleCategoryChange}
-        />
+        {/* ── Move ─────────────────────────────────────────────────────────── */}
+        {segment === 'Move' && (
+          <KeyboardAvoidingView
+            style={styles.flex}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          >
+            <ScrollView
+              ref={scrollRef}
+              style={styles.container}
+              contentContainerStyle={styles.content}
+              keyboardShouldPersistTaps="handled"
+            >
+              <Text style={styles.label}>Move name</Text>
+              <TextInput
+                style={[styles.input, nameError ? styles.inputError : null]}
+                value={name}
+                onChangeText={(t) => { setName(t); if (nameError) setNameError(null); }}
+                placeholder="e.g. Triple Dip"
+                placeholderTextColor={C.textSecondary}
+                returnKeyType="done"
+              />
+              {nameError && <Text style={styles.fieldError}>{nameError}</Text>}
 
-        <Text style={styles.label}>Difficulty</Text>
-        <SegmentedControl
-          options={DIFFICULTIES}
-          value={difficulty}
-          onChange={(v) => setDifficulty(v as Difficulty)}
-        />
+              <Text style={styles.label}>Category</Text>
+              <SegmentedControl
+                options={CATEGORY_LABELS}
+                value={CATEGORY_SHORT[category]}
+                onChange={handleCategoryChange}
+              />
 
-        <Text style={styles.label}>Notes</Text>
-        <TextInput
-          style={[styles.input, styles.multiline]}
-          value={notes}
-          onChangeText={setNotes}
-          placeholder="Cues, timing, things to remember…"
-          placeholderTextColor={C.textSecondary}
-          multiline
-          numberOfLines={4}
-          textAlignVertical="top"
-        />
+              <Text style={styles.label}>Difficulty</Text>
+              <SegmentedControl
+                options={DIFFICULTIES}
+                value={difficulty}
+                onChange={(v) => setDifficulty(v as Difficulty)}
+              />
 
-        <Text style={styles.label}>Video (optional)</Text>
-        <VideoPickerButtons
-          videoUri={videoUri}
-          onRecord={handleRecord}
-          onPick={handlePick}
-          onClear={handleClear}
-        />
+              <Text style={styles.label}>Notes</Text>
+              <TextInput
+                style={[styles.input, styles.multiline]}
+                value={notes}
+                onChangeText={setNotes}
+                placeholder="Cues, timing, things to remember…"
+                placeholderTextColor={C.textSecondary}
+                multiline
+                numberOfLines={4}
+                textAlignVertical="top"
+              />
 
-        {MOTION_TRACKING_ENABLED && (
-          <>
-            <Text style={styles.label}>Motion Capture (optional)</Text>
-            <MotionRecorderButton
-              isRecording={isRecording}
-              frames={frames}
-              onStart={startMotion}
-              onStop={stopMotion}
-              onDiscard={clearMotion}
-            />
-          </>
+              <Text style={styles.label}>Video (optional)</Text>
+              <VideoPickerButtons
+                videoUri={videoUri}
+                onRecord={handleRecord}
+                onPick={handlePick}
+                onClear={handleClear}
+              />
+
+              {MOTION_TRACKING_ENABLED && (
+                <>
+                  <Text style={styles.label}>Motion Capture (optional)</Text>
+                  <MotionRecorderButton
+                    isRecording={isRecording}
+                    frames={frames}
+                    onStart={startMotion}
+                    onStop={stopMotion}
+                    onDiscard={clearMotion}
+                  />
+                </>
+              )}
+
+              <Pressable
+                style={({ pressed }) => [
+                  styles.saveBtn,
+                  saving && styles.saveBtnDisabled,
+                  { opacity: pressed ? 0.85 : 1 },
+                ]}
+                android_ripple={{ color: 'transparent' }}
+                onPress={handleSave}
+                disabled={saving}
+              >
+                <Text style={styles.saveBtnText}>{saving ? 'Saving…' : 'Save Move'}</Text>
+              </Pressable>
+            </ScrollView>
+          </KeyboardAvoidingView>
         )}
 
-        <Pressable
-          style={({ pressed }) => [
-            styles.saveBtn,
-            saving && styles.saveBtnDisabled,
-            { opacity: pressed ? 0.85 : 1 },
-          ]}
-          android_ripple={{ color: 'transparent' }}
-          onPress={handleSave}
-          disabled={saving}
-        >
-          <Text style={styles.saveBtnText}>{saving ? 'Saving…' : 'Save Move'}</Text>
-        </Pressable>
-      </ScrollView>
-      </KeyboardAvoidingView>
+        {/* ── Song ─────────────────────────────────────────────────────────── */}
+        {segment === 'Song' && (
+          <KeyboardAvoidingView
+            style={styles.flex}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          >
+            <ScrollView
+              style={styles.container}
+              contentContainerStyle={styles.content}
+              keyboardShouldPersistTaps="handled"
+            >
+              {!attachedTrack ? (
+                <>
+                  <Text style={styles.label}>Search Spotify</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={searchQuery}
+                    onChangeText={handleSearchChange}
+                    placeholder="Song title or artist…"
+                    placeholderTextColor={C.textSecondary}
+                    returnKeyType="search"
+                  />
+                  {searchLoading && (
+                    <ActivityIndicator color={C.accent} style={styles.loader} />
+                  )}
+                  {searchResults.map((track) => (
+                    <SongSearchResultRow
+                      key={track.id}
+                      track={track}
+                      onPress={() => handleAttachTrack(track)}
+                    />
+                  ))}
+                  {!searchLoading && searchQuery.trim() !== '' && searchResults.length === 0 && (
+                    <Text style={styles.noResults}>No results found.</Text>
+                  )}
+                </>
+              ) : (
+                <>
+                  <Text style={styles.label}>Selected track</Text>
+                  <View style={styles.attachedRow}>
+                    {attachedArtUrl ? (
+                      <Image
+                        source={{ uri: attachedArtUrl }}
+                        style={styles.attachedArt}
+                        contentFit="cover"
+                      />
+                    ) : (
+                      <View style={[styles.attachedArt, styles.artPlaceholder]}>
+                        <Ionicons name="musical-note" size={18} color={C.textSecondary} />
+                      </View>
+                    )}
+                    <View style={styles.attachedInfo}>
+                      <Text style={styles.attachedTitle} numberOfLines={1}>
+                        {attachedTrack.name}
+                      </Text>
+                      <Text style={styles.attachedArtist} numberOfLines={1}>
+                        {attachedTrack.artists.map((a) => a.name).join(', ')}
+                      </Text>
+                    </View>
+                    <Pressable
+                      style={({ pressed }) => [styles.changeBtn, { opacity: pressed ? 0.8 : 1 }]}
+                      android_ripple={{ color: 'transparent' }}
+                      onPress={() => { setAttachedTrack(null); setSearchResults([]); }}
+                    >
+                      <Text style={styles.changeBtnText}>Change</Text>
+                    </Pressable>
+                  </View>
+
+                  <Text style={styles.label}>Notes (optional)</Text>
+                  <TextInput
+                    style={[styles.input, styles.multiline]}
+                    value={songNotes}
+                    onChangeText={setSongNotes}
+                    placeholder="Why you love this song, what you dance to it…"
+                    placeholderTextColor={C.textSecondary}
+                    multiline
+                    numberOfLines={4}
+                    textAlignVertical="top"
+                  />
+
+                  <Pressable
+                    style={({ pressed }) => [
+                      styles.saveBtn,
+                      songSaving && styles.saveBtnDisabled,
+                      { opacity: pressed ? 0.85 : 1 },
+                    ]}
+                    android_ripple={{ color: 'transparent' }}
+                    onPress={handleSaveSong}
+                    disabled={songSaving}
+                  >
+                    <Text style={styles.saveBtnText}>{songSaving ? 'Saving…' : 'Save Song'}</Text>
+                  </Pressable>
+                </>
+              )}
+            </ScrollView>
+          </KeyboardAvoidingView>
+        )}
+
+        {/* ── Line Dance ───────────────────────────────────────────────────── */}
+        {segment === 'Line Dance' && (
+          <ComingSoon
+            icon="walk-outline"
+            title="Line Dances"
+            message="Coming in a future phase — track line dance routines step by step."
+          />
+        )}
+      </View>
     </>
   );
 }
@@ -183,6 +383,11 @@ const styles = StyleSheet.create({
   flex: {
     flex: 1,
     backgroundColor: C.bg,
+  },
+  segmentWrap: {
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 8,
   },
   container: {
     flex: 1,
@@ -220,6 +425,58 @@ const styles = StyleSheet.create({
   },
   multiline: {
     minHeight: 120,
+  },
+  loader: {
+    marginVertical: 16,
+  },
+  noResults: {
+    fontSize: 14,
+    color: C.textSecondary,
+    textAlign: 'center',
+    marginTop: 16,
+  },
+  attachedRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: C.surface,
+    borderRadius: RADIUS.card,
+    padding: 12,
+    gap: 12,
+  },
+  attachedArt: {
+    width: 44,
+    height: 44,
+    borderRadius: 6,
+    flexShrink: 0,
+  },
+  artPlaceholder: {
+    backgroundColor: C.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  attachedInfo: {
+    flex: 1,
+    gap: 3,
+  },
+  attachedTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: C.textPrimary,
+  },
+  attachedArtist: {
+    fontSize: 13,
+    color: C.textSecondary,
+  },
+  changeBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: C.border,
+    borderRadius: RADIUS.chip,
+  },
+  changeBtnText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: C.textPrimary,
   },
   saveBtn: {
     backgroundColor: C.accent,
