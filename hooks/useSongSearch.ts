@@ -43,12 +43,16 @@ export function useSongSearch() {
   const [error, setError] = useState<string | null>(null);
   const tokenRef = useRef<CachedToken | null>(null);
 
-  const getToken = useCallback(async (): Promise<string> => {
+  const getToken = useCallback(async (): Promise<string | null> => {
     const cached = tokenRef.current;
     if (cached && cached.expiresAt > Date.now()) return cached.token;
 
-    const clientId = process.env.EXPO_PUBLIC_SPOTIFY_CLIENT_ID!;
-    const clientSecret = process.env.EXPO_PUBLIC_SPOTIFY_CLIENT_SECRET!;
+    const clientId = process.env.EXPO_PUBLIC_SPOTIFY_CLIENT_ID;
+    const clientSecret = process.env.EXPO_PUBLIC_SPOTIFY_CLIENT_SECRET;
+    if (!clientId || !clientSecret) {
+      console.warn('Spotify env vars missing — search disabled');
+      return null;
+    }
     const basic = base64Encode(`${clientId}:${clientSecret}`);
 
     const res = await fetch(TOKEN_URL, {
@@ -73,6 +77,7 @@ export function useSongSearch() {
     setError(null);
     try {
       const token = await getToken();
+      if (!token) return [];
       const url = `${SEARCH_URL}?type=track&limit=10&q=${encodeURIComponent(query)}`;
       const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
       if (!res.ok) throw new Error('Spotify search failed');

@@ -1,20 +1,20 @@
 import { useCallback, useRef } from 'react';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { AlbumArt } from './AlbumArt';
+import { Ionicons } from '@expo/vector-icons';
+import { DifficultyBadge } from './DifficultyBadge';
 import { SwipeActions } from './SwipeActions';
-import { Song } from '@/types/Song';
+import { LineDance } from '@/types/LineDance';
 import { C, RADIUS } from '@/constants/theme';
 
 type Props = {
-  song: Song;
+  lineDance: LineDance;
   onPress: () => void;
   onEdit: () => void;
   onDelete: () => void;
 };
 
-export function SongCard({ song, onPress, onEdit, onDelete }: Props) {
+export function LineDanceCard({ lineDance, onPress, onEdit, onDelete }: Props) {
   const swipeableRef = useRef<any>(null);
 
   const handleEdit = useCallback(() => {
@@ -24,14 +24,14 @@ export function SongCard({ song, onPress, onEdit, onDelete }: Props) {
 
   const handleDelete = useCallback(() => {
     Alert.alert(
-      'Delete Song',
-      `Delete "${song.title}"? This cannot be undone.`,
+      'Delete Line Dance',
+      `Delete "${lineDance.name}"? This cannot be undone.`,
       [
         { text: 'Cancel', style: 'cancel' },
         { text: 'Delete', style: 'destructive', onPress: onDelete },
       ]
     );
-  }, [song.title, onDelete]);
+  }, [lineDance.name, onDelete]);
 
   return (
     <ReanimatedSwipeable
@@ -44,15 +44,16 @@ export function SongCard({ song, onPress, onEdit, onDelete }: Props) {
         android_ripple={{ color: 'transparent' }}
         onPress={onPress}
       >
-        <AlbumArt url={song.albumArtUrl} size={40} />
+        <View style={[styles.dot, { backgroundColor: lineDance.videoUri ? C.accent : C.border }]} />
         <View style={styles.info}>
-          <Text style={styles.title} numberOfLines={1}>{song.title}</Text>
-          <Text style={styles.artist} numberOfLines={1}>{song.artist}</Text>
+          <Text style={styles.name} numberOfLines={1}>{lineDance.name}</Text>
+          <View style={styles.meta}>
+            <DifficultyBadge difficulty={lineDance.difficulty} />
+            <Text style={styles.metaText}>{lineDance.steps.length} steps</Text>
+            <Text style={styles.metaText}>↻ {lineDance.practiceCount}</Text>
+          </View>
         </View>
-        <View style={styles.trailingIcons}>
-          {song.spotifyUrl && <MaterialCommunityIcons name="spotify" size={18} color="#1DB954" />}
-          <Ionicons name="chevron-forward" size={20} color="#636366" />
-        </View>
+        <Ionicons name="chevron-forward" size={20} color="#636366" />
       </Pressable>
     </ReanimatedSwipeable>
   );
@@ -70,22 +71,28 @@ const styles = StyleSheet.create({
     gap: 12,
     minHeight: 68,
   },
+  dot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    flexShrink: 0,
+  },
   info: {
     flex: 1,
-    gap: 4,
+    gap: 6,
   },
-  title: {
+  name: {
     fontSize: 16,
     fontWeight: '600',
     color: C.textPrimary,
   },
-  artist: {
-    fontSize: 13,
-    color: C.textSecondary,
-  },
-  trailingIcons: {
+  meta: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 8,
+  },
+  metaText: {
+    fontSize: 13,
+    color: C.textSecondary,
   },
 });

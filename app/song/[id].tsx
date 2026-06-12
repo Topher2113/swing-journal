@@ -1,16 +1,17 @@
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useSong } from '@/hooks/useSong';
+import { Skeleton } from '@/components/Skeleton';
 import { NotesBox } from '@/components/NotesBox';
 import { SpotifyLinkButton } from '@/components/SpotifyLinkButton';
+import { Image } from 'expo-image';
 import { C, RADIUS } from '@/constants/theme';
 
 export default function SongDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { song } = useSong(id);
+  const { song, loading } = useSong(id);
 
   return (
     <>
@@ -28,7 +29,18 @@ export default function SongDetailScreen() {
         }}
       />
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-        {song && (
+        {loading ? (
+          <>
+            <Skeleton style={{ aspectRatio: 1 }} borderRadius={RADIUS.card} />
+            <Skeleton height={28} width="90%" />
+            <Skeleton height={18} width="60%" />
+            <Skeleton height={44} />
+          </>
+        ) : !song ? (
+          <View style={styles.notFound}>
+            <Text style={styles.notFoundText}>Song not found.</Text>
+          </View>
+        ) : (
           <>
             {song.albumArtUrl ? (
               <Image source={{ uri: song.albumArtUrl }} style={styles.art} contentFit="cover" />
@@ -80,5 +92,15 @@ const styles = StyleSheet.create({
     fontSize: 17,
     color: C.textSecondary,
     marginTop: -8,
+  },
+  notFound: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: 80,
+  },
+  notFoundText: {
+    fontSize: 16,
+    color: C.textSecondary,
   },
 });

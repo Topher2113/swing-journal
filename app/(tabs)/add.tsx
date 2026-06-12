@@ -10,21 +10,24 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { Image } from 'expo-image';
-import { Ionicons } from '@expo/vector-icons';
-import { Stack, useRouter, useFocusEffect } from 'expo-router';
+import { Stack, useRouter, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useMoves } from '@/hooks/useMoves';
 import { useSongs } from '@/hooks/useSongs';
+import { useLineDances } from '@/hooks/useLineDances';
 import { useSongSearch } from '@/hooks/useSongSearch';
 import { useVideoRecorder } from '@/hooks/useVideoRecorder';
 import { useMotionRecorder } from '@/hooks/useMotionRecorder';
+import { AlbumArt } from '@/components/AlbumArt';
+import { SaveButton } from '@/components/SaveButton';
 import { SegmentedControl } from '@/components/SegmentedControl';
 import { SongSearchResultRow } from '@/components/SongSearchResultRow';
-import { ComingSoon } from '@/components/ComingSoon';
 import { VideoPickerButtons } from '@/components/VideoPickerButtons';
+import { StepListEditor } from '@/components/StepListEditor';
+import { LinkedSongPicker } from '@/components/LinkedSongPicker';
 import { MotionRecorderButton } from '@/components/MotionRecorderButton';
 import { CATEGORIES, DIFFICULTIES, CATEGORY_SHORT, Category, Difficulty } from '@/types/Move';
+import { LineDanceStep } from '@/types/LineDance';
 import { SpotifyTrackResult } from '@/types/Song';
 import { C, RADIUS } from '@/constants/theme';
 import { MOTION_TRACKING_ENABLED } from '@/constants/features';
@@ -37,11 +40,13 @@ export default function AddScreen() {
   const router = useRouter();
   const { addMove } = useMoves();
   const { addSong } = useSongs();
+  const { addLineDance } = useLineDances();
   const { search: searchSpotify, loading: searchLoading } = useSongSearch();
   const { recordVideo, pickVideo } = useVideoRecorder();
   const { isRecording, frames, start: startMotion, stop: stopMotion, clear: clearMotion } =
     useMotionRecorder();
 
+  const { segment: segmentParam } = useLocalSearchParams<{ segment?: string }>();
   const [segment, setSegment] = useState<AddSegment>('Move');
 
   // Move form state
@@ -62,8 +67,21 @@ export default function AddScreen() {
   const [songSaving, setSongSaving] = useState(false);
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Line Dance form state
+  const [ldName, setLdName] = useState('');
+  const [ldNameError, setLdNameError] = useState<string | null>(null);
+  const [ldDifficulty, setLdDifficulty] = useState<Difficulty>('Beginner');
+  const [ldSteps, setLdSteps] = useState<LineDanceStep[]>([]);
+  const [ldVideoUri, setLdVideoUri] = useState<string | null>(null);
+  const [ldLinkedSongId, setLdLinkedSongId] = useState<string | null>(null);
+  const [ldNotes, setLdNotes] = useState('');
+  const [ldSaving, setLdSaving] = useState(false);
+
   useFocusEffect(
     useCallback(() => {
+      if (segmentParam === 'Move' || segmentParam === 'Line Dance' || segmentParam === 'Song') {
+        setSegment(segmentParam as AddSegment);
+      }
       setName('');
       setNameError(null);
       setCategory('Footwork');
@@ -75,10 +93,17 @@ export default function AddScreen() {
       setSearchResults([]);
       setAttachedTrack(null);
       setSongNotes('');
+      setLdName('');
+      setLdNameError(null);
+      setLdDifficulty('Beginner');
+      setLdSteps([]);
+      setLdVideoUri(null);
+      setLdLinkedSongId(null);
+      setLdNotes('');
       return () => {
         if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
       };
-    }, [clearMotion])
+    }, [clearMotion, segmentParam])
   );
 
   // ── Move handlers ────────────────────────────────────────────────────────────
@@ -161,6 +186,44 @@ export default function AddScreen() {
       router.replace('/(tabs)');
     } finally {
       setSongSaving(false);
+    }
+  };
+
+  // ── Line Dance handlers ──────────────────────────────────────────────────────
+
+  const handleLdRecord = async () => {
+    const uri = await recordVideo();
+    if (uri) setLdVideoUri(uri);
+  };
+
+  const handleLdPick = async () => {
+    const uri = await pickVideo();
+    if (uri) setLdVideoUri(uri);
+  };
+
+  const handleLdClear = useCallback(() => setLdVideoUri(null), []);
+
+  const handleSaveLineDance = async () => {
+    if (!ldName.trim()) {
+      setLdNameError('Name is required');
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
+      return;
+    }
+    setLdSaving(true);
+    try {
+      await addLineDance({
+        name: ldName.trim(),
+        difficulty: ldDifficulty,
+        steps: ldSteps.filter((s) => s.name.trim()).map((s, i) => ({ ...s, order: i + 1 })),
+        videoUri: ldVideoUri,
+        linkedSongId: ldLinkedSongId,
+        notes: ldNotes.trim(),
+        practiceCount: 0,
+      });
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      router.replace('/(tabs)');
+    } finally {
+      setLdSaving(false);
     }
   };
 
@@ -252,18 +315,7 @@ export default function AddScreen() {
                 </>
               )}
 
-              <Pressable
-                style={({ pressed }) => [
-                  styles.saveBtn,
-                  saving && styles.saveBtnDisabled,
-                  { opacity: pressed ? 0.85 : 1 },
-                ]}
-                android_ripple={{ color: 'transparent' }}
-                onPress={handleSave}
-                disabled={saving}
-              >
-                <Text style={styles.saveBtnText}>{saving ? 'Saving…' : 'Save Move'}</Text>
-              </Pressable>
+              <SaveButton label="Save Move" saving={saving} onPress={handleSave} />
             </ScrollView>
           </KeyboardAvoidingView>
         )}
@@ -308,17 +360,7 @@ export default function AddScreen() {
                 <>
                   <Text style={styles.label}>Selected track</Text>
                   <View style={styles.attachedRow}>
-                    {attachedArtUrl ? (
-                      <Image
-                        source={{ uri: attachedArtUrl }}
-                        style={styles.attachedArt}
-                        contentFit="cover"
-                      />
-                    ) : (
-                      <View style={[styles.attachedArt, styles.artPlaceholder]}>
-                        <Ionicons name="musical-note" size={18} color={C.textSecondary} />
-                      </View>
-                    )}
+                    <AlbumArt url={attachedArtUrl} size={44} />
                     <View style={styles.attachedInfo}>
                       <Text style={styles.attachedTitle} numberOfLines={1}>
                         {attachedTrack.name}
@@ -348,18 +390,7 @@ export default function AddScreen() {
                     textAlignVertical="top"
                   />
 
-                  <Pressable
-                    style={({ pressed }) => [
-                      styles.saveBtn,
-                      songSaving && styles.saveBtnDisabled,
-                      { opacity: pressed ? 0.85 : 1 },
-                    ]}
-                    android_ripple={{ color: 'transparent' }}
-                    onPress={handleSaveSong}
-                    disabled={songSaving}
-                  >
-                    <Text style={styles.saveBtnText}>{songSaving ? 'Saving…' : 'Save Song'}</Text>
-                  </Pressable>
+                  <SaveButton label="Save Song" saving={songSaving} onPress={handleSaveSong} />
                 </>
               )}
             </ScrollView>
@@ -368,11 +399,62 @@ export default function AddScreen() {
 
         {/* ── Line Dance ───────────────────────────────────────────────────── */}
         {segment === 'Line Dance' && (
-          <ComingSoon
-            icon="walk-outline"
-            title="Line Dances"
-            message="Coming in a future phase — track line dance routines step by step."
-          />
+          <KeyboardAvoidingView
+            style={styles.flex}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          >
+            <ScrollView
+              style={styles.container}
+              contentContainerStyle={styles.content}
+              keyboardShouldPersistTaps="handled"
+            >
+              <Text style={styles.label}>Name</Text>
+              <TextInput
+                style={[styles.input, ldNameError ? styles.inputError : null]}
+                value={ldName}
+                onChangeText={(t) => { setLdName(t); if (ldNameError) setLdNameError(null); }}
+                placeholder="e.g. Cotton Eye Joe"
+                placeholderTextColor={C.textSecondary}
+                returnKeyType="done"
+              />
+              {ldNameError && <Text style={styles.fieldError}>{ldNameError}</Text>}
+
+              <Text style={styles.label}>Difficulty</Text>
+              <SegmentedControl
+                options={DIFFICULTIES}
+                value={ldDifficulty}
+                onChange={(v) => setLdDifficulty(v as Difficulty)}
+              />
+
+              <Text style={styles.label}>Steps (optional)</Text>
+              <StepListEditor steps={ldSteps} onChange={setLdSteps} />
+
+              <Text style={styles.label}>Video (optional)</Text>
+              <VideoPickerButtons
+                videoUri={ldVideoUri}
+                onRecord={handleLdRecord}
+                onPick={handleLdPick}
+                onClear={handleLdClear}
+              />
+
+              <Text style={styles.label}>Linked Song (optional)</Text>
+              <LinkedSongPicker linkedSongId={ldLinkedSongId} onChange={setLdLinkedSongId} />
+
+              <Text style={styles.label}>Notes (optional)</Text>
+              <TextInput
+                style={[styles.input, styles.multiline]}
+                value={ldNotes}
+                onChangeText={setLdNotes}
+                placeholder="Cues, styling notes, things to remember…"
+                placeholderTextColor={C.textSecondary}
+                multiline
+                numberOfLines={4}
+                textAlignVertical="top"
+              />
+
+              <SaveButton label="Save Line Dance" saving={ldSaving} onPress={handleSaveLineDance} />
+            </ScrollView>
+          </KeyboardAvoidingView>
         )}
       </View>
     </>
@@ -443,17 +525,6 @@ const styles = StyleSheet.create({
     padding: 12,
     gap: 12,
   },
-  attachedArt: {
-    width: 44,
-    height: 44,
-    borderRadius: 6,
-    flexShrink: 0,
-  },
-  artPlaceholder: {
-    backgroundColor: C.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   attachedInfo: {
     flex: 1,
     gap: 3,
@@ -475,21 +546,6 @@ const styles = StyleSheet.create({
   },
   changeBtnText: {
     fontSize: 13,
-    fontWeight: '600',
-    color: C.textPrimary,
-  },
-  saveBtn: {
-    backgroundColor: C.accent,
-    borderRadius: RADIUS.card,
-    paddingVertical: 18,
-    alignItems: 'center',
-    marginTop: 16,
-  },
-  saveBtnDisabled: {
-    opacity: 0.5,
-  },
-  saveBtnText: {
-    fontSize: 17,
     fontWeight: '600',
     color: C.textPrimary,
   },

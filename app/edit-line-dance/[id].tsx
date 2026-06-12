@@ -9,50 +9,43 @@ import {
 } from 'react-native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import { useMove } from '@/hooks/useMove';
+import { useLineDance } from '@/hooks/useLineDance';
 import { useVideoRecorder } from '@/hooks/useVideoRecorder';
-import { useMotionRecorder } from '@/hooks/useMotionRecorder';
-import { saveMove } from '@/storage/moves';
 import { SegmentedControl } from '@/components/SegmentedControl';
-import { SaveButton } from '@/components/SaveButton';
+import { StepListEditor } from '@/components/StepListEditor';
 import { VideoPickerButtons } from '@/components/VideoPickerButtons';
-import { MotionRecorderButton } from '@/components/MotionRecorderButton';
-import { CATEGORIES, DIFFICULTIES, CATEGORY_SHORT, Category, Difficulty } from '@/types/Move';
+import { LinkedSongPicker } from '@/components/LinkedSongPicker';
+import { SaveButton } from '@/components/SaveButton';
+import { DIFFICULTIES, Difficulty } from '@/types/Move';
+import { LineDanceStep } from '@/types/LineDance';
 import { C, RADIUS } from '@/constants/theme';
-import { MOTION_TRACKING_ENABLED } from '@/constants/features';
 
-const CATEGORY_LABELS = CATEGORIES.map((c) => CATEGORY_SHORT[c]);
-
-export default function EditMoveScreen() {
+export default function EditLineDanceScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { move } = useMove(id);
+  const { lineDance, updateLineDance } = useLineDance(id);
   const { recordVideo, pickVideo } = useVideoRecorder();
-  const { isRecording, frames, start: startMotion, stop: stopMotion, seed: seedMotion, clear: clearMotion } = useMotionRecorder();
 
   const [name, setName] = useState('');
-  const [category, setCategory] = useState<Category>('Footwork');
+  const [nameError, setNameError] = useState<string | null>(null);
   const [difficulty, setDifficulty] = useState<Difficulty>('Beginner');
-  const [notes, setNotes] = useState('');
+  const [steps, setSteps] = useState<LineDanceStep[]>([]);
   const [videoUri, setVideoUri] = useState<string | null>(null);
+  const [linkedSongId, setLinkedSongId] = useState<string | null>(null);
+  const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
   const seeded = useRef(false);
 
   useEffect(() => {
-    if (!move || seeded.current) return;
+    if (!lineDance || seeded.current) return;
     seeded.current = true;
-    setName(move.name);
-    setCategory(move.category);
-    setDifficulty(move.difficulty);
-    setNotes(move.notes);
-    setVideoUri(move.videoUri);
-    seedMotion(move.motionData ?? null);
-  }, [move, seedMotion]);
-
-  const handleCategoryChange = (label: string) => {
-    const full = CATEGORIES[CATEGORY_LABELS.indexOf(label)];
-    if (full) setCategory(full);
-  };
+    setName(lineDance.name);
+    setDifficulty(lineDance.difficulty);
+    setSteps(lineDance.steps);
+    setVideoUri(lineDance.videoUri);
+    setLinkedSongId(lineDance.linkedSongId);
+    setNotes(lineDance.notes);
+  }, [lineDance]);
 
   const handleRecord = async () => {
     const uri = await recordVideo();
@@ -64,18 +57,25 @@ export default function EditMoveScreen() {
     if (uri) setVideoUri(uri);
   };
 
+  const handleClear = () => setVideoUri(null);
+
   const handleSave = async () => {
-    if (!move || !name.trim()) return;
+    if (!lineDance) return;
+    if (!name.trim()) {
+      setNameError('Name is required');
+      return;
+    }
     setSaving(true);
     try {
-      await saveMove({
-        ...move,
+      await updateLineDance({
+        ...lineDance,
         name: name.trim(),
-        category,
         difficulty,
-        notes,
+        steps: steps.filter((s) => s.name.trim()).map((s, i) => ({ ...s, order: i + 1 })),
         videoUri,
-        motionData: MOTION_TRACKING_ENABLED ? frames : null,
+        linkedSongId,
+        notes: notes.trim(),
+        updatedAt: new Date().toISOString(),
       });
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       router.back();
@@ -86,7 +86,7 @@ export default function EditMoveScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ title: 'Edit Move' }} />
+      <Stack.Screen options={{ title: 'Edit Line Dance' }} />
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -96,22 +96,16 @@ export default function EditMoveScreen() {
           contentContainerStyle={styles.content}
           keyboardShouldPersistTaps="handled"
         >
-          <Text style={styles.label}>Move name</Text>
+          <Text style={styles.label}>Name</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, nameError ? styles.inputError : null]}
             value={name}
-            onChangeText={setName}
-            placeholder="e.g. Triple Dip"
+            onChangeText={(t) => { setName(t); if (nameError) setNameError(null); }}
+            placeholder="e.g. Cotton Eye Joe"
             placeholderTextColor={C.textSecondary}
             returnKeyType="done"
           />
-
-          <Text style={styles.label}>Category</Text>
-          <SegmentedControl
-            options={CATEGORY_LABELS}
-            value={CATEGORY_SHORT[category]}
-            onChange={handleCategoryChange}
-          />
+          {nameError && <Text style={styles.fieldError}>{nameError}</Text>}
 
           <Text style={styles.label}>Difficulty</Text>
           <SegmentedControl
@@ -120,38 +114,31 @@ export default function EditMoveScreen() {
             onChange={(v) => setDifficulty(v as Difficulty)}
           />
 
-          <Text style={styles.label}>Notes</Text>
-          <TextInput
-            style={[styles.input, styles.multiline]}
-            value={notes}
-            onChangeText={setNotes}
-            placeholder="Cues, timing, things to remember…"
-            placeholderTextColor={C.textSecondary}
-            multiline
-            numberOfLines={4}
-            textAlignVertical="top"
-          />
+          <Text style={styles.label}>Steps (optional)</Text>
+          <StepListEditor steps={steps} onChange={setSteps} />
 
           <Text style={styles.label}>Video (optional)</Text>
           <VideoPickerButtons
             videoUri={videoUri}
             onRecord={handleRecord}
             onPick={handlePick}
-            onClear={() => setVideoUri(null)}
+            onClear={handleClear}
           />
 
-          {MOTION_TRACKING_ENABLED && (
-            <>
-              <Text style={styles.label}>Motion Capture (optional)</Text>
-              <MotionRecorderButton
-                isRecording={isRecording}
-                frames={frames}
-                onStart={startMotion}
-                onStop={stopMotion}
-                onDiscard={clearMotion}
-              />
-            </>
-          )}
+          <Text style={styles.label}>Linked Song (optional)</Text>
+          <LinkedSongPicker linkedSongId={linkedSongId} onChange={setLinkedSongId} />
+
+          <Text style={styles.label}>Notes (optional)</Text>
+          <TextInput
+            style={[styles.input, styles.multiline]}
+            value={notes}
+            onChangeText={setNotes}
+            placeholder="Cues, styling notes, things to remember…"
+            placeholderTextColor={C.textSecondary}
+            multiline
+            numberOfLines={4}
+            textAlignVertical="top"
+          />
 
           <SaveButton label="Save Changes" saving={saving} disabled={!name.trim()} onPress={handleSave} />
         </ScrollView>
@@ -189,6 +176,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: C.textPrimary,
     minHeight: 50,
+  },
+  inputError: {
+    borderWidth: 1.5,
+    borderColor: '#EF4444',
+  },
+  fieldError: {
+    fontSize: 12,
+    color: '#EF4444',
+    marginTop: -6,
   },
   multiline: {
     minHeight: 120,

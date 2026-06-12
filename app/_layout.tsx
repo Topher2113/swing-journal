@@ -28,6 +28,8 @@ export default function RootLayout() {
       <Stack.Screen name="motion-trail/[id]" options={{ headerBackTitle: 'Detail' }} />
       <Stack.Screen name="song/[id]" options={{ headerBackTitle: 'Library' }} />
       <Stack.Screen name="edit-song/[id]" options={{ title: 'Edit Song', headerBackTitle: 'Detail' }} />
+      <Stack.Screen name="line-dance/[id]" options={{ headerBackTitle: 'Library' }} />
+      <Stack.Screen name="edit-line-dance/[id]" options={{ title: 'Edit Line Dance', headerBackTitle: 'Detail' }} />
     </Stack>
     </GestureHandlerRootView>
   );

@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { SortKey, SortDir } from '@/hooks/useSortedMoves';
+import { SortDir } from '@/hooks/useSortedMoves';
 import { C, RADIUS } from '@/constants/theme';
 
-const SORT_OPTIONS: { key: SortKey; label: string }[] = [
+const DEFAULT_OPTIONS: { key: string; label: string }[] = [
   { key: 'name', label: 'A–Z' },
   { key: 'difficulty', label: 'Difficulty' },
   { key: 'practiceCount', label: 'Practice' },
@@ -12,17 +12,18 @@ const SORT_OPTIONS: { key: SortKey; label: string }[] = [
 ];
 
 type Props = {
-  sortKey: SortKey;
+  sortKey: string;
   sortDir: SortDir;
-  onSort: (key: SortKey, dir: SortDir) => void;
+  onSort: (key: string, dir: SortDir) => void;
+  options?: { key: string; label: string }[];
 };
 
-export function SortDropdown({ sortKey, sortDir, onSort }: Props) {
+export function SortDropdown({ sortKey, sortDir, onSort, options = DEFAULT_OPTIONS }: Props) {
   const [open, setOpen] = useState(false);
-  const currentLabel = SORT_OPTIONS.find((o) => o.key === sortKey)?.label ?? 'A–Z';
+  const currentLabel = options.find((o) => o.key === sortKey)?.label ?? options[0]?.label;
   const dirArrow = sortDir === 'asc' ? '↑' : '↓';
 
-  const handlePill = (key: SortKey) => {
+  const handlePill = (key: string) => {
     if (key === sortKey) {
       onSort(key, sortDir === 'asc' ? 'desc' : 'asc');
     } else {
@@ -50,7 +51,7 @@ export function SortDropdown({ sortKey, sortDir, onSort }: Props) {
       {open && (
         <View style={styles.dropdown}>
           <View style={styles.pillGrid}>
-            {SORT_OPTIONS.map(({ key, label }) => {
+            {options.map(({ key, label }) => {
               const active = key === sortKey;
               return (
                 <Pressable
