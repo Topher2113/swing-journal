@@ -20,6 +20,8 @@ export function useSyncedStorage<T extends SyncableEntity>(config: SyncedStorage
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const itemsRef = useRef<T[]>([]);
+  const configRef = useRef(config);
+  configRef.current = config;
 
   const setItemsBoth = useCallback((next: T[]) => {
     itemsRef.current = next;
@@ -27,10 +29,10 @@ export function useSyncedStorage<T extends SyncableEntity>(config: SyncedStorage
   }, []);
 
   const loadLocal = useCallback(async () => {
-    const json = await AsyncStorage.getItem(config.storageKey);
+    const json = await AsyncStorage.getItem(configRef.current.storageKey);
     setItemsBoth(json ? JSON.parse(json) : []);
     setLoading(false);
-  }, [config.storageKey, setItemsBoth]);
+  }, [setItemsBoth]);
 
   useEffect(() => {
     loadLocal();
@@ -39,25 +41,27 @@ export function useSyncedStorage<T extends SyncableEntity>(config: SyncedStorage
   const sync = useCallback(async () => {
     setSyncing(true);
     try {
+      const cfg = configRef.current;
       const local = itemsRef.current;
       const pending = local.filter((i) => i.syncStatus === 'pending');
       for (const item of pending) {
-        await supabase.from(config.table).upsert(config.toRow(item));
+        const { error: upsertError } = await supabase.from(cfg.table).upsert(cfg.toRow(item));
+        if (upsertError) throw upsertError;
       }
 
-      const { data: remoteRows, error } = await supabase.from(config.table).select('*');
+      const { data: remoteRows, error } = await supabase.from(cfg.table).select('*');
       if (error) throw error;
-      const remote = (remoteRows ?? []).map(config.fromRow);
+      const remote = (remoteRows ?? []).map(cfg.fromRow);
 
       const merged = mergeByUpdatedAt(itemsRef.current, remote, pending);
       setItemsBoth(merged);
-      await AsyncStorage.setItem(config.storageKey, JSON.stringify(merged));
+      await AsyncStorage.setItem(cfg.storageKey, JSON.stringify(merged));
     } catch {
-      // offline or Supabase unreachable - local data stays source of truth, retried on next sync
+      // offline or Supabase unreachable — local data stays source of truth, retried on next sync
     } finally {
       setSyncing(false);
     }
-  }, [config, setItemsBoth]);
+  }, [setItemsBoth]);
 
   const upsertLocal = useCallback(async (item: T) => {
     const next = { ...item, updatedAt: new Date().toISOString(), syncStatus: 'pending' as const };
@@ -65,17 +69,17 @@ export function useSyncedStorage<T extends SyncableEntity>(config: SyncedStorage
     const idx = prev.findIndex((i) => i.id === next.id);
     const updated = idx >= 0 ? prev.map((i) => (i.id === next.id ? next : i)) : [...prev, next];
     setItemsBoth(updated);
-    await AsyncStorage.setItem(config.storageKey, JSON.stringify(updated));
+    await AsyncStorage.setItem(configRef.current.storageKey, JSON.stringify(updated));
     sync();
     return next;
-  }, [config.storageKey, setItemsBoth, sync]);
+  }, [setItemsBoth, sync]);
 
   const removeLocal = useCallback(async (id: string) => {
     const updated = itemsRef.current.filter((i) => i.id !== id);
     setItemsBoth(updated);
-    await AsyncStorage.setItem(config.storageKey, JSON.stringify(updated));
-    supabase.from(config.table).delete().eq('id', id).then(() => {});
-  }, [config.storageKey, config.table, setItemsBoth]);
+    await AsyncStorage.setItem(configRef.current.storageKey, JSON.stringify(updated));
+    supabase.from(configRef.current.table).delete().eq('id', id).then(() => {});
+  }, [setItemsBoth]);
 
   return { items, loading, syncing, upsertLocal, removeLocal, sync, reload: loadLocal };
 }

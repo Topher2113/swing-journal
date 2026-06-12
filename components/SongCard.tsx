@@ -3,6 +3,7 @@ import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
+import { SwipeActions } from './SwipeActions';
 import { Song } from '@/types/Song';
 import { C, RADIUS } from '@/constants/theme';
 
@@ -13,34 +14,9 @@ type Props = {
   onDelete: () => void;
 };
 
-function RightActions({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => void }) {
-  return (
-    <View style={styles.actions}>
-      <Pressable
-        style={[styles.actionBtn, styles.editBtn]}
-        android_ripple={{ color: 'transparent' }}
-        onPress={onEdit}
-      >
-        <Ionicons name="pencil" size={18} color="#fff" />
-        <Text style={styles.actionLabel}>Edit</Text>
-      </Pressable>
-      <Pressable
-        style={[styles.actionBtn, styles.deleteBtn]}
-        android_ripple={{ color: 'transparent' }}
-        onPress={onDelete}
-      >
-        <Ionicons name="trash" size={18} color="#fff" />
-        <Text style={styles.actionLabel}>Delete</Text>
-      </Pressable>
-    </View>
-  );
-}
-
 export function SongCard({ song, onPress, onEdit, onDelete }: Props) {
   const swipeableRef = useRef<any>(null);
 
-  // Close the swipeable before navigating so the card is in its resting state
-  // when the user returns from the Edit screen.
   const handleEdit = useCallback(() => {
     swipeableRef.current?.close();
     onEdit();
@@ -60,7 +36,7 @@ export function SongCard({ song, onPress, onEdit, onDelete }: Props) {
   return (
     <ReanimatedSwipeable
       ref={swipeableRef}
-      renderRightActions={() => <RightActions onEdit={handleEdit} onDelete={handleDelete} />}
+      renderRightActions={() => <SwipeActions onEdit={handleEdit} onDelete={handleDelete} />}
       overshootRight={false}
     >
       <Pressable
@@ -124,32 +100,9 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: C.textSecondary,
   },
-  actions: {
-    flexDirection: 'row',
-    marginBottom: 6,
-    borderRadius: RADIUS.card,
-    overflow: 'hidden',
-  },
-  actionBtn: {
-    width: 72,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 4,
-  },
-  editBtn: {
-    backgroundColor: C.editSwipe,
-  },
-  deleteBtn: {
-    backgroundColor: C.deleteSwipe,
-  },
   trailingIcons: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-  },
-  actionLabel: {
-    fontSize: 11,
-    color: '#fff',
-    fontWeight: '500',
   },
 });

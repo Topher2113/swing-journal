@@ -3,6 +3,7 @@ import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useSong } from '@/hooks/useSong';
+import { NotesBox } from '@/components/NotesBox';
 import { SpotifyLinkButton } from '@/components/SpotifyLinkButton';
 import { C, RADIUS } from '@/constants/theme';
 
@@ -42,12 +43,7 @@ export default function SongDetailScreen() {
 
             {song.spotifyUrl && <SpotifyLinkButton url={song.spotifyUrl} />}
 
-            {song.notes ? (
-              <View style={styles.notesBox}>
-                <Text style={styles.notesLabel}>Notes</Text>
-                <Text style={styles.notesText}>{song.notes}</Text>
-              </View>
-            ) : null}
+            {song.notes ? <NotesBox notes={song.notes} /> : null}
           </>
         )}
       </ScrollView>
@@ -84,25 +80,5 @@ const styles = StyleSheet.create({
     fontSize: 17,
     color: C.textSecondary,
     marginTop: -8,
-  },
-  notesBox: {
-    backgroundColor: C.surface,
-    borderRadius: RADIUS.card,
-    padding: 14,
-    gap: 6,
-    borderLeftWidth: 3,
-    borderLeftColor: C.accent,
-  },
-  notesLabel: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: C.accent,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  notesText: {
-    fontSize: 15,
-    color: C.textPrimary,
-    lineHeight: 22,
   },
 });

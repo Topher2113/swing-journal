@@ -5,6 +5,7 @@ import { useMove } from '@/hooks/useMove';
 import { saveMove } from '@/storage/moves';
 import { VideoPlayer } from '@/components/VideoPlayer';
 import { DifficultyBadge } from '@/components/DifficultyBadge';
+import { NotesBox } from '@/components/NotesBox';
 import { PracticeCounter } from '@/components/PracticeCounter';
 import { C, RADIUS } from '@/constants/theme';
 import { MOTION_TRACKING_ENABLED } from '@/constants/features';
@@ -48,12 +49,7 @@ export default function MoveDetailScreen() {
               <DifficultyBadge difficulty={move.difficulty} />
             </View>
 
-            {move.notes ? (
-              <View style={styles.notesBox}>
-                <Text style={styles.notesLabel}>Notes</Text>
-                <Text style={styles.notesText}>{move.notes}</Text>
-              </View>
-            ) : null}
+            {move.notes ? <NotesBox notes={move.notes} /> : null}
 
             <PracticeCounter count={move.practiceCount} onIncrement={handleIncrement} />
 
@@ -104,26 +100,6 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: RADIUS.badge,
     overflow: 'hidden',
-  },
-  notesBox: {
-    backgroundColor: C.surface,
-    borderRadius: RADIUS.card,
-    padding: 14,
-    gap: 6,
-    borderLeftWidth: 3,
-    borderLeftColor: C.accent,
-  },
-  notesLabel: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: C.accent,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  notesText: {
-    fontSize: 15,
-    color: C.textPrimary,
-    lineHeight: 22,
   },
   motionBtn: {
     flexDirection: 'row',
