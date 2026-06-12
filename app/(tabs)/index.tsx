@@ -5,11 +5,12 @@ import { Stack, useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useMoves } from '@/hooks/useMoves';
 import { useSongs } from '@/hooks/useSongs';
+import { useLineDances } from '@/hooks/useLineDances';
 import { CategorySection } from '@/components/CategorySection';
 import { SongCard } from '@/components/SongCard';
+import { LineDanceCard } from '@/components/LineDanceCard';
 import { LibraryHeader } from '@/components/LibraryHeader';
 import { SegmentedControl } from '@/components/SegmentedControl';
-import { ComingSoon } from '@/components/ComingSoon';
 import { CATEGORIES } from '@/types/Move';
 import { C, RADIUS } from '@/constants/theme';
 
@@ -20,13 +21,15 @@ export default function LibraryScreen() {
   const router = useRouter();
   const { moves, reload: reloadMoves, deleteMove } = useMoves();
   const { songs, reload: reloadSongs, deleteSong } = useSongs();
+  const { lineDances, reload: reloadLineDances, deleteLineDance } = useLineDances();
   const [segment, setSegment] = useState<Segment>('Moves');
 
   useFocusEffect(
     useCallback(() => {
       reloadMoves();
       reloadSongs();
-    }, [reloadMoves, reloadSongs])
+      reloadLineDances();
+    }, [reloadMoves, reloadSongs, reloadLineDances])
   );
 
   const byCategory = useMemo(
@@ -39,16 +42,21 @@ export default function LibraryScreen() {
     [songs]
   );
 
+  const sortedLineDances = useMemo(
+    () => [...lineDances].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+    [lineDances]
+  );
+
   const headerProps = useMemo(() => {
     switch (segment) {
       case 'Songs':
         return { title: 'My Songs', count: songs.length, label: 'song' };
       case 'Line Dances':
-        return { title: 'Line Dances', count: 0, label: 'line dance' };
+        return { title: 'Line Dances', count: lineDances.length, label: 'line dance' };
       default:
         return { title: 'My Moves', count: moves.length, label: 'move' };
     }
-  }, [segment, moves.length, songs.length]);
+  }, [segment, moves.length, songs.length, lineDances.length]);
 
   return (
     <>
@@ -114,11 +122,32 @@ export default function LibraryScreen() {
         )}
 
         {segment === 'Line Dances' && (
-          <ComingSoon
-            icon="walk-outline"
-            title="Line Dances"
-            message="Coming in a future phase — track line dance routines separately from partner moves."
-          />
+          sortedLineDances.length === 0 ? (
+            <View style={styles.fullEmpty}>
+              <Ionicons name="walk-outline" size={64} color={C.textSecondary} />
+              <Text style={styles.emptyTitle}>No line dances yet</Text>
+              <Text style={styles.emptyBody}>Add a routine from the Add tab.</Text>
+              <Pressable
+                style={({ pressed }) => [styles.emptyBtn, { opacity: pressed ? 0.8 : 1 }]}
+                android_ripple={{ color: 'transparent' }}
+                onPress={() => router.push('/(tabs)/add')}
+              >
+                <Text style={styles.emptyBtnText}>Add your first routine</Text>
+              </Pressable>
+            </View>
+          ) : (
+            <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+              {sortedLineDances.map((ld) => (
+                <LineDanceCard
+                  key={ld.id}
+                  lineDance={ld}
+                  onPress={() => router.push(`/line-dance/${ld.id}` as any)}
+                  onEdit={() => router.push(`/edit-line-dance/${ld.id}` as any)}
+                  onDelete={() => deleteLineDance(ld.id)}
+                />
+              ))}
+            </ScrollView>
+          )
         )}
       </View>
     </>
