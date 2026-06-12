@@ -71,7 +71,7 @@ export default function EditLineDanceScreen() {
         ...lineDance,
         name: name.trim(),
         difficulty,
-        steps: steps.map((s, i) => ({ ...s, order: i + 1 })),
+        steps: steps.filter((s) => s.name.trim()).map((s, i) => ({ ...s, order: i + 1 })),
         videoUri,
         linkedSongId,
         notes: notes.trim(),
@@ -114,7 +114,7 @@ export default function EditLineDanceScreen() {
             onChange={(v) => setDifficulty(v as Difficulty)}
           />
 
-          <Text style={styles.label}>Steps</Text>
+          <Text style={styles.label}>Steps (optional)</Text>
           <StepListEditor steps={steps} onChange={setSteps} />
 
           <Text style={styles.label}>Video (optional)</Text>

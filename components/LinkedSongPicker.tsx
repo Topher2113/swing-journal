@@ -1,20 +1,87 @@
-import { useState } from 'react';
-import { FlatList, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useRef, useState } from 'react';
+import {
+  ActivityIndicator,
+  FlatList,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { useSongs } from '@/hooks/useSongs';
+import { useSongSearch } from '@/hooks/useSongSearch';
+import { SongSearchResultRow } from '@/components/SongSearchResultRow';
+import { SpotifyTrackResult } from '@/types/Song';
 import { C, RADIUS } from '@/constants/theme';
 
 type Props = { linkedSongId: string | null; onChange: (id: string | null) => void };
 
+type ModalMode = 'browse' | 'search';
+
 export function LinkedSongPicker({ linkedSongId, onChange }: Props) {
-  const { songs } = useSongs();
+  const { songs, addSong } = useSongs();
+  const { search: searchSpotify, loading: searchLoading } = useSongSearch();
+
   const [pickerVisible, setPickerVisible] = useState(false);
+  const [mode, setMode] = useState<ModalMode>('browse');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<SpotifyTrackResult[]>([]);
+  const [adding, setAdding] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const linkedSong = linkedSongId ? (songs.find((s) => s.id === linkedSongId) ?? null) : null;
 
-  const handleSelect = (id: string) => {
-    onChange(id);
+  const openPicker = () => {
+    setMode('browse');
+    setSearchQuery('');
+    setSearchResults([]);
+    setPickerVisible(true);
+  };
+
+  const closePicker = () => {
     setPickerVisible(false);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+  };
+
+  const handleSearchChange = (text: string) => {
+    setSearchQuery(text);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (text.trim()) {
+      debounceRef.current = setTimeout(async () => {
+        const results = await searchSpotify(text);
+        setSearchResults(results);
+      }, 400);
+    } else {
+      setSearchResults([]);
+    }
+  };
+
+  const handleSelectExisting = (id: string) => {
+    onChange(id);
+    closePicker();
+  };
+
+  const handleAddFromSpotify = async (track: SpotifyTrackResult) => {
+    setAdding(true);
+    try {
+      const song = await addSong({
+        title: track.name,
+        artist: track.artists.map((a) => a.name).join(', '),
+        albumArtUrl: track.album.images[0]?.url ?? null,
+        spotifyUrl: track.external_urls.spotify,
+        spotifyTrackId: track.id,
+        notes: '',
+      });
+      onChange(song.id);
+      closePicker();
+    } finally {
+      setAdding(false);
+    }
   };
 
   return (
@@ -35,7 +102,7 @@ export function LinkedSongPicker({ linkedSongId, onChange }: Props) {
           <Pressable
             style={({ pressed }) => [styles.chip, { opacity: pressed ? 0.7 : 1 }]}
             android_ripple={{ color: 'transparent' }}
-            onPress={() => setPickerVisible(true)}
+            onPress={openPicker}
           >
             <Text style={styles.chipText}>Change</Text>
           </Pressable>
@@ -49,23 +116,12 @@ export function LinkedSongPicker({ linkedSongId, onChange }: Props) {
         </View>
       ) : (
         <Pressable
-          style={({ pressed }) => [
-            styles.linkBtn,
-            songs.length === 0 && styles.linkBtnDisabled,
-            { opacity: pressed && songs.length > 0 ? 0.8 : 1 },
-          ]}
+          style={({ pressed }) => [styles.linkBtn, { opacity: pressed ? 0.8 : 1 }]}
           android_ripple={{ color: 'transparent' }}
-          onPress={() => songs.length > 0 && setPickerVisible(true)}
-          disabled={songs.length === 0}
+          onPress={openPicker}
         >
-          <Ionicons
-            name="musical-notes-outline"
-            size={16}
-            color={songs.length > 0 ? C.accent : C.textSecondary}
-          />
-          <Text style={[styles.linkBtnText, songs.length === 0 && styles.linkBtnTextDisabled]}>
-            {songs.length === 0 ? 'Add songs from the Song tab first' : 'Link a song'}
-          </Text>
+          <Ionicons name="musical-notes-outline" size={16} color={C.accent} />
+          <Text style={styles.linkBtnText}>Link a song</Text>
         </Pressable>
       )}
 
@@ -73,49 +129,121 @@ export function LinkedSongPicker({ linkedSongId, onChange }: Props) {
         visible={pickerVisible}
         animationType="slide"
         transparent
-        onRequestClose={() => setPickerVisible(false)}
+        onRequestClose={closePicker}
       >
-        <View style={styles.modalContainer}>
-          <Pressable style={styles.backdrop} onPress={() => setPickerVisible(false)} />
+        <KeyboardAvoidingView
+          style={styles.modalContainer}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
+          <Pressable style={styles.backdrop} onPress={closePicker} />
           <View style={styles.sheet}>
-            <View style={styles.sheetHeader}>
-              <Text style={styles.sheetHeading}>Pick a Song</Text>
-              <Pressable
-                onPress={() => setPickerVisible(false)}
-                style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
-              >
-                <Text style={styles.cancelText}>Cancel</Text>
-              </Pressable>
-            </View>
-            <FlatList
-              data={songs}
-              keyExtractor={(s) => s.id}
-              contentContainerStyle={styles.sheetList}
-              renderItem={({ item }) => (
-                <Pressable
-                  style={({ pressed }) => [styles.sheetRow, { opacity: pressed ? 0.7 : 1 }]}
-                  android_ripple={{ color: 'transparent' }}
-                  onPress={() => handleSelect(item.id)}
-                >
-                  {item.albumArtUrl ? (
-                    <Image source={{ uri: item.albumArtUrl }} style={styles.sheetArt} />
-                  ) : (
-                    <View style={[styles.sheetArt, styles.artPlaceholder]}>
-                      <Ionicons name="musical-note" size={16} color={C.textSecondary} />
-                    </View>
+
+            {/* ── Browse mode ─────────────────────────────────────────── */}
+            {mode === 'browse' && (
+              <>
+                <View style={styles.sheetHeader}>
+                  <Text style={styles.sheetHeading}>Pick a Song</Text>
+                  <Pressable
+                    onPress={closePicker}
+                    style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+                  >
+                    <Text style={styles.cancelText}>Cancel</Text>
+                  </Pressable>
+                </View>
+                <FlatList
+                  data={songs}
+                  keyExtractor={(s) => s.id}
+                  contentContainerStyle={styles.sheetList}
+                  ListEmptyComponent={
+                    <Text style={styles.emptyText}>No songs in your library yet.</Text>
+                  }
+                  ListFooterComponent={
+                    <Pressable
+                      style={({ pressed }) => [styles.spotifyRow, { opacity: pressed ? 0.7 : 1 }]}
+                      android_ripple={{ color: 'transparent' }}
+                      onPress={() => {
+                        setSearchQuery('');
+                        setSearchResults([]);
+                        setMode('search');
+                      }}
+                    >
+                      <Ionicons name="search" size={18} color={C.accent} />
+                      <Text style={styles.spotifyRowText}>Search Spotify to add a new song</Text>
+                      <Ionicons name="chevron-forward" size={16} color={C.textSecondary} />
+                    </Pressable>
+                  }
+                  renderItem={({ item }) => (
+                    <Pressable
+                      style={({ pressed }) => [styles.sheetRow, { opacity: pressed ? 0.7 : 1 }]}
+                      android_ripple={{ color: 'transparent' }}
+                      onPress={() => handleSelectExisting(item.id)}
+                    >
+                      {item.albumArtUrl ? (
+                        <Image source={{ uri: item.albumArtUrl }} style={styles.sheetArt} />
+                      ) : (
+                        <View style={[styles.sheetArt, styles.artPlaceholder]}>
+                          <Ionicons name="musical-note" size={16} color={C.textSecondary} />
+                        </View>
+                      )}
+                      <View style={styles.sheetInfo}>
+                        <Text style={styles.sheetTitle} numberOfLines={1}>{item.title}</Text>
+                        <Text style={styles.sheetArtist} numberOfLines={1}>{item.artist}</Text>
+                      </View>
+                      {item.id === linkedSongId && (
+                        <Ionicons name="checkmark" size={20} color={C.accent} />
+                      )}
+                    </Pressable>
                   )}
-                  <View style={styles.sheetInfo}>
-                    <Text style={styles.sheetTitle} numberOfLines={1}>{item.title}</Text>
-                    <Text style={styles.sheetArtist} numberOfLines={1}>{item.artist}</Text>
-                  </View>
-                  {item.id === linkedSongId && (
-                    <Ionicons name="checkmark" size={20} color={C.accent} />
+                />
+              </>
+            )}
+
+            {/* ── Search mode ─────────────────────────────────────────── */}
+            {mode === 'search' && (
+              <>
+                <View style={styles.sheetHeader}>
+                  <Text style={styles.sheetHeading}>Search Spotify</Text>
+                  <Pressable
+                    onPress={() => setMode('browse')}
+                    style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+                  >
+                    <Text style={styles.cancelText}>Back</Text>
+                  </Pressable>
+                </View>
+                <View style={styles.searchWrap}>
+                  <TextInput
+                    style={styles.searchInput}
+                    value={searchQuery}
+                    onChangeText={handleSearchChange}
+                    placeholder="Song title or artist…"
+                    placeholderTextColor={C.textSecondary}
+                    returnKeyType="search"
+                    autoFocus
+                  />
+                </View>
+                {(searchLoading || adding) && (
+                  <ActivityIndicator color={C.accent} style={styles.loader} />
+                )}
+                {!searchLoading && !adding && searchQuery.trim() !== '' && searchResults.length === 0 && (
+                  <Text style={styles.emptyText}>No results found.</Text>
+                )}
+                <FlatList
+                  data={searchResults}
+                  keyExtractor={(t) => t.id}
+                  contentContainerStyle={styles.sheetList}
+                  keyboardShouldPersistTaps="handled"
+                  renderItem={({ item }) => (
+                    <SongSearchResultRow
+                      track={item}
+                      onPress={() => handleAddFromSpotify(item)}
+                    />
                   )}
-                </Pressable>
-              )}
-            />
+                />
+              </>
+            )}
+
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </>
   );
@@ -180,17 +308,10 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 16,
   },
-  linkBtnDisabled: {
-    opacity: 0.5,
-  },
   linkBtnText: {
     fontSize: 14,
     fontWeight: '600',
     color: C.accent,
-  },
-  linkBtnTextDisabled: {
-    color: C.textSecondary,
-    fontWeight: '400',
   },
   modalContainer: {
     flex: 1,
@@ -204,7 +325,7 @@ const styles = StyleSheet.create({
     backgroundColor: C.surface,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    maxHeight: '70%',
+    maxHeight: '75%',
     paddingBottom: 34,
   },
   sheetHeader: {
@@ -223,6 +344,23 @@ const styles = StyleSheet.create({
   cancelText: {
     fontSize: 15,
     color: C.accent,
+  },
+  searchWrap: {
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: C.border,
+  },
+  searchInput: {
+    backgroundColor: C.bg,
+    borderRadius: RADIUS.control,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    fontSize: 15,
+    color: C.textPrimary,
+  },
+  loader: {
+    marginVertical: 16,
   },
   sheetList: {
     padding: 12,
@@ -254,5 +392,26 @@ const styles = StyleSheet.create({
   sheetArtist: {
     fontSize: 13,
     color: C.textSecondary,
+  },
+  spotifyRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: C.bg,
+    borderRadius: RADIUS.card,
+    padding: 14,
+    marginTop: 4,
+  },
+  spotifyRowText: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '600',
+    color: C.accent,
+  },
+  emptyText: {
+    fontSize: 14,
+    color: C.textSecondary,
+    textAlign: 'center',
+    paddingVertical: 16,
   },
 });

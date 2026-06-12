@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
-import { Stack, useRouter, useFocusEffect } from 'expo-router';
+import { Stack, useRouter, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useMoves } from '@/hooks/useMoves';
 import { useSongs } from '@/hooks/useSongs';
@@ -46,6 +46,7 @@ export default function AddScreen() {
   const { isRecording, frames, start: startMotion, stop: stopMotion, clear: clearMotion } =
     useMotionRecorder();
 
+  const { segment: segmentParam } = useLocalSearchParams<{ segment?: string }>();
   const [segment, setSegment] = useState<AddSegment>('Move');
 
   // Move form state
@@ -78,6 +79,9 @@ export default function AddScreen() {
 
   useFocusEffect(
     useCallback(() => {
+      if (segmentParam === 'Move' || segmentParam === 'Line Dance' || segmentParam === 'Song') {
+        setSegment(segmentParam as AddSegment);
+      }
       setName('');
       setNameError(null);
       setCategory('Footwork');
@@ -99,7 +103,7 @@ export default function AddScreen() {
       return () => {
         if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
       };
-    }, [clearMotion])
+    }, [clearMotion, segmentParam])
   );
 
   // ── Move handlers ────────────────────────────────────────────────────────────
@@ -210,7 +214,7 @@ export default function AddScreen() {
       await addLineDance({
         name: ldName.trim(),
         difficulty: ldDifficulty,
-        steps: ldSteps.map((s, i) => ({ ...s, order: i + 1 })),
+        steps: ldSteps.filter((s) => s.name.trim()).map((s, i) => ({ ...s, order: i + 1 })),
         videoUri: ldVideoUri,
         linkedSongId: ldLinkedSongId,
         notes: ldNotes.trim(),
@@ -454,7 +458,7 @@ export default function AddScreen() {
                 onChange={(v) => setLdDifficulty(v as Difficulty)}
               />
 
-              <Text style={styles.label}>Steps</Text>
+              <Text style={styles.label}>Steps (optional)</Text>
               <StepListEditor steps={ldSteps} onChange={setLdSteps} />
 
               <Text style={styles.label}>Video (optional)</Text>

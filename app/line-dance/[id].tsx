@@ -37,8 +37,6 @@ export default function LineDanceDetailScreen() {
         }}
       />
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-        {lineDance?.videoUri && <VideoPlayer uri={lineDance.videoUri} />}
-
         {lineDance && (
           <>
             <Text style={styles.name}>{lineDance.name}</Text>
@@ -48,12 +46,7 @@ export default function LineDanceDetailScreen() {
               <Text style={styles.stepCount}>{lineDance.steps.length} steps</Text>
             </View>
 
-            {lineDance.steps.length > 0 && (
-              <>
-                <Text style={styles.sectionLabel}>Steps</Text>
-                <StepListView steps={lineDance.steps} />
-              </>
-            )}
+            {lineDance.videoUri && <VideoPlayer uri={lineDance.videoUri} />}
 
             {linkedSong && (
               <>
@@ -79,9 +72,16 @@ export default function LineDanceDetailScreen() {
               </>
             )}
 
-            <PracticeCounter count={lineDance.practiceCount} onIncrement={incrementPractice} />
-
             {lineDance.notes ? <NotesBox notes={lineDance.notes} /> : null}
+
+            {lineDance.steps.length > 0 && (
+              <>
+                <Text style={styles.sectionLabel}>Steps</Text>
+                <StepListView steps={lineDance.steps} />
+              </>
+            )}
+
+            <PracticeCounter count={lineDance.practiceCount} onIncrement={incrementPractice} />
           </>
         )}
       </ScrollView>

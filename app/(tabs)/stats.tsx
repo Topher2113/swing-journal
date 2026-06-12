@@ -2,6 +2,8 @@ import { useCallback } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useMoves } from '@/hooks/useMoves';
+import { useSongs } from '@/hooks/useSongs';
+import { useLineDances } from '@/hooks/useLineDances';
 import { useStats } from '@/hooks/useStats';
 import { StatCard } from '@/components/StatCard';
 import { C, RADIUS } from '@/constants/theme';
@@ -15,24 +17,50 @@ const DIFFICULTY_COLORS: Record<Difficulty, string> = {
 
 export default function StatsScreen() {
   const router = useRouter();
-  const { moves, reload } = useMoves();
-  const { totalMoves, totalPractices, byCategory, byDifficulty, maxCategoryCount } =
-    useStats(moves);
+  const { moves, reload: reloadMoves } = useMoves();
+  const { songs, reload: reloadSongs } = useSongs();
+  const { lineDances, reload: reloadLineDances } = useLineDances();
+
+  const {
+    totalMoves,
+    totalPractices,
+    byCategory,
+    byDifficulty,
+    maxCategoryCount,
+    totalLineDances,
+    totalLineDancePractices,
+    totalSteps,
+    totalSongs,
+    ldByDifficulty,
+  } = useStats(moves, lineDances, songs);
 
   useFocusEffect(
     useCallback(() => {
-      reload();
-    }, [reload])
+      reloadMoves();
+      reloadSongs();
+      reloadLineDances();
+    }, [reloadMoves, reloadSongs, reloadLineDances])
   );
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <Text style={styles.sectionTitle}>Moves</Text>
       <View style={styles.metricRow}>
         <StatCard value={totalMoves} label="Total moves" />
         <StatCard value={totalPractices} label="Total practices" />
       </View>
 
-      <Text style={styles.sectionTitle}>By Category</Text>
+      <Text style={styles.sectionTitle}>Line Dances</Text>
+      <View style={styles.metricRow}>
+        <StatCard value={totalLineDances} label="Line dances" />
+        <StatCard value={totalLineDancePractices} label="Practices" />
+      </View>
+      <View style={styles.metricRow}>
+        <StatCard value={totalSteps} label="Steps catalogued" />
+        <StatCard value={totalSongs} label="Songs saved" />
+      </View>
+
+      <Text style={styles.sectionTitle}>Moves by Category</Text>
       <View style={styles.card}>
         {byCategory.map(({ category, count }) => (
           <Pressable
@@ -57,17 +85,25 @@ export default function StatsScreen() {
         ))}
       </View>
 
-      <Text style={styles.sectionTitle}>By Difficulty</Text>
+      <Text style={styles.sectionTitle}>Moves by Difficulty</Text>
       <View style={styles.card}>
         {byDifficulty.map(({ difficulty, count }) => (
           <View key={difficulty} style={styles.diffRow}>
             <View style={styles.diffLeft}>
-              <View
-                style={[
-                  styles.diffDot,
-                  { backgroundColor: DIFFICULTY_COLORS[difficulty] },
-                ]}
-              />
+              <View style={[styles.diffDot, { backgroundColor: DIFFICULTY_COLORS[difficulty] }]} />
+              <Text style={styles.catName}>{difficulty}</Text>
+            </View>
+            <Text style={styles.catCount}>{count}</Text>
+          </View>
+        ))}
+      </View>
+
+      <Text style={styles.sectionTitle}>Line Dances by Difficulty</Text>
+      <View style={styles.card}>
+        {ldByDifficulty.map(({ difficulty, count }) => (
+          <View key={difficulty} style={styles.diffRow}>
+            <View style={styles.diffLeft}>
+              <View style={[styles.diffDot, { backgroundColor: DIFFICULTY_COLORS[difficulty] }]} />
               <Text style={styles.catName}>{difficulty}</Text>
             </View>
             <Text style={styles.catCount}>{count}</Text>
@@ -95,7 +131,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: C.textSecondary,
+    color: C.textPrimary,
     letterSpacing: 0.5,
     textTransform: 'uppercase',
     marginBottom: -8,

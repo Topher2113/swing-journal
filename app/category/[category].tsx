@@ -28,8 +28,8 @@ export default function CategoryDetailScreen() {
   const categoryMoves = moves.filter((m) => m.category === category);
   const sorted = useSortedMoves(categoryMoves, sortKey, sortDir, search);
 
-  const handleSort = (key: SortKey, dir: SortDir) => {
-    setSortKey(key);
+  const handleSort = (key: string, dir: SortDir) => {
+    setSortKey(key as SortKey);
     setSortDir(dir);
   };
 
