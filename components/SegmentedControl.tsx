@@ -15,10 +15,11 @@ export function SegmentedControl({ options, value, onChange }: Props) {
         return (
           <Pressable
             key={opt}
-            style={[styles.option, active && styles.optionActive]}
+            style={({ pressed }) => [styles.option, { opacity: pressed ? 0.85 : 1 }]}
             android_ripple={{ color: 'transparent' }}
             onPress={() => onChange(opt)}
           >
+            {active && <View pointerEvents="none" style={styles.activeIndicator} />}
             <Text style={[styles.label, active && styles.labelActive]} numberOfLines={1}>
               {opt}
             </Text>
@@ -45,8 +46,10 @@ const styles = StyleSheet.create({
     minHeight: 42,
     justifyContent: 'center',
   },
-  optionActive: {
+  activeIndicator: {
+    ...StyleSheet.absoluteFillObject,
     backgroundColor: C.accent,
+    borderRadius: 8,
   },
   label: {
     fontSize: 14,
