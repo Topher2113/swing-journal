@@ -2,7 +2,7 @@ import { useCallback, useRef } from 'react';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { Image } from 'expo-image';
+import { AlbumArt } from './AlbumArt';
 import { SwipeActions } from './SwipeActions';
 import { Song } from '@/types/Song';
 import { C, RADIUS } from '@/constants/theme';
@@ -44,13 +44,7 @@ export function SongCard({ song, onPress, onEdit, onDelete }: Props) {
         android_ripple={{ color: 'transparent' }}
         onPress={onPress}
       >
-        {song.albumArtUrl ? (
-          <Image source={{ uri: song.albumArtUrl }} style={styles.art} />
-        ) : (
-          <View style={[styles.art, styles.artPlaceholder]}>
-            <Ionicons name="musical-note" size={18} color={C.textSecondary} />
-          </View>
-        )}
+        <AlbumArt url={song.albumArtUrl} size={40} />
         <View style={styles.info}>
           <Text style={styles.title} numberOfLines={1}>{song.title}</Text>
           <Text style={styles.artist} numberOfLines={1}>{song.artist}</Text>
@@ -75,17 +69,6 @@ const styles = StyleSheet.create({
     marginBottom: 6,
     gap: 12,
     minHeight: 68,
-  },
-  art: {
-    width: 40,
-    height: 40,
-    borderRadius: 6,
-    flexShrink: 0,
-  },
-  artPlaceholder: {
-    backgroundColor: C.border,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   info: {
     flex: 1,

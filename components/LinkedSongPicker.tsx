@@ -11,7 +11,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { Image } from 'expo-image';
+import { AlbumArt } from '@/components/AlbumArt';
 import { Ionicons } from '@expo/vector-icons';
 import { useSongs } from '@/hooks/useSongs';
 import { useSongSearch } from '@/hooks/useSongSearch';
@@ -88,13 +88,7 @@ export function LinkedSongPicker({ linkedSongId, onChange }: Props) {
     <>
       {linkedSong ? (
         <View style={styles.linkedRow}>
-          {linkedSong.albumArtUrl ? (
-            <Image source={{ uri: linkedSong.albumArtUrl }} style={styles.art} />
-          ) : (
-            <View style={[styles.art, styles.artPlaceholder]}>
-              <Ionicons name="musical-note" size={14} color={C.textSecondary} />
-            </View>
-          )}
+          <AlbumArt url={linkedSong.albumArtUrl} size={36} borderRadius={5} />
           <View style={styles.linkedInfo}>
             <Text style={styles.linkedTitle} numberOfLines={1}>{linkedSong.title}</Text>
             <Text style={styles.linkedArtist} numberOfLines={1}>{linkedSong.artist}</Text>
@@ -178,13 +172,7 @@ export function LinkedSongPicker({ linkedSongId, onChange }: Props) {
                       android_ripple={{ color: 'transparent' }}
                       onPress={() => handleSelectExisting(item.id)}
                     >
-                      {item.albumArtUrl ? (
-                        <Image source={{ uri: item.albumArtUrl }} style={styles.sheetArt} />
-                      ) : (
-                        <View style={[styles.sheetArt, styles.artPlaceholder]}>
-                          <Ionicons name="musical-note" size={16} color={C.textSecondary} />
-                        </View>
-                      )}
+                      <AlbumArt url={item.albumArtUrl} size={40} />
                       <View style={styles.sheetInfo}>
                         <Text style={styles.sheetTitle} numberOfLines={1}>{item.title}</Text>
                         <Text style={styles.sheetArtist} numberOfLines={1}>{item.artist}</Text>
@@ -257,17 +245,6 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.card,
     padding: 10,
     gap: 10,
-  },
-  art: {
-    width: 36,
-    height: 36,
-    borderRadius: 5,
-    flexShrink: 0,
-  },
-  artPlaceholder: {
-    backgroundColor: C.border,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   linkedInfo: {
     flex: 1,
@@ -373,12 +350,6 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.card,
     padding: 10,
     gap: 12,
-  },
-  sheetArt: {
-    width: 40,
-    height: 40,
-    borderRadius: 6,
-    flexShrink: 0,
   },
   sheetInfo: {
     flex: 1,

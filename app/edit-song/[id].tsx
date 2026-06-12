@@ -10,12 +10,12 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { Image } from 'expo-image';
-import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useSong } from '@/hooks/useSong';
 import { useSongSearch } from '@/hooks/useSongSearch';
+import { AlbumArt } from '@/components/AlbumArt';
+import { SaveButton } from '@/components/SaveButton';
 import { SongSearchResultRow } from '@/components/SongSearchResultRow';
 import { SpotifyTrackResult } from '@/types/Song';
 import { C, RADIUS } from '@/constants/theme';
@@ -81,7 +81,7 @@ export default function EditSongScreen() {
       await updateSong({
         ...song,
         title: trackTitle.trim(),
-        artist: trackArtist,
+        artist: trackArtist.trim(),
         albumArtUrl: trackArtUrl,
         spotifyUrl: trackSpotifyUrl,
         spotifyTrackId: trackSpotifyTrackId,
@@ -145,17 +145,7 @@ export default function EditSongScreen() {
             <>
               <Text style={styles.label}>Track</Text>
               <View style={styles.attachedRow}>
-                {trackArtUrl ? (
-                  <Image
-                    source={{ uri: trackArtUrl }}
-                    style={styles.attachedArt}
-                    contentFit="cover"
-                  />
-                ) : (
-                  <View style={[styles.attachedArt, styles.artPlaceholder]}>
-                    <Ionicons name="musical-note" size={18} color={C.textSecondary} />
-                  </View>
-                )}
+                <AlbumArt url={trackArtUrl} size={44} />
                 <View style={styles.attachedInfo}>
                   <Text style={styles.attachedTitle} numberOfLines={1}>{trackTitle}</Text>
                   <Text style={styles.attachedArtist} numberOfLines={1}>{trackArtist}</Text>
@@ -181,18 +171,7 @@ export default function EditSongScreen() {
                 textAlignVertical="top"
               />
 
-              <Pressable
-                style={({ pressed }) => [
-                  styles.saveBtn,
-                  (saving || !trackTitle.trim()) && styles.saveBtnDisabled,
-                  { opacity: pressed ? 0.85 : 1 },
-                ]}
-                android_ripple={{ color: 'transparent' }}
-                onPress={handleSave}
-                disabled={saving || !trackTitle.trim()}
-              >
-                <Text style={styles.saveBtnText}>{saving ? 'Saving…' : 'Save Changes'}</Text>
-              </Pressable>
+              <SaveButton label="Save Changes" saving={saving} disabled={!trackTitle.trim()} onPress={handleSave} />
             </>
           )}
         </ScrollView>
@@ -260,17 +239,6 @@ const styles = StyleSheet.create({
     padding: 12,
     gap: 12,
   },
-  attachedArt: {
-    width: 44,
-    height: 44,
-    borderRadius: 6,
-    flexShrink: 0,
-  },
-  artPlaceholder: {
-    backgroundColor: C.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   attachedInfo: {
     flex: 1,
     gap: 3,
@@ -292,21 +260,6 @@ const styles = StyleSheet.create({
   },
   changeBtnText: {
     fontSize: 13,
-    fontWeight: '600',
-    color: C.textPrimary,
-  },
-  saveBtn: {
-    backgroundColor: C.accent,
-    borderRadius: RADIUS.card,
-    paddingVertical: 18,
-    alignItems: 'center',
-    marginTop: 16,
-  },
-  saveBtnDisabled: {
-    opacity: 0.5,
-  },
-  saveBtnText: {
-    fontSize: 17,
     fontWeight: '600',
     color: C.textPrimary,
   },

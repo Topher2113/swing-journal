@@ -1,14 +1,14 @@
 import { useCallback, useState } from 'react';
-import { FlatList, StyleSheet, TextInput, View } from 'react-native';
+import { FlatList, StyleSheet, View } from 'react-native';
 import { Stack, useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
 import { useMoves } from '@/hooks/useMoves';
 import { useSortedMoves, SortKey, SortDir } from '@/hooks/useSortedMoves';
 import { MoveCard } from '@/components/MoveCard';
+import { SearchBar } from '@/components/SearchBar';
 import { SortDropdown } from '@/components/SortDropdown';
 import { EmptyState } from '@/components/EmptyState';
 import { CategoryHeaderTitle } from '@/components/CategoryHeaderTitle';
-import { C, RADIUS } from '@/constants/theme';
+import { C } from '@/constants/theme';
 
 export default function CategoryDetailScreen() {
   const { category } = useLocalSearchParams<{ category: string }>();
@@ -43,17 +43,7 @@ export default function CategoryDetailScreen() {
         }}
       />
       <View style={styles.container}>
-        <View style={styles.searchBar}>
-          <Ionicons name="search" size={16} color={C.textSecondary} />
-          <TextInput
-            style={styles.searchInput}
-            value={search}
-            onChangeText={setSearch}
-            placeholder={`Search ${category}…`}
-            placeholderTextColor={C.textSecondary}
-            returnKeyType="search"
-          />
-        </View>
+        <SearchBar value={search} onChange={setSearch} placeholder={`Search ${category}…`} />
 
         <SortDropdown sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
 
@@ -92,24 +82,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: C.bg,
-  },
-  searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: C.surface,
-    borderRadius: RADIUS.control,
-    marginHorizontal: 16,
-    marginTop: 12,
-    marginBottom: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    minHeight: 44,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 15,
-    color: C.textPrimary,
   },
   list: {
     paddingHorizontal: 16,

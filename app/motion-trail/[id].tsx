@@ -9,7 +9,9 @@ export default function MotionTrailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { move } = useMove(id);
 
-  if (!MOTION_TRACKING_ENABLED || !move?.motionData || move.motionData.length < 2) return null;
+  if (!MOTION_TRACKING_ENABLED || !move?.motionData || move.motionData.length < 2) {
+    return <View style={styles.root} />;
+  }
 
   return (
     <>

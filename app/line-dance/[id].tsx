@@ -1,9 +1,10 @@
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useLineDance } from '@/hooks/useLineDance';
 import { useSongs } from '@/hooks/useSongs';
+import { Skeleton, SkeletonRow } from '@/components/Skeleton';
+import { AlbumArt } from '@/components/AlbumArt';
 import { VideoPlayer } from '@/components/VideoPlayer';
 import { DifficultyBadge } from '@/components/DifficultyBadge';
 import { StepListView } from '@/components/StepListView';
@@ -14,7 +15,7 @@ import { C, RADIUS } from '@/constants/theme';
 export default function LineDanceDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { lineDance, incrementPractice } = useLineDance(id);
+  const { lineDance, incrementPractice, loading } = useLineDance(id);
   const { songs } = useSongs();
 
   const linkedSong = lineDance?.linkedSongId
@@ -37,7 +38,23 @@ export default function LineDanceDetailScreen() {
         }}
       />
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-        {lineDance && (
+        {loading ? (
+          <>
+            <Skeleton height={28} width="85%" />
+            <SkeletonRow>
+              <Skeleton height={24} width={80} />
+              <Skeleton height={24} width={60} />
+            </SkeletonRow>
+            <Skeleton height={56} />
+            <Skeleton height={56} />
+            <Skeleton height={56} />
+            <Skeleton height={72} />
+          </>
+        ) : !lineDance ? (
+          <View style={styles.notFound}>
+            <Text style={styles.notFoundText}>Line dance not found.</Text>
+          </View>
+        ) : (
           <>
             <Text style={styles.name}>{lineDance.name}</Text>
 
@@ -56,13 +73,7 @@ export default function LineDanceDetailScreen() {
                   android_ripple={{ color: 'transparent' }}
                   onPress={() => router.push(`/song/${linkedSong.id}` as any)}
                 >
-                  {linkedSong.albumArtUrl ? (
-                    <Image source={{ uri: linkedSong.albumArtUrl }} style={styles.linkedArt} contentFit="cover" />
-                  ) : (
-                    <View style={[styles.linkedArt, styles.artPlaceholder]}>
-                      <Ionicons name="musical-note" size={18} color={C.textSecondary} />
-                    </View>
-                  )}
+                  <AlbumArt url={linkedSong.albumArtUrl} size={40} />
                   <View style={styles.linkedInfo}>
                     <Text style={styles.linkedTitle} numberOfLines={1}>{linkedSong.title}</Text>
                     <Text style={styles.linkedArtist} numberOfLines={1}>{linkedSong.artist}</Text>
@@ -127,17 +138,6 @@ const styles = StyleSheet.create({
     padding: 12,
     gap: 12,
   },
-  linkedArt: {
-    width: 40,
-    height: 40,
-    borderRadius: 6,
-    flexShrink: 0,
-  },
-  artPlaceholder: {
-    backgroundColor: C.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   linkedInfo: {
     flex: 1,
     gap: 3,
@@ -149,6 +149,16 @@ const styles = StyleSheet.create({
   },
   linkedArtist: {
     fontSize: 13,
+    color: C.textSecondary,
+  },
+  notFound: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: 80,
+  },
+  notFoundText: {
+    fontSize: 16,
     color: C.textSecondary,
   },
 });

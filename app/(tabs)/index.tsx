@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Stack, useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -12,6 +12,7 @@ import { CategorySection } from '@/components/CategorySection';
 import { SongCard } from '@/components/SongCard';
 import { LineDanceCard } from '@/components/LineDanceCard';
 import { LibraryHeader } from '@/components/LibraryHeader';
+import { SearchBar } from '@/components/SearchBar';
 import { SegmentedControl } from '@/components/SegmentedControl';
 import { SortDropdown } from '@/components/SortDropdown';
 import { CATEGORIES } from '@/types/Move';
@@ -123,22 +124,7 @@ export default function LibraryScreen() {
             </View>
           ) : (
             <View style={styles.flex}>
-              <View style={styles.searchBar}>
-                <Ionicons name="search" size={16} color={C.textSecondary} />
-                <TextInput
-                  style={styles.searchInput}
-                  value={songSearch}
-                  onChangeText={setSongSearch}
-                  placeholder="Search songs…"
-                  placeholderTextColor={C.textSecondary}
-                  returnKeyType="search"
-                />
-                {songSearch.length > 0 && (
-                  <Pressable onPress={() => setSongSearch('')} hitSlop={8}>
-                    <Ionicons name="close-circle" size={16} color={C.textSecondary} />
-                  </Pressable>
-                )}
-              </View>
+              <SearchBar value={songSearch} onChange={setSongSearch} placeholder="Search songs…" />
               <SortDropdown
                 sortKey={songSortKey}
                 sortDir={songSortDir}
@@ -185,22 +171,7 @@ export default function LibraryScreen() {
             </View>
           ) : (
             <View style={styles.flex}>
-              <View style={styles.searchBar}>
-                <Ionicons name="search" size={16} color={C.textSecondary} />
-                <TextInput
-                  style={styles.searchInput}
-                  value={ldSearch}
-                  onChangeText={setLdSearch}
-                  placeholder="Search line dances…"
-                  placeholderTextColor={C.textSecondary}
-                  returnKeyType="search"
-                />
-                {ldSearch.length > 0 && (
-                  <Pressable onPress={() => setLdSearch('')} hitSlop={8}>
-                    <Ionicons name="close-circle" size={16} color={C.textSecondary} />
-                  </Pressable>
-                )}
-              </View>
+              <SearchBar value={ldSearch} onChange={setLdSearch} placeholder="Search line dances…" />
               <SortDropdown
                 sortKey={ldSortKey}
                 sortDir={ldSortDir}
@@ -253,24 +224,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 8,
     paddingBottom: 32,
-  },
-  searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: C.surface,
-    borderRadius: RADIUS.control,
-    marginHorizontal: 16,
-    marginTop: 8,
-    marginBottom: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    minHeight: 44,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 15,
-    color: C.textPrimary,
   },
   fullEmpty: {
     flex: 1,

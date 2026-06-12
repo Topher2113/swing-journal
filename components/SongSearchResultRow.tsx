@@ -1,6 +1,5 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { Image } from 'expo-image';
-import { Ionicons } from '@expo/vector-icons';
+import { AlbumArt } from './AlbumArt';
 import { SpotifyTrackResult } from '@/types/Song';
 import { C, RADIUS } from '@/constants/theme';
 
@@ -19,13 +18,7 @@ export function SongSearchResultRow({ track, onPress }: Props) {
       android_ripple={{ color: 'transparent' }}
       onPress={onPress}
     >
-      {artUrl ? (
-        <Image source={{ uri: artUrl }} style={styles.art} contentFit="cover" />
-      ) : (
-        <View style={[styles.art, styles.artPlaceholder]}>
-          <Ionicons name="musical-note" size={20} color={C.textSecondary} />
-        </View>
-      )}
+      <AlbumArt url={artUrl} size={48} />
       <View style={styles.info}>
         <Text style={styles.title} numberOfLines={1}>{track.name}</Text>
         <Text style={styles.artist} numberOfLines={1}>{artistNames}</Text>
@@ -45,17 +38,6 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.card,
     marginBottom: 6,
     minHeight: 68,
-  },
-  art: {
-    width: 48,
-    height: 48,
-    borderRadius: 6,
-    flexShrink: 0,
-  },
-  artPlaceholder: {
-    backgroundColor: C.border,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   info: {
     flex: 1,

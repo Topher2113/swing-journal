@@ -10,8 +10,6 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { Image } from 'expo-image';
-import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useMoves } from '@/hooks/useMoves';
@@ -20,6 +18,8 @@ import { useLineDances } from '@/hooks/useLineDances';
 import { useSongSearch } from '@/hooks/useSongSearch';
 import { useVideoRecorder } from '@/hooks/useVideoRecorder';
 import { useMotionRecorder } from '@/hooks/useMotionRecorder';
+import { AlbumArt } from '@/components/AlbumArt';
+import { SaveButton } from '@/components/SaveButton';
 import { SegmentedControl } from '@/components/SegmentedControl';
 import { SongSearchResultRow } from '@/components/SongSearchResultRow';
 import { VideoPickerButtons } from '@/components/VideoPickerButtons';
@@ -315,18 +315,7 @@ export default function AddScreen() {
                 </>
               )}
 
-              <Pressable
-                style={({ pressed }) => [
-                  styles.saveBtn,
-                  saving && styles.saveBtnDisabled,
-                  { opacity: pressed ? 0.85 : 1 },
-                ]}
-                android_ripple={{ color: 'transparent' }}
-                onPress={handleSave}
-                disabled={saving}
-              >
-                <Text style={styles.saveBtnText}>{saving ? 'Saving…' : 'Save Move'}</Text>
-              </Pressable>
+              <SaveButton label="Save Move" saving={saving} onPress={handleSave} />
             </ScrollView>
           </KeyboardAvoidingView>
         )}
@@ -371,17 +360,7 @@ export default function AddScreen() {
                 <>
                   <Text style={styles.label}>Selected track</Text>
                   <View style={styles.attachedRow}>
-                    {attachedArtUrl ? (
-                      <Image
-                        source={{ uri: attachedArtUrl }}
-                        style={styles.attachedArt}
-                        contentFit="cover"
-                      />
-                    ) : (
-                      <View style={[styles.attachedArt, styles.artPlaceholder]}>
-                        <Ionicons name="musical-note" size={18} color={C.textSecondary} />
-                      </View>
-                    )}
+                    <AlbumArt url={attachedArtUrl} size={44} />
                     <View style={styles.attachedInfo}>
                       <Text style={styles.attachedTitle} numberOfLines={1}>
                         {attachedTrack.name}
@@ -411,18 +390,7 @@ export default function AddScreen() {
                     textAlignVertical="top"
                   />
 
-                  <Pressable
-                    style={({ pressed }) => [
-                      styles.saveBtn,
-                      songSaving && styles.saveBtnDisabled,
-                      { opacity: pressed ? 0.85 : 1 },
-                    ]}
-                    android_ripple={{ color: 'transparent' }}
-                    onPress={handleSaveSong}
-                    disabled={songSaving}
-                  >
-                    <Text style={styles.saveBtnText}>{songSaving ? 'Saving…' : 'Save Song'}</Text>
-                  </Pressable>
+                  <SaveButton label="Save Song" saving={songSaving} onPress={handleSaveSong} />
                 </>
               )}
             </ScrollView>
@@ -484,18 +452,7 @@ export default function AddScreen() {
                 textAlignVertical="top"
               />
 
-              <Pressable
-                style={({ pressed }) => [
-                  styles.saveBtn,
-                  ldSaving && styles.saveBtnDisabled,
-                  { opacity: pressed ? 0.85 : 1 },
-                ]}
-                android_ripple={{ color: 'transparent' }}
-                onPress={handleSaveLineDance}
-                disabled={ldSaving}
-              >
-                <Text style={styles.saveBtnText}>{ldSaving ? 'Saving…' : 'Save Line Dance'}</Text>
-              </Pressable>
+              <SaveButton label="Save Line Dance" saving={ldSaving} onPress={handleSaveLineDance} />
             </ScrollView>
           </KeyboardAvoidingView>
         )}
@@ -568,17 +525,6 @@ const styles = StyleSheet.create({
     padding: 12,
     gap: 12,
   },
-  attachedArt: {
-    width: 44,
-    height: 44,
-    borderRadius: 6,
-    flexShrink: 0,
-  },
-  artPlaceholder: {
-    backgroundColor: C.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   attachedInfo: {
     flex: 1,
     gap: 3,
@@ -600,21 +546,6 @@ const styles = StyleSheet.create({
   },
   changeBtnText: {
     fontSize: 13,
-    fontWeight: '600',
-    color: C.textPrimary,
-  },
-  saveBtn: {
-    backgroundColor: C.accent,
-    borderRadius: RADIUS.card,
-    paddingVertical: 18,
-    alignItems: 'center',
-    marginTop: 16,
-  },
-  saveBtnDisabled: {
-    opacity: 0.5,
-  },
-  saveBtnText: {
-    fontSize: 17,
     fontWeight: '600',
     color: C.textPrimary,
   },

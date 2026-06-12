@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -15,6 +14,7 @@ import { useVideoRecorder } from '@/hooks/useVideoRecorder';
 import { useMotionRecorder } from '@/hooks/useMotionRecorder';
 import { saveMove } from '@/storage/moves';
 import { SegmentedControl } from '@/components/SegmentedControl';
+import { SaveButton } from '@/components/SaveButton';
 import { VideoPickerButtons } from '@/components/VideoPickerButtons';
 import { MotionRecorderButton } from '@/components/MotionRecorderButton';
 import { CATEGORIES, DIFFICULTIES, CATEGORY_SHORT, Category, Difficulty } from '@/types/Move';
@@ -153,18 +153,7 @@ export default function EditMoveScreen() {
             </>
           )}
 
-          <Pressable
-            style={({ pressed }) => [
-              styles.saveBtn,
-              (saving || !name.trim()) && styles.saveBtnDisabled,
-              { opacity: pressed ? 0.85 : 1 },
-            ]}
-            android_ripple={{ color: 'transparent' }}
-            onPress={handleSave}
-            disabled={saving || !name.trim()}
-          >
-            <Text style={styles.saveBtnText}>{saving ? 'Saving…' : 'Save Changes'}</Text>
-          </Pressable>
+          <SaveButton label="Save Changes" saving={saving} disabled={!name.trim()} onPress={handleSave} />
         </ScrollView>
       </KeyboardAvoidingView>
     </>
@@ -203,20 +192,5 @@ const styles = StyleSheet.create({
   },
   multiline: {
     minHeight: 120,
-  },
-  saveBtn: {
-    backgroundColor: C.accent,
-    borderRadius: RADIUS.card,
-    paddingVertical: 18,
-    alignItems: 'center',
-    marginTop: 16,
-  },
-  saveBtnDisabled: {
-    opacity: 0.5,
-  },
-  saveBtnText: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: C.textPrimary,
   },
 });
