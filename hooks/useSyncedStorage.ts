@@ -86,7 +86,7 @@ export function useSyncedStorage<T extends SyncableEntity>(config: SyncedStorage
 
 // Items just pushed in this sync pass keep their local version even if the
 // immediately-following select returns a stale (pre-write) remote row.
-function mergeByUpdatedAt<T extends SyncableEntity>(local: T[], remote: T[], justPushed: T[]): T[] {
+export function mergeByUpdatedAt<T extends SyncableEntity>(local: T[], remote: T[], justPushed: T[]): T[] {
   const byId = new Map<string, T>();
   for (const item of local) byId.set(item.id, { ...item, syncStatus: 'synced' as const });
 
