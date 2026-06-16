@@ -1,46 +1,66 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback } from 'react';
 import * as Crypto from 'expo-crypto';
-import { Move } from '@/types/Move';
-import { getAllMoves, saveMove, deleteMoveById } from '@/storage/moves';
+import { Move, Category, Difficulty } from '@/types/Move';
+import { useSyncedStorage } from './useSyncedStorage';
+import { useAuth } from '@/context/AuthContext';
+
+function fromRow(row: Record<string, unknown>): Move {
+  return {
+    id: row.id as string,
+    name: row.name as string,
+    category: row.category as Category,
+    difficulty: row.difficulty as Difficulty,
+    notes: (row.notes as string) ?? '',
+    videoUri: (row.video_uri as string | null) ?? null,
+    practiceCount: (row.practice_count as number) ?? 0,
+    motionData: (row.motion_data as Move['motionData']) ?? null,
+    createdAt: row.created_at as string,
+    updatedAt: row.updated_at as string,
+    syncStatus: 'synced',
+  };
+}
 
 export function useMoves() {
-  const [moves, setMoves] = useState<Move[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
-  const reload = useCallback(async () => {
-    setLoading(true);
-    const data = await getAllMoves();
-    setMoves(data);
-    setLoading(false);
-  }, []);
+  const toRow = (m: Move): Record<string, unknown> => ({
+    id: m.id,
+    user_id: user!.id,
+    name: m.name,
+    category: m.category,
+    difficulty: m.difficulty,
+    notes: m.notes,
+    video_uri: m.videoUri,
+    practice_count: m.practiceCount,
+    motion_data: m.motionData,
+    created_at: m.createdAt,
+    updated_at: m.updatedAt,
+  });
 
-  useEffect(() => {
-    reload();
-  }, [reload]);
+  const { items, loading, syncing, upsertLocal, removeLocal, sync, reload } =
+    useSyncedStorage<Move>({ storageKey: '@moves', table: 'moves', toRow, fromRow });
 
   const addMove = useCallback(async (
-    fields: Omit<Move, 'id' | 'practiceCount' | 'createdAt'>
+    fields: Omit<Move, 'id' | 'practiceCount' | 'createdAt' | 'updatedAt' | 'syncStatus'>
   ): Promise<Move> => {
-    const move: Move = {
+    const now = new Date().toISOString();
+    return upsertLocal({
       ...fields,
       id: Crypto.randomUUID(),
       practiceCount: 0,
-      createdAt: new Date().toISOString(),
-    };
-    await saveMove(move);
-    setMoves((prev) => [...prev, move]);
-    return move;
-  }, []);
+      createdAt: now,
+      updatedAt: now,
+      syncStatus: 'pending',
+    });
+  }, [upsertLocal]);
 
   const updateMove = useCallback(async (move: Move): Promise<void> => {
-    await saveMove(move);
-    setMoves((prev) => prev.map((m) => (m.id === move.id ? move : m)));
-  }, []);
+    await upsertLocal(move);
+  }, [upsertLocal]);
 
   const deleteMove = useCallback(async (id: string): Promise<void> => {
-    await deleteMoveById(id);
-    setMoves((prev) => prev.filter((m) => m.id !== id));
-  }, []);
+    await removeLocal(id);
+  }, [removeLocal]);
 
-  return { moves, loading, reload, addMove, updateMove, deleteMove };
+  return { moves: items, loading, syncing, reload, addMove, updateMove, deleteMove, sync };
 }

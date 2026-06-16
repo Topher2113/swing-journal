@@ -1,0 +1,109 @@
+import { useCallback, useEffect, useRef, useState } from 'react';
+import * as SecureStore from 'expo-secure-store';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/context/AuthContext';
+import { PartnerLink } from '@/types/Auth';
+
+const SECURE_KEY = 'partner_link_id';
+
+function randomCode(): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let result = 'SWING-';
+  for (let i = 0; i < 4; i++) {
+    result += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return result;
+}
+
+function fromRow(row: Record<string, unknown>): PartnerLink {
+  return {
+    id: row.id as string,
+    userIdA: row.user_id_a as string,
+    userIdB: (row.user_id_b as string | null) ?? null,
+    userEmailA: row.user_email_a as string,
+    userEmailB: (row.user_email_b as string | null) ?? null,
+    inviteCode: row.invite_code as string,
+    status: row.status as 'pending' | 'linked',
+    createdAt: row.created_at as string,
+  };
+}
+
+export function usePartnerLink() {
+  const { user } = useAuth();
+  const [link, setLink] = useState<PartnerLink | null>(null);
+  const [loading, setLoading] = useState(true);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const fetchLink = useCallback(async (id: string) => {
+    const { data, error } = await supabase
+      .from('partner_links')
+      .select('*')
+      .eq('id', id)
+      .single();
+    if (!error && data) setLink(fromRow(data as Record<string, unknown>));
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      const storedId = await SecureStore.getItemAsync(SECURE_KEY);
+      if (storedId) await fetchLink(storedId);
+      setLoading(false);
+    })();
+  }, [fetchLink]);
+
+  // Poll every 5 seconds while pending so the inviter sees their link activate
+  useEffect(() => {
+    if (link?.status !== 'pending') {
+      if (pollRef.current) clearInterval(pollRef.current);
+      pollRef.current = null;
+      return;
+    }
+    pollRef.current = setInterval(() => fetchLink(link.id), 5000);
+    return () => {
+      if (pollRef.current) {
+        clearInterval(pollRef.current);
+        pollRef.current = null;
+      }
+    };
+  }, [link?.status, link?.id, fetchLink]);
+
+  const generateInviteCode = useCallback(async () => {
+    if (!user) return;
+    const code = randomCode();
+    const { data, error } = await supabase
+      .from('partner_links')
+      .insert({
+        user_id_a: user.id,
+        user_email_a: user.email,
+        invite_code: code,
+        status: 'pending',
+      })
+      .select()
+      .single();
+    if (error) throw error;
+    const newLink = fromRow(data as Record<string, unknown>);
+    await SecureStore.setItemAsync(SECURE_KEY, newLink.id);
+    setLink(newLink);
+  }, [user]);
+
+  const redeemInviteCode = useCallback(async (code: string) => {
+    if (!user) return;
+    const { data, error } = await supabase
+      .from('partner_links')
+      .update({
+        user_id_b: user.id,
+        user_email_b: user.email,
+        status: 'linked',
+      })
+      .eq('invite_code', code.trim().toUpperCase())
+      .eq('status', 'pending')
+      .select()
+      .single();
+    if (error) throw error;
+    const updated = fromRow(data as Record<string, unknown>);
+    await SecureStore.setItemAsync(SECURE_KEY, updated.id);
+    setLink(updated);
+  }, [user]);
+
+  return { link, loading, generateInviteCode, redeemInviteCode };
+}

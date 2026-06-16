@@ -1,3 +1,5 @@
+import { SyncStatus } from './Song';
+
 export type Category = 'Footwork' | 'Spins & Turns' | 'Dips & Drops' | 'Lifts & Tricks';
 export type Difficulty = 'Beginner' | 'Intermediate' | 'Advanced';
 
@@ -17,7 +19,14 @@ export type Move = {
   videoUri: string | null;
   practiceCount: number;
   createdAt: string;
+  updatedAt: string;
   motionData: MotionFrame[] | null;
+  syncStatus: SyncStatus;
+};
+
+export type SharedMove = Move & {
+  partnerLinkId: string;
+  addedByUserId: string;
 };
 
 export const CATEGORIES: Category[] = [

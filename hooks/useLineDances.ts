@@ -3,24 +3,10 @@ import * as Crypto from 'expo-crypto';
 import { useSyncedStorage } from './useSyncedStorage';
 import { LineDance, LineDanceStep } from '@/types/LineDance';
 import { Difficulty } from '@/types/Move';
+import { useAuth } from '@/context/AuthContext';
 
 const STORAGE_KEY = '@line_dances';
 const TABLE = 'line_dances';
-
-function toRow(ld: LineDance): Record<string, unknown> {
-  return {
-    id: ld.id,
-    name: ld.name,
-    steps: ld.steps,
-    difficulty: ld.difficulty,
-    video_uri: ld.videoUri,
-    linked_song_id: ld.linkedSongId,
-    notes: ld.notes,
-    practice_count: ld.practiceCount,
-    created_at: ld.createdAt,
-    updated_at: ld.updatedAt,
-  };
-}
 
 function fromRow(row: Record<string, unknown>): LineDance {
   return {
@@ -39,6 +25,22 @@ function fromRow(row: Record<string, unknown>): LineDance {
 }
 
 export function useLineDances() {
+  const { user } = useAuth();
+
+  const toRow = (ld: LineDance): Record<string, unknown> => ({
+    id: ld.id,
+    user_id: user!.id,
+    name: ld.name,
+    steps: ld.steps,
+    difficulty: ld.difficulty,
+    video_uri: ld.videoUri,
+    linked_song_id: ld.linkedSongId,
+    notes: ld.notes,
+    practice_count: ld.practiceCount,
+    created_at: ld.createdAt,
+    updated_at: ld.updatedAt,
+  });
+
   const { items, loading, syncing, upsertLocal, removeLocal, sync, reload } =
     useSyncedStorage<LineDance>({ storageKey: STORAGE_KEY, table: TABLE, toRow, fromRow });
 

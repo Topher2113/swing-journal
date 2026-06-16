@@ -1,8 +1,10 @@
-import { Stack } from 'expo-router';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SystemUI from 'expo-system-ui';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { useEffect } from 'react';
 import { C } from '@/constants/theme';
+import { AuthProvider, useAuth } from '@/context/AuthContext';
 
 SystemUI.setBackgroundColorAsync(C.bg);
 
@@ -10,11 +12,23 @@ const headerStyle = { backgroundColor: C.bg };
 const contentStyle = { backgroundColor: C.bg };
 const rootStyle = { flex: 1 };
 
-export default function RootLayout() {
+function RootLayoutInner() {
+  const { session, loading } = useAuth();
+  const segments = useSegments();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (loading) return;
+    const inAuthGroup = (segments[0] as string) === '(auth)';
+    if (!session && !inAuthGroup) {
+      router.replace('/(auth)/sign-in' as never);
+    } else if (session && inAuthGroup) {
+      router.replace('/(tabs)');
+    }
+  }, [session, loading, segments]);
+
   return (
-    <GestureHandlerRootView style={rootStyle}>
-      <StatusBar style="light" />
-      <Stack
+    <Stack
       screenOptions={{
         headerStyle,
         headerTintColor: C.textPrimary,
@@ -22,6 +36,7 @@ export default function RootLayout() {
       }}
     >
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="(auth)/sign-in" options={{ headerShown: false }} />
       <Stack.Screen name="move/[id]" options={{ headerBackTitle: 'Moves' }} />
       <Stack.Screen name="category/[category]" options={{ headerBackTitle: 'My Moves' }} />
       <Stack.Screen name="edit/[id]" options={{ title: 'Edit Move', headerBackTitle: 'Detail' }} />
@@ -30,7 +45,18 @@ export default function RootLayout() {
       <Stack.Screen name="edit-song/[id]" options={{ title: 'Edit Song', headerBackTitle: 'Detail' }} />
       <Stack.Screen name="line-dance/[id]" options={{ headerBackTitle: 'Library' }} />
       <Stack.Screen name="edit-line-dance/[id]" options={{ title: 'Edit Line Dance', headerBackTitle: 'Detail' }} />
+      <Stack.Screen name="shared-move/[id]" options={{ title: '', headerBackTitle: 'Journal' }} />
     </Stack>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <GestureHandlerRootView style={rootStyle}>
+      <StatusBar style="light" />
+      <AuthProvider>
+        <RootLayoutInner />
+      </AuthProvider>
     </GestureHandlerRootView>
   );
 }

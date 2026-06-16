@@ -12,9 +12,13 @@ import {
 } from 'react-native';
 import { Stack, useRouter, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import * as Haptics from 'expo-haptics';
+import * as Crypto from 'expo-crypto';
 import { useMoves } from '@/hooks/useMoves';
 import { useSongs } from '@/hooks/useSongs';
 import { useLineDances } from '@/hooks/useLineDances';
+import { usePartnerLink } from '@/hooks/usePartnerLink';
+import { usePartnerJournal } from '@/hooks/usePartnerJournal';
+import { useAuth } from '@/context/AuthContext';
 import { useSongSearch } from '@/hooks/useSongSearch';
 import { useVideoRecorder } from '@/hooks/useVideoRecorder';
 import { useMotionRecorder } from '@/hooks/useMotionRecorder';
@@ -26,7 +30,8 @@ import { VideoPickerButtons } from '@/components/VideoPickerButtons';
 import { StepListEditor } from '@/components/StepListEditor';
 import { LinkedSongPicker } from '@/components/LinkedSongPicker';
 import { MotionRecorderButton } from '@/components/MotionRecorderButton';
-import { CATEGORIES, DIFFICULTIES, CATEGORY_SHORT, Category, Difficulty } from '@/types/Move';
+import { Ionicons } from '@expo/vector-icons';
+import { CATEGORIES, DIFFICULTIES, CATEGORY_SHORT, Category, Difficulty, SharedMove } from '@/types/Move';
 import { LineDanceStep } from '@/types/LineDance';
 import { SpotifyTrackResult } from '@/types/Song';
 import { C, RADIUS } from '@/constants/theme';
@@ -41,6 +46,9 @@ export default function AddScreen() {
   const { addMove } = useMoves();
   const { addSong } = useSongs();
   const { addLineDance } = useLineDances();
+  const { link } = usePartnerLink();
+  const { upsertLocal: shareToJournal } = usePartnerJournal(link?.id ?? '');
+  const { user } = useAuth();
   const { search: searchSpotify, loading: searchLoading } = useSongSearch();
   const { recordVideo, pickVideo } = useVideoRecorder();
   const { isRecording, frames, start: startMotion, stop: stopMotion, clear: clearMotion } =
@@ -58,6 +66,7 @@ export default function AddScreen() {
   const [notes, setNotes] = useState('');
   const [videoUri, setVideoUri] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [saveToJournal, setSaveToJournal] = useState(false);
 
   // Song form state
   const [searchQuery, setSearchQuery] = useState('');
@@ -100,6 +109,7 @@ export default function AddScreen() {
       setLdVideoUri(null);
       setLdLinkedSongId(null);
       setLdNotes('');
+      setSaveToJournal(false);
       return () => {
         if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
       };
@@ -134,7 +144,7 @@ export default function AddScreen() {
     }
     setSaving(true);
     try {
-      await addMove({
+      const move = await addMove({
         name: name.trim(),
         category,
         difficulty,
@@ -142,6 +152,15 @@ export default function AddScreen() {
         videoUri,
         motionData: MOTION_TRACKING_ENABLED ? frames : null,
       });
+      if (saveToJournal && link?.status === 'linked' && user) {
+        const sharedMove: SharedMove = {
+          ...move,
+          id: Crypto.randomUUID(),
+          partnerLinkId: link.id,
+          addedByUserId: user.id,
+        };
+        await shareToJournal(sharedMove);
+      }
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       router.replace('/(tabs)');
     } finally {
@@ -313,6 +332,18 @@ export default function AddScreen() {
                     onDiscard={clearMotion}
                   />
                 </>
+              )}
+
+              {link?.status === 'linked' && (
+                <Pressable
+                  style={styles.journalToggle}
+                  onPress={() => setSaveToJournal((p) => !p)}
+                >
+                  <View style={[styles.checkbox, saveToJournal && styles.checkboxChecked]}>
+                    {saveToJournal && <Ionicons name="checkmark" size={12} color={C.textPrimary} />}
+                  </View>
+                  <Text style={styles.journalToggleText}>Also save to shared journal</Text>
+                </Pressable>
               )}
 
               <SaveButton label="Save Move" saving={saving} onPress={handleSave} />
@@ -548,5 +579,28 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
     color: C.textPrimary,
+  },
+  journalToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 4,
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderRadius: 4,
+    borderWidth: 1.5,
+    borderColor: C.textSecondary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkboxChecked: {
+    backgroundColor: C.accent,
+    borderColor: C.accent,
+  },
+  journalToggleText: {
+    fontSize: 14,
+    color: C.textSecondary,
   },
 });

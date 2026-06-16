@@ -2,23 +2,10 @@ import { useCallback } from 'react';
 import * as Crypto from 'expo-crypto';
 import { useSyncedStorage } from './useSyncedStorage';
 import { Song } from '@/types/Song';
+import { useAuth } from '@/context/AuthContext';
 
 const STORAGE_KEY = '@songs';
 const TABLE = 'songs';
-
-function toRow(song: Song): Record<string, unknown> {
-  return {
-    id: song.id,
-    title: song.title,
-    artist: song.artist,
-    album_art_url: song.albumArtUrl,
-    spotify_url: song.spotifyUrl,
-    spotify_track_id: song.spotifyTrackId,
-    notes: song.notes,
-    created_at: song.createdAt,
-    updated_at: song.updatedAt,
-  };
-}
 
 function fromRow(row: Record<string, unknown>): Song {
   return {
@@ -36,6 +23,21 @@ function fromRow(row: Record<string, unknown>): Song {
 }
 
 export function useSongs() {
+  const { user } = useAuth();
+
+  const toRow = (song: Song): Record<string, unknown> => ({
+    id: song.id,
+    user_id: user!.id,
+    title: song.title,
+    artist: song.artist,
+    album_art_url: song.albumArtUrl,
+    spotify_url: song.spotifyUrl,
+    spotify_track_id: song.spotifyTrackId,
+    notes: song.notes,
+    created_at: song.createdAt,
+    updated_at: song.updatedAt,
+  });
+
   const { items, loading, syncing, upsertLocal, removeLocal, sync, reload } =
     useSyncedStorage<Song>({ storageKey: STORAGE_KEY, table: TABLE, toRow, fromRow });
 

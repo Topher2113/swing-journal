@@ -19,7 +19,9 @@ export function makeMove(overrides: Partial<Move> = {}): Move {
     videoUri: null,
     practiceCount: 0,
     createdAt: iso(),
+    updatedAt: iso(),
     motionData: null,
+    syncStatus: 'synced',
     ...overrides,
   };
 }

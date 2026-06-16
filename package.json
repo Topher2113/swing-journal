@@ -15,7 +15,9 @@
   },
   "jest": {
     "preset": "jest-expo",
-    "roots": ["<rootDir>/tests"],
+    "roots": [
+      "<rootDir>/tests"
+    ],
     "moduleNameMapper": {
       "^@react-native-async-storage/async-storage$": "<rootDir>/node_modules/@react-native-async-storage/async-storage/jest/async-storage-mock",
       "^@/lib/supabase$": "<rootDir>/tests/__mocks__/supabase.ts",
@@ -48,6 +50,7 @@
     "expo-image-picker": "~17.0.11",
     "expo-linking": "~8.0.12",
     "expo-router": "~6.0.23",
+    "expo-secure-store": "~15.0.8",
     "expo-sensors": "~15.0.8",
     "expo-splash-screen": "~31.0.13",
     "expo-status-bar": "~3.0.9",
