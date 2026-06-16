@@ -2,6 +2,11 @@
 
 A personal dance move journal for swing dancers. Log moves you've learned, categorize them, record short video clips, and rate difficulty. The goal is to be able to keep track of all the moves you've learned so you don't forget them!
 
+## Wireframes
+![First](assets/images/image.png)
+![Second](assets/images/image-1.png)
+![Third](assets/images/image-2.png)
+
 
 ## Expo Packages
 
