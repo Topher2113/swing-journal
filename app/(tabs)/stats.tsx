@@ -1,10 +1,13 @@
 import { useCallback } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { useMoves } from '@/hooks/useMoves';
 import { useSongs } from '@/hooks/useSongs';
 import { useLineDances } from '@/hooks/useLineDances';
 import { useStats } from '@/hooks/useStats';
+import { useAuth } from '@/context/AuthContext';
+import { signOut } from '@/lib/auth';
 import { StatCard } from '@/components/StatCard';
 import { C, RADIUS } from '@/constants/theme';
 import type { Difficulty } from '@/types/Move';
@@ -15,8 +18,21 @@ const DIFFICULTY_COLORS: Record<Difficulty, string> = {
   Advanced: '#EF4444',
 };
 
-export default function StatsScreen() {
+const DANCE_PREF_LABELS = {
+  swing: 'Swing',
+  line_dancing: 'Line Dancing',
+  both: 'Swing & Line Dancing',
+};
+
+const LEVEL_LABELS = {
+  beginner: 'Beginner',
+  intermediate: 'Intermediate',
+  advanced: 'Advanced',
+};
+
+export default function ProfileScreen() {
   const router = useRouter();
+  const { user, profile } = useAuth();
   const { moves, reload: reloadMoves } = useMoves();
   const { songs, reload: reloadSongs } = useSongs();
   const { lineDances, reload: reloadLineDances } = useLineDances();
@@ -42,8 +58,25 @@ export default function StatsScreen() {
     }, [reloadMoves, reloadSongs, reloadLineDances])
   );
 
+  const handleLogout = () => {
+    Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Sign Out',
+        style: 'destructive',
+        onPress: async () => {
+          await signOut();
+          // onAuthStateChange in AuthContext clears the session and the gate
+          // in _layout.tsx redirects to sign-in automatically
+        },
+      },
+    ]);
+  };
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+
+      {/* ── Stats ── */}
       <Text style={styles.sectionTitle}>Moves</Text>
       <View style={styles.metricRow}>
         <StatCard value={totalMoves} label="Total moves" />
@@ -110,6 +143,55 @@ export default function StatsScreen() {
           </View>
         ))}
       </View>
+
+      {/* ── Profile ── */}
+      <Text style={styles.sectionTitle}>Profile</Text>
+      <View style={styles.card}>
+        <View style={styles.profileRow}>
+          <Ionicons name="person-outline" size={18} color={C.textSecondary} />
+          <View style={styles.profileInfo}>
+            <Text style={styles.profileValue}>{profile?.name ?? '—'}</Text>
+            <Text style={styles.profileLabel}>Name</Text>
+          </View>
+        </View>
+        <View style={styles.divider} />
+        <View style={styles.profileRow}>
+          <Ionicons name="mail-outline" size={18} color={C.textSecondary} />
+          <View style={styles.profileInfo}>
+            <Text style={styles.profileValue}>{user?.email ?? '—'}</Text>
+            <Text style={styles.profileLabel}>Email</Text>
+          </View>
+        </View>
+        <View style={styles.divider} />
+        <View style={styles.profileRow}>
+          <Ionicons name="musical-notes-outline" size={18} color={C.textSecondary} />
+          <View style={styles.profileInfo}>
+            <Text style={styles.profileValue}>
+              {profile ? DANCE_PREF_LABELS[profile.dancePreference] : '—'}
+            </Text>
+            <Text style={styles.profileLabel}>Dance style</Text>
+          </View>
+        </View>
+        <View style={styles.divider} />
+        <View style={styles.profileRow}>
+          <Ionicons name="ribbon-outline" size={18} color={C.textSecondary} />
+          <View style={styles.profileInfo}>
+            <Text style={styles.profileValue}>
+              {profile ? LEVEL_LABELS[profile.level] : '—'}
+            </Text>
+            <Text style={styles.profileLabel}>Experience level</Text>
+          </View>
+        </View>
+      </View>
+
+      <Pressable
+        style={({ pressed }) => [styles.logoutBtn, pressed && styles.logoutBtnPressed]}
+        onPress={handleLogout}
+      >
+        <Ionicons name="log-out-outline" size={18} color="#FCA5A5" />
+        <Text style={styles.logoutText}>Sign Out</Text>
+      </Pressable>
+
     </ScrollView>
   );
 }
@@ -122,7 +204,7 @@ const styles = StyleSheet.create({
   content: {
     padding: 16,
     gap: 16,
-    paddingBottom: 40,
+    paddingBottom: 48,
   },
   metricRow: {
     flexDirection: 'row',
@@ -183,5 +265,48 @@ const styles = StyleSheet.create({
     width: 12,
     height: 12,
     borderRadius: 6,
+  },
+  profileRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    paddingVertical: 4,
+  },
+  profileInfo: {
+    flex: 1,
+    gap: 2,
+  },
+  profileValue: {
+    fontSize: 16,
+    color: C.textPrimary,
+    fontWeight: '500',
+  },
+  profileLabel: {
+    fontSize: 12,
+    color: C.textSecondary,
+  },
+  divider: {
+    height: 0.5,
+    backgroundColor: C.border,
+    marginHorizontal: -18,
+  },
+  logoutBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: C.surface,
+    borderRadius: RADIUS.card,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#7F1D1D44',
+  },
+  logoutBtnPressed: {
+    opacity: 0.7,
+  },
+  logoutText: {
+    color: '#FCA5A5',
+    fontSize: 15,
+    fontWeight: '600',
   },
 });
