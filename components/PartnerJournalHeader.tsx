@@ -4,17 +4,19 @@ import { C } from '@/constants/theme';
 
 type Props = {
   partnerEmail: string;
+  partnerName?: string | null;
   syncing: boolean;
   onSync: () => void;
 };
 
-export function PartnerJournalHeader({ partnerEmail, syncing, onSync }: Props) {
+export function PartnerJournalHeader({ partnerEmail, partnerName, syncing, onSync }: Props) {
+  const display = partnerName ?? partnerEmail;
   return (
     <View style={styles.container}>
       <View style={styles.left}>
         <Ionicons name="people-outline" size={16} color={C.textSecondary} />
         <Text style={styles.label} numberOfLines={1}>
-          Shared with <Text style={styles.email}>{partnerEmail}</Text>
+          Shared with <Text style={styles.email}>{display}</Text>
         </Text>
       </View>
       <Pressable

@@ -22,6 +22,8 @@ function fromRow(row: Record<string, unknown>): PartnerLink {
     userIdB: (row.user_id_b as string | null) ?? null,
     userEmailA: row.user_email_a as string,
     userEmailB: (row.user_email_b as string | null) ?? null,
+    userNameA: (row.user_name_a as string | null) ?? null,
+    userNameB: (row.user_name_b as string | null) ?? null,
     inviteCode: row.invite_code as string,
     status: row.status as 'pending' | 'linked',
     createdAt: row.created_at as string,
@@ -29,7 +31,7 @@ function fromRow(row: Record<string, unknown>): PartnerLink {
 }
 
 export function usePartnerLink() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [link, setLink] = useState<PartnerLink | null>(null);
   const [loading, setLoading] = useState(true);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -75,6 +77,7 @@ export function usePartnerLink() {
       .insert({
         user_id_a: user.id,
         user_email_a: user.email,
+        user_name_a: profile?.name ?? null,
         invite_code: code,
         status: 'pending',
       })
@@ -114,7 +117,7 @@ export function usePartnerLink() {
 
     const { data, error } = await supabase
       .from('partner_links')
-      .update({ user_id_b: user.id, user_email_b: user.email, status: 'linked' })
+      .update({ user_id_b: user.id, user_email_b: user.email, user_name_b: profile?.name ?? null, status: 'linked' })
       .eq('invite_code', trimmed)
       .eq('status', 'pending')
       .select()

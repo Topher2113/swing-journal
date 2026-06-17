@@ -13,19 +13,24 @@ const contentStyle = { backgroundColor: C.bg };
 const rootStyle = { flex: 1 };
 
 function RootLayoutInner() {
-  const { session, loading } = useAuth();
+  const { session, loading, profile, profileLoading } = useAuth();
   const segments = useSegments();
   const router = useRouter();
 
   useEffect(() => {
-    if (loading) return;
+    if (loading || profileLoading) return;
     const inAuthGroup = (segments[0] as string) === '(auth)';
+    const onOnboarding = (segments[1] as string) === 'onboarding';
+
     if (!session && !inAuthGroup) {
       router.replace('/(auth)/sign-in' as never);
-    } else if (session && inAuthGroup) {
+    } else if (session && !profile && !onOnboarding) {
+      // Logged in but hasn't completed onboarding yet
+      router.replace('/(auth)/onboarding' as never);
+    } else if (session && profile && inAuthGroup) {
       router.replace('/(tabs)');
     }
-  }, [session, loading, segments]);
+  }, [session, loading, profile, profileLoading, segments]);
 
   return (
     <Stack
@@ -38,6 +43,7 @@ function RootLayoutInner() {
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="(auth)/sign-in" options={{ headerShown: false }} />
       <Stack.Screen name="(auth)/verify-email" options={{ headerShown: false }} />
+      <Stack.Screen name="(auth)/onboarding" options={{ headerShown: false }} />
       <Stack.Screen name="move/[id]" options={{ headerBackTitle: 'Moves' }} />
       <Stack.Screen name="category/[category]" options={{ headerBackTitle: 'My Moves' }} />
       <Stack.Screen name="edit/[id]" options={{ title: 'Edit Move', headerBackTitle: 'Detail' }} />

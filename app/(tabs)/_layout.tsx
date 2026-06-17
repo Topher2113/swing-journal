@@ -8,7 +8,7 @@ type TabIconProps = { color: string; size: number };
 const LibraryIcon = ({ color, size }: TabIconProps) => <Ionicons name="library" size={size} color={color} />;
 const AddIcon = ({ color, size }: TabIconProps) => <Ionicons name="add-circle" size={size} color={color} />;
 const JournalIcon = ({ color, size }: TabIconProps) => <Ionicons name="people" size={size} color={color} />;
-const BarChartIcon = ({ color, size }: TabIconProps) => <Ionicons name="bar-chart" size={size} color={color} />;
+const ProfileIcon = ({ color, size }: TabIconProps) => <Ionicons name="person-circle-outline" size={size} color={color} />;
 
 const headerStyle = { backgroundColor: C.bg };
 
@@ -60,7 +60,7 @@ export default function TabLayout() {
       />
       <Tabs.Screen
         name="stats"
-        options={{ title: 'Stats', tabBarIcon: BarChartIcon }}
+        options={{ title: 'Profile', tabBarIcon: ProfileIcon }}
       />
     </Tabs>
   );

@@ -2,11 +2,25 @@ import { createContext, useCallback, useContext, useEffect, useState, ReactNode 
 import { Linking } from 'react-native';
 import { Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
+import { UserProfile } from '@/types/Auth';
+
+function profileFromRow(row: Record<string, unknown>): UserProfile {
+  return {
+    id: row.id as string,
+    name: row.name as string,
+    dancePreference: row.dance_preference as UserProfile['dancePreference'],
+    level: row.level as UserProfile['level'],
+    createdAt: row.created_at as string,
+  };
+}
 
 type AuthContextValue = {
   session: Session | null;
   user: Session['user'] | null;
   loading: boolean;
+  profile: UserProfile | null;
+  profileLoading: boolean;
+  refreshProfile: () => Promise<void>;
   linkError: string | null;
   clearLinkError: () => void;
 };
@@ -15,6 +29,9 @@ const AuthContext = createContext<AuthContextValue>({
   session: null,
   user: null,
   loading: true,
+  profile: null,
+  profileLoading: false,
+  refreshProfile: async () => {},
   linkError: null,
   clearLinkError: () => {},
 });
@@ -22,9 +39,24 @@ const AuthContext = createContext<AuthContextValue>({
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [profileLoading, setProfileLoading] = useState(false);
   const [linkError, setLinkError] = useState<string | null>(null);
 
   const clearLinkError = useCallback(() => setLinkError(null), []);
+
+  const refreshProfile = useCallback(async (userId?: string) => {
+    const id = userId ?? session?.user?.id;
+    if (!id) return;
+    setProfileLoading(true);
+    const { data } = await supabase
+      .from('user_profiles')
+      .select('*')
+      .eq('id', id)
+      .maybeSingle();
+    setProfile(data ? profileFromRow(data as Record<string, unknown>) : null);
+    setProfileLoading(false);
+  }, [session?.user?.id]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -36,10 +68,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(newSession);
     });
 
-    // Handle email confirmation deep links.
-    // Supabase redirects back to the app with tokens or errors in the URL hash:
-    //   Success: swingjournal://#access_token=xxx&refresh_token=xxx&type=signup
-    //   Failure: swingjournal://#error=access_denied&error_code=otp_expired&error_description=...
     const handleDeepLink = async (url: string) => {
       const fragment = url.split('#')[1];
       if (!fragment) return;
@@ -75,8 +103,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  // Load profile whenever the logged-in user changes
+  useEffect(() => {
+    if (session?.user?.id) {
+      refreshProfile(session.user.id);
+    } else {
+      setProfile(null);
+    }
+  }, [session?.user?.id]);
+
   return (
-    <AuthContext.Provider value={{ session, user: session?.user ?? null, loading, linkError, clearLinkError }}>
+    <AuthContext.Provider value={{
+      session,
+      user: session?.user ?? null,
+      loading,
+      profile,
+      profileLoading,
+      refreshProfile,
+      linkError,
+      clearLinkError,
+    }}>
       {children}
     </AuthContext.Provider>
   );

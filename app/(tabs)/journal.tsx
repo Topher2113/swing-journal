@@ -41,16 +41,16 @@ function JournalLinked({ link }: { link: PartnerLink }) {
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
 
-  const partnerEmail =
-    user?.email === link.userEmailA
-      ? (link.userEmailB ?? 'Partner')
-      : link.userEmailA;
+  const isUserA = user?.email === link.userEmailA;
+  const partnerEmail = isUserA ? (link.userEmailB ?? 'Partner') : link.userEmailA;
+  const partnerName = isUserA ? link.userNameB : link.userNameA;
 
   return (
     <View style={styles.container}>
       <Stack.Screen options={{ title: 'Journal', headerShown: true }} />
       <PartnerJournalHeader
         partnerEmail={partnerEmail}
+        partnerName={partnerName}
         syncing={syncing}
         onSync={sync}
       />
