@@ -11,7 +11,7 @@ import { PartnerLink } from '@/types/Auth';
 import { C } from '@/constants/theme';
 
 export default function JournalScreen() {
-  const { link, loading, generateInviteCode, redeemInviteCode } = usePartnerLink();
+  const { link, loading, generateInviteCode, redeemInviteCode, cancelInviteCode } = usePartnerLink();
 
   if (loading) return null;
 
@@ -23,6 +23,7 @@ export default function JournalScreen() {
           link={link}
           onGenerate={generateInviteCode}
           onRedeem={redeemInviteCode}
+          onCancel={cancelInviteCode}
         />
       </View>
     );

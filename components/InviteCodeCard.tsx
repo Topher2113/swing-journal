@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   Pressable,
   Share,
   StyleSheet,
@@ -16,9 +17,10 @@ type Props = {
   link: PartnerLink | null;
   onGenerate: () => Promise<void>;
   onRedeem: (code: string) => Promise<void>;
+  onCancel: () => Promise<void>;
 };
 
-export function InviteCodeCard({ link, onGenerate, onRedeem }: Props) {
+export function InviteCodeCard({ link, onGenerate, onRedeem, onCancel }: Props) {
   const [redeemCode, setRedeemCode] = useState('');
   const [generating, setGenerating] = useState(false);
   const [redeeming, setRedeeming] = useState(false);
@@ -108,6 +110,21 @@ export function InviteCodeCard({ link, onGenerate, onRedeem }: Props) {
   }
 
   // Pending: code was generated, waiting for partner
+  const handleCancel = () => {
+    Alert.alert(
+      'Cancel Invite',
+      'This will delete the code and stop waiting for your partner. Are you sure?',
+      [
+        { text: 'Keep Waiting', style: 'cancel' },
+        {
+          text: 'Cancel Invite',
+          style: 'destructive',
+          onPress: onCancel,
+        },
+      ]
+    );
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.section}>
@@ -126,6 +143,13 @@ export function InviteCodeCard({ link, onGenerate, onRedeem }: Props) {
           <Text style={styles.waitingText}>Waiting for your partner to join…</Text>
         </View>
       </View>
+
+      <Pressable
+        style={({ pressed }) => [styles.cancelBtn, pressed && styles.cancelBtnPressed]}
+        onPress={handleCancel}
+      >
+        <Text style={styles.cancelText}>Cancel Invite</Text>
+      </Pressable>
     </View>
   );
 }
@@ -227,5 +251,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: 'center',
     marginTop: 8,
+  },
+  cancelBtn: {
+    marginTop: 'auto',
+    marginBottom: 32,
+    alignItems: 'center',
+    padding: 12,
+  },
+  cancelBtnPressed: {
+    opacity: 0.6,
+  },
+  cancelText: {
+    color: '#FCA5A5',
+    fontSize: 15,
+    fontWeight: '500',
   },
 });

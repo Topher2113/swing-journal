@@ -128,5 +128,12 @@ export function usePartnerLink() {
     setLink(updated);
   }, [user]);
 
-  return { link, loading, generateInviteCode, redeemInviteCode };
+  const cancelInviteCode = useCallback(async () => {
+    if (!link) return;
+    await supabase.from('partner_links').delete().eq('id', link.id);
+    await SecureStore.deleteItemAsync(SECURE_KEY);
+    setLink(null);
+  }, [link]);
+
+  return { link, loading, generateInviteCode, redeemInviteCode, cancelInviteCode };
 }
