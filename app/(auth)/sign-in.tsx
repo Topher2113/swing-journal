@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -10,51 +10,100 @@ import {
   Pressable,
 } from 'react-native';
 import { router } from 'expo-router';
+import * as Linking from 'expo-linking';
 import { signIn, signUp } from '@/lib/auth';
+import { useAuth } from '@/context/AuthContext';
 import { C, RADIUS } from '@/constants/theme';
 
 type Mode = 'signin' | 'signup';
 
+function friendlyError(msg: string): string {
+  const lower = msg.toLowerCase();
+  if (lower.includes('invalid login credentials')) return 'Email or password is incorrect.';
+  if (lower.includes('user already registered') || lower.includes('already registered')) {
+    return 'An account with this email already exists. Sign in instead.';
+  }
+  if (lower.includes('password should be at least')) return 'Password must be at least 6 characters.';
+  if (lower.includes('invalid email') || lower.includes('unable to validate email')) {
+    return 'Please enter a valid email address.';
+  }
+  if (lower.includes('rate limit') || lower.includes('too many')) {
+    return 'Too many attempts. Please wait a moment and try again.';
+  }
+  if (lower.includes('network') || lower.includes('fetch') || lower.includes('failed to fetch')) {
+    return 'Connection failed. Check your internet and try again.';
+  }
+  return msg || 'Something went wrong. Please try again.';
+}
+
 export default function SignInScreen() {
+  const { linkError, clearLinkError } = useAuth();
   const [mode, setMode] = useState<Mode>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [info, setInfo] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // Show errors surfaced by AuthContext (e.g. expired confirmation link)
+  useEffect(() => {
+    if (linkError) {
+      setError(linkError);
+      clearLinkError();
+    }
+  }, [linkError, clearLinkError]);
 
   const switchMode = (next: Mode) => {
     setError(null);
-    setInfo(null);
     setMode(next);
   };
 
   const handleSubmit = async () => {
     setError(null);
-    setInfo(null);
-    if (!email.trim() || !password) {
-      setError('Email and password are required.');
+
+    if (!email.trim()) {
+      setError('Please enter your email address.');
       return;
     }
-    if (mode === 'signup' && password !== confirm) {
-      setError('Passwords do not match.');
+    if (!password) {
+      setError('Please enter your password.');
       return;
     }
+    if (mode === 'signup') {
+      if (password.length < 6) {
+        setError('Password must be at least 6 characters.');
+        return;
+      }
+      if (password !== confirm) {
+        setError('Passwords do not match.');
+        return;
+      }
+    }
+
     setLoading(true);
     try {
       if (mode === 'signup') {
-        const { error: err } = await signUp(email.trim(), password);
+        const redirectTo = Linking.createURL('/');
+        const { error: err } = await signUp(email.trim(), password, redirectTo);
         if (err) throw err;
-        setInfo('Account created! Check your email to confirm, then sign in.');
-        switchMode('signin');
+        router.push(
+          `/(auth)/verify-email?email=${encodeURIComponent(email.trim())}` as never
+        );
       } else {
         const { error: err } = await signIn(email.trim(), password);
         if (err) throw err;
         router.replace('/(tabs)');
       }
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Something went wrong.');
+      const msg = e instanceof Error ? e.message : String(e);
+      // "Email not confirmed" → send them to the verify screen to resend
+      if (msg.toLowerCase().includes('email not confirmed')) {
+        router.push(
+          `/(auth)/verify-email?email=${encodeURIComponent(email.trim())}` as never
+        );
+        return;
+      }
+      setError(friendlyError(msg));
     } finally {
       setLoading(false);
     }
@@ -105,7 +154,6 @@ export default function SignInScreen() {
         )}
 
         {error ? <Text style={styles.error}>{error}</Text> : null}
-        {info ? <Text style={styles.info}>{info}</Text> : null}
 
         <Pressable
           style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
@@ -168,11 +216,6 @@ const styles = StyleSheet.create({
   },
   error: {
     color: '#FCA5A5',
-    fontSize: 14,
-    textAlign: 'center',
-  },
-  info: {
-    color: '#86EFAC',
     fontSize: 14,
     textAlign: 'center',
   },

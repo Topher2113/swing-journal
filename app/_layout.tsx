@@ -37,6 +37,7 @@ function RootLayoutInner() {
     >
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="(auth)/sign-in" options={{ headerShown: false }} />
+      <Stack.Screen name="(auth)/verify-email" options={{ headerShown: false }} />
       <Stack.Screen name="move/[id]" options={{ headerBackTitle: 'Moves' }} />
       <Stack.Screen name="category/[category]" options={{ headerBackTitle: 'My Moves' }} />
       <Stack.Screen name="edit/[id]" options={{ title: 'Edit Move', headerBackTitle: 'Detail' }} />

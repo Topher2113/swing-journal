@@ -80,7 +80,12 @@ export function usePartnerLink() {
       })
       .select()
       .single();
-    if (error) throw error;
+    if (error) {
+      if (error.code === '23505') {
+        throw new Error('Could not generate a unique code. Please try again.');
+      }
+      throw new Error('Could not create an invite code. Check your connection and try again.');
+    }
     const newLink = fromRow(data as Record<string, unknown>);
     await SecureStore.setItemAsync(SECURE_KEY, newLink.id);
     setLink(newLink);
@@ -88,18 +93,36 @@ export function usePartnerLink() {
 
   const redeemInviteCode = useCallback(async (code: string) => {
     if (!user) return;
+    const trimmed = code.trim().toUpperCase();
+
+    // Pre-flight: find the code and validate before committing the update
+    const { data: existing } = await supabase
+      .from('partner_links')
+      .select('id, user_id_a, status')
+      .eq('invite_code', trimmed)
+      .maybeSingle();
+
+    if (!existing) {
+      throw new Error('Invite code not found. Double-check the code and try again.');
+    }
+    if (existing.user_id_a === user.id) {
+      throw new Error("That's your own invite code! Share it with your dance partner instead.");
+    }
+    if (existing.status !== 'pending') {
+      throw new Error('This code has already been used.');
+    }
+
     const { data, error } = await supabase
       .from('partner_links')
-      .update({
-        user_id_b: user.id,
-        user_email_b: user.email,
-        status: 'linked',
-      })
-      .eq('invite_code', code.trim().toUpperCase())
+      .update({ user_id_b: user.id, user_email_b: user.email, status: 'linked' })
+      .eq('invite_code', trimmed)
       .eq('status', 'pending')
       .select()
       .single();
-    if (error) throw error;
+
+    if (error || !data) {
+      throw new Error('Failed to join. Please try again.');
+    }
     const updated = fromRow(data as Record<string, unknown>);
     await SecureStore.setItemAsync(SECURE_KEY, updated.id);
     setLink(updated);
