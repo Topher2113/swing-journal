@@ -40,7 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [profileLoading, setProfileLoading] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(true);
   const [linkError, setLinkError] = useState<string | null>(null);
 
   const clearLinkError = useCallback(() => setLinkError(null), []);
@@ -109,6 +109,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       refreshProfile(session.user.id);
     } else {
       setProfile(null);
+      setProfileLoading(false);
     }
   }, [session?.user?.id]);
 

@@ -19,6 +19,7 @@ import { useLineDances } from '@/hooks/useLineDances';
 import { usePartnerLink } from '@/hooks/usePartnerLink';
 import { usePartnerJournal } from '@/hooks/usePartnerJournal';
 import { useAuth } from '@/context/AuthContext';
+import { uploadVideoForSharing, isLocalUri } from '@/lib/videoStorage';
 import { useSongSearch } from '@/hooks/useSongSearch';
 import { useVideoRecorder } from '@/hooks/useVideoRecorder';
 import { useMotionRecorder } from '@/hooks/useMotionRecorder';
@@ -153,9 +154,14 @@ export default function AddScreen() {
         motionData: MOTION_TRACKING_ENABLED ? frames : null,
       });
       if (saveToJournal && link?.status === 'linked' && user) {
+        let shareVideoUri = move.videoUri;
+        if (shareVideoUri && isLocalUri(shareVideoUri)) {
+          shareVideoUri = await uploadVideoForSharing(shareVideoUri, user.id);
+        }
         const sharedMove: SharedMove = {
           ...move,
           id: Crypto.randomUUID(),
+          videoUri: shareVideoUri,
           partnerLinkId: link.id,
           addedByUserId: user.id,
         };

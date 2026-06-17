@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as Crypto from 'expo-crypto';
@@ -8,6 +8,7 @@ import { saveMove } from '@/storage/moves';
 import { usePartnerLink } from '@/hooks/usePartnerLink';
 import { usePartnerJournal } from '@/hooks/usePartnerJournal';
 import { useAuth } from '@/context/AuthContext';
+import { uploadVideoForSharing, isLocalUri } from '@/lib/videoStorage';
 import { VideoPlayer } from '@/components/VideoPlayer';
 import { DifficultyBadge } from '@/components/DifficultyBadge';
 import { NotesBox } from '@/components/NotesBox';
@@ -20,10 +21,11 @@ export default function MoveDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { move, setMove } = useMove(id);
-  const { link } = usePartnerLink();
-  const { upsertLocal: shareToJournal } = usePartnerJournal(link?.id ?? '');
+  const { link, loading: linkLoading } = usePartnerLink();
+  const { upsertLocal: shareToJournal, sync: syncJournal } = usePartnerJournal(link?.id ?? '');
   const { user } = useAuth();
   const [shared, setShared] = useState(false);
+  const [sharing, setSharing] = useState(false);
 
   const handleIncrement = async () => {
     if (!move) return;
@@ -33,15 +35,27 @@ export default function MoveDetailScreen() {
   };
 
   const handleShare = async () => {
-    if (!move || !link || !user) return;
-    const sharedMove: SharedMove = {
-      ...move,
-      id: Crypto.randomUUID(),
-      partnerLinkId: link.id,
-      addedByUserId: user.id,
-    };
-    await shareToJournal(sharedMove);
-    setShared(true);
+    if (!move || !link || !user || sharing) return;
+    setSharing(true);
+    try {
+      // If the video is a local file, upload it to Supabase Storage so the partner can view it
+      let shareVideoUri = move.videoUri;
+      if (shareVideoUri && isLocalUri(shareVideoUri)) {
+        shareVideoUri = await uploadVideoForSharing(shareVideoUri, user.id);
+      }
+      const sharedMove: SharedMove = {
+        ...move,
+        id: Crypto.randomUUID(),
+        videoUri: shareVideoUri,
+        partnerLinkId: link.id,
+        addedByUserId: user.id,
+      };
+      await shareToJournal(sharedMove);
+      syncJournal(); // push immediately so partner sees it without waiting for foreground
+      setShared(true);
+    } finally {
+      setSharing(false);
+    }
   };
 
   return (
@@ -87,21 +101,36 @@ export default function MoveDetailScreen() {
               </Pressable>
             )}
 
-            {link?.status === 'linked' && (
+            {!linkLoading && link?.status === 'linked' && (
               <Pressable
-                style={({ pressed }) => [styles.shareBtn, shared && styles.shareBtnDone, { opacity: pressed ? 0.8 : 1 }]}
+                style={({ pressed }) => [
+                  styles.shareBtn,
+                  shared && styles.shareBtnDone,
+                  { opacity: pressed && !sharing ? 0.8 : 1 },
+                ]}
                 android_ripple={{ color: 'transparent' }}
                 onPress={handleShare}
-                disabled={shared}
+                disabled={shared || sharing}
               >
-                <Ionicons
-                  name={shared ? 'checkmark-circle-outline' : 'share-outline'}
-                  size={18}
-                  color={shared ? '#86EFAC' : C.accent}
-                />
-                <Text style={[styles.shareBtnText, shared && styles.shareBtnTextDone]}>
-                  {shared ? 'Shared to journal' : 'Share to partner journal'}
-                </Text>
+                {sharing ? (
+                  <>
+                    <ActivityIndicator size="small" color={C.accent} />
+                    <Text style={styles.shareBtnText}>
+                      {move?.videoUri ? 'Uploading video…' : 'Sharing…'}
+                    </Text>
+                  </>
+                ) : (
+                  <>
+                    <Ionicons
+                      name={shared ? 'checkmark-circle-outline' : 'share-outline'}
+                      size={18}
+                      color={shared ? '#86EFAC' : C.accent}
+                    />
+                    <Text style={[styles.shareBtnText, shared && styles.shareBtnTextDone]}>
+                      {shared ? 'Shared to journal' : 'Share to partner journal'}
+                    </Text>
+                  </>
+                )}
               </Pressable>
             )}
           </>

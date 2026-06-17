@@ -1,9 +1,11 @@
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Stack, useLocalSearchParams } from 'expo-router';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
+import { Ionicons } from '@expo/vector-icons';
 import { usePartnerLink } from '@/hooks/usePartnerLink';
 import { usePartnerJournal } from '@/hooks/usePartnerJournal';
 import { useAuth } from '@/context/AuthContext';
+import { useMoves } from '@/hooks/useMoves';
 import { VideoPlayer } from '@/components/VideoPlayer';
 import { DifficultyBadge } from '@/components/DifficultyBadge';
 import { NotesBox } from '@/components/NotesBox';
@@ -18,11 +20,27 @@ export default function SharedMoveDetailScreen() {
   const { items, upsertLocal } = usePartnerJournal(resolvedLinkId);
   const { user } = useAuth();
 
+  const { addMove } = useMoves();
+  const [saved, setSaved] = useState(false);
+
   const move = useMemo(() => items.find((m) => m.id === id) ?? null, [items, id]);
 
   const handleIncrement = async () => {
     if (!move) return;
     await upsertLocal({ ...move, practiceCount: move.practiceCount + 1 });
+  };
+
+  const handleSaveToLibrary = async () => {
+    if (!move || saved) return;
+    await addMove({
+      name: move.name,
+      category: move.category,
+      difficulty: move.difficulty,
+      notes: move.notes,
+      videoUri: move.videoUri,
+      motionData: move.motionData,
+    });
+    setSaved(true);
   };
 
   const addedByLabel =
@@ -56,6 +74,22 @@ export default function SharedMoveDetailScreen() {
         {move.notes ? <NotesBox notes={move.notes} /> : null}
 
         <PracticeCounter count={move.practiceCount} onIncrement={handleIncrement} />
+
+        <Pressable
+          style={({ pressed }) => [styles.saveBtn, saved && styles.saveBtnDone, { opacity: pressed ? 0.8 : 1 }]}
+          android_ripple={{ color: 'transparent' }}
+          onPress={handleSaveToLibrary}
+          disabled={saved}
+        >
+          <Ionicons
+            name={saved ? 'checkmark-circle-outline' : 'bookmark-outline'}
+            size={18}
+            color={saved ? '#86EFAC' : C.accent}
+          />
+          <Text style={[styles.saveBtnText, saved && styles.saveBtnTextDone]}>
+            {saved ? 'Saved to your library' : 'Save to my library'}
+          </Text>
+        </Pressable>
 
         {MOTION_TRACKING_ENABLED && move.motionData && move.motionData.length >= 2 && (
           <View style={styles.motionNote}>
@@ -116,5 +150,28 @@ const styles = StyleSheet.create({
   motionNoteText: {
     fontSize: 13,
     color: C.textSecondary,
+  },
+  saveBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: C.surface,
+    borderRadius: RADIUS.card,
+    padding: 16,
+    minHeight: 52,
+    borderWidth: 1,
+    borderColor: C.border,
+  },
+  saveBtnDone: {
+    borderColor: '#14532D',
+    backgroundColor: '#14532D33',
+  },
+  saveBtnText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: C.accent,
+  },
+  saveBtnTextDone: {
+    color: '#86EFAC',
   },
 });
