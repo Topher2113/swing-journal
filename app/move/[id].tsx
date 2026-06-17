@@ -8,7 +8,7 @@ import { saveMove } from '@/storage/moves';
 import { usePartnerLink } from '@/hooks/usePartnerLink';
 import { usePartnerJournal } from '@/hooks/usePartnerJournal';
 import { useAuth } from '@/context/AuthContext';
-import { uploadVideoForSharing, isLocalUri } from '@/lib/videoStorage';
+import { uploadVideo, isLocalUri } from '@/lib/videoStorage';
 import { VideoPlayer } from '@/components/VideoPlayer';
 import { DifficultyBadge } from '@/components/DifficultyBadge';
 import { NotesBox } from '@/components/NotesBox';
@@ -41,7 +41,7 @@ export default function MoveDetailScreen() {
       // If the video is a local file, upload it to Supabase Storage so the partner can view it
       let shareVideoUri = move.videoUri;
       if (shareVideoUri && isLocalUri(shareVideoUri)) {
-        shareVideoUri = await uploadVideoForSharing(shareVideoUri, user.id);
+        shareVideoUri = await uploadVideo(shareVideoUri, user.id);
       }
       const sharedMove: SharedMove = {
         ...move,

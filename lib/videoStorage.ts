@@ -3,7 +3,11 @@ import { supabase } from './supabase';
 
 const BUCKET = 'move-videos';
 
-export async function uploadVideoForSharing(
+export function isLocalUri(uri: string): boolean {
+  return uri.startsWith('file://') || uri.startsWith('content://');
+}
+
+export async function uploadVideo(
   localUri: string,
   userId: string,
 ): Promise<string | null> {
@@ -29,8 +33,4 @@ export async function uploadVideoForSharing(
   } catch {
     return null;
   }
-}
-
-export function isLocalUri(uri: string): boolean {
-  return uri.startsWith('file://') || uri.startsWith('content://');
 }

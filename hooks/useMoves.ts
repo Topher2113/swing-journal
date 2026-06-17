@@ -3,6 +3,7 @@ import * as Crypto from 'expo-crypto';
 import { Move, Category, Difficulty } from '@/types/Move';
 import { useSyncedStorage } from './useSyncedStorage';
 import { useAuth } from '@/context/AuthContext';
+import { uploadVideo, isLocalUri } from '@/lib/videoStorage';
 
 function fromRow(row: Record<string, unknown>): Move {
   return {
@@ -44,7 +45,7 @@ export function useMoves() {
     fields: Omit<Move, 'id' | 'practiceCount' | 'createdAt' | 'updatedAt' | 'syncStatus'>
   ): Promise<Move> => {
     const now = new Date().toISOString();
-    return upsertLocal({
+    const move = await upsertLocal({
       ...fields,
       id: Crypto.randomUUID(),
       practiceCount: 0,
@@ -52,11 +53,42 @@ export function useMoves() {
       updatedAt: now,
       syncStatus: 'pending',
     });
-  }, [upsertLocal]);
+
+    // Background upload: save returns immediately with the local URI, then
+    // we replace it with the public cloud URL once the upload finishes.
+    if (move.videoUri && isLocalUri(move.videoUri) && user) {
+      uploadVideo(move.videoUri, user.id).then((publicUrl) => {
+        if (publicUrl) {
+          upsertLocal({
+            ...move,
+            videoUri: publicUrl,
+            updatedAt: new Date().toISOString(),
+            syncStatus: 'pending',
+          });
+        }
+      }).catch(() => {});
+    }
+
+    return move;
+  }, [upsertLocal, user]);
 
   const updateMove = useCallback(async (move: Move): Promise<void> => {
     await upsertLocal(move);
-  }, [upsertLocal]);
+
+    // Background upload if the video was changed to a new local file
+    if (move.videoUri && isLocalUri(move.videoUri) && user) {
+      uploadVideo(move.videoUri, user.id).then((publicUrl) => {
+        if (publicUrl) {
+          upsertLocal({
+            ...move,
+            videoUri: publicUrl,
+            updatedAt: new Date().toISOString(),
+            syncStatus: 'pending',
+          });
+        }
+      }).catch(() => {});
+    }
+  }, [upsertLocal, user]);
 
   const deleteMove = useCallback(async (id: string): Promise<void> => {
     await removeLocal(id);

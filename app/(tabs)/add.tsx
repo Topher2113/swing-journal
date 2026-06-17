@@ -19,7 +19,7 @@ import { useLineDances } from '@/hooks/useLineDances';
 import { usePartnerLink } from '@/hooks/usePartnerLink';
 import { usePartnerJournal } from '@/hooks/usePartnerJournal';
 import { useAuth } from '@/context/AuthContext';
-import { uploadVideoForSharing, isLocalUri } from '@/lib/videoStorage';
+import { uploadVideo, isLocalUri } from '@/lib/videoStorage';
 import { useSongSearch } from '@/hooks/useSongSearch';
 import { useVideoRecorder } from '@/hooks/useVideoRecorder';
 import { useMotionRecorder } from '@/hooks/useMotionRecorder';
@@ -145,25 +145,31 @@ export default function AddScreen() {
     }
     setSaving(true);
     try {
+      // When sharing to journal, pre-upload the video once so both the personal
+      // move and the shared move get the same cloud URL (avoids two uploads).
+      // When not sharing, addMove handles the upload in the background.
+      let resolvedVideoUri = videoUri;
+      const willShare = saveToJournal && link?.status === 'linked' && user;
+      if (willShare && videoUri && isLocalUri(videoUri) && user) {
+        const publicUrl = await uploadVideo(videoUri, user.id);
+        if (publicUrl) resolvedVideoUri = publicUrl;
+      }
+
       const move = await addMove({
         name: name.trim(),
         category,
         difficulty,
         notes,
-        videoUri,
+        videoUri: resolvedVideoUri,
         motionData: MOTION_TRACKING_ENABLED ? frames : null,
       });
-      if (saveToJournal && link?.status === 'linked' && user) {
-        let shareVideoUri = move.videoUri;
-        if (shareVideoUri && isLocalUri(shareVideoUri)) {
-          shareVideoUri = await uploadVideoForSharing(shareVideoUri, user.id);
-        }
+
+      if (willShare) {
         const sharedMove: SharedMove = {
           ...move,
           id: Crypto.randomUUID(),
-          videoUri: shareVideoUri,
-          partnerLinkId: link.id,
-          addedByUserId: user.id,
+          partnerLinkId: link!.id,
+          addedByUserId: user!.id,
         };
         await shareToJournal(sharedMove);
       }
