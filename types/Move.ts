@@ -27,6 +27,7 @@ export type Move = {
 export type SharedMove = Move & {
   partnerLinkId: string;
   addedByUserId: string;
+  originalMoveId: string | null;
 };
 
 export const CATEGORIES: Category[] = [

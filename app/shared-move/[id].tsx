@@ -1,5 +1,5 @@
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { usePartnerLink } from '@/hooks/usePartnerLink';
@@ -15,9 +15,10 @@ import { MOTION_TRACKING_ENABLED } from '@/constants/features';
 
 export default function SharedMoveDetailScreen() {
   const { id, partnerLinkId } = useLocalSearchParams<{ id: string; partnerLinkId: string }>();
+  const router = useRouter();
   const { link } = usePartnerLink();
   const resolvedLinkId = partnerLinkId ?? link?.id ?? '';
-  const { items, upsertLocal } = usePartnerJournal(resolvedLinkId);
+  const { items, upsertLocal, removeLocal } = usePartnerJournal(resolvedLinkId);
   const { user } = useAuth();
 
   const { addMove } = useMoves();
@@ -43,10 +44,23 @@ export default function SharedMoveDetailScreen() {
     setSaved(true);
   };
 
-  const addedByLabel =
-    move?.addedByUserId === user?.id
-      ? 'Added by you'
-      : 'Added by partner';
+  const isOwn = move?.addedByUserId === user?.id;
+  const addedByLabel = isOwn ? 'Added by you' : 'Added by partner';
+
+  const handleRemove = () => {
+    if (!move) return;
+    Alert.alert('Remove from journal', 'Remove this move from the partner journal?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Remove',
+        style: 'destructive',
+        onPress: async () => {
+          await removeLocal(move.id);
+          router.back();
+        },
+      },
+    ]);
+  };
 
   if (!move) {
     return (
@@ -90,6 +104,17 @@ export default function SharedMoveDetailScreen() {
             {saved ? 'Saved to your library' : 'Save to my library'}
           </Text>
         </Pressable>
+
+        {isOwn && (
+          <Pressable
+            style={({ pressed }) => [styles.removeBtn, { opacity: pressed ? 0.8 : 1 }]}
+            android_ripple={{ color: 'transparent' }}
+            onPress={handleRemove}
+          >
+            <Ionicons name="trash-outline" size={18} color="#FCA5A5" />
+            <Text style={styles.removeBtnText}>Remove from journal</Text>
+          </Pressable>
+        )}
 
         {MOTION_TRACKING_ENABLED && move.motionData && move.motionData.length >= 2 && (
           <View style={styles.motionNote}>
@@ -173,5 +198,21 @@ const styles = StyleSheet.create({
   },
   saveBtnTextDone: {
     color: '#86EFAC',
+  },
+  removeBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: C.surface,
+    borderRadius: RADIUS.card,
+    padding: 16,
+    minHeight: 52,
+    borderWidth: 1,
+    borderColor: '#7F1D1D44',
+  },
+  removeBtnText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#FCA5A5',
   },
 });

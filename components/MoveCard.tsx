@@ -12,9 +12,10 @@ type Props = {
   onPress: () => void;
   onEdit: () => void;
   onDelete: () => void;
+  isShared?: boolean;
 };
 
-export function MoveCard({ move, onPress, onEdit, onDelete }: Props) {
+export function MoveCard({ move, onPress, onEdit, onDelete, isShared }: Props) {
   const swipeableRef = useRef<any>(null);
 
   const handleEdit = useCallback(() => {
@@ -53,6 +54,7 @@ export function MoveCard({ move, onPress, onEdit, onDelete }: Props) {
           </View>
         </View>
         <View style={styles.trailingIcons}>
+          {isShared && <Ionicons name="link-outline" size={13} color={C.accent} />}
           <Ionicons name="ellipsis-horizontal" size={16} color={C.textSecondary} />
           <Ionicons name="chevron-forward" size={20} color="#636366" />
         </View>

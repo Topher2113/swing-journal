@@ -145,7 +145,15 @@ export default function ProfileScreen() {
       </View>
 
       {/* ── Profile ── */}
-      <Text style={styles.sectionTitle}>Profile</Text>
+      <View style={styles.sectionTitleRow}>
+        <Text style={styles.sectionTitle}>Profile</Text>
+        <Pressable
+          onPress={() => router.push('/edit-profile' as never)}
+          style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1, padding: 4 })}
+        >
+          <Ionicons name="pencil-outline" size={18} color={C.accent} />
+        </Pressable>
+      </View>
       <View style={styles.card}>
         <View style={styles.profileRow}>
           <Ionicons name="person-outline" size={18} color={C.textSecondary} />
@@ -308,5 +316,11 @@ const styles = StyleSheet.create({
     color: '#FCA5A5',
     fontSize: 15,
     fontWeight: '600',
+  },
+  sectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: -8,
   },
 });

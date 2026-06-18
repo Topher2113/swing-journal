@@ -49,6 +49,7 @@ export default function MoveDetailScreen() {
         videoUri: shareVideoUri,
         partnerLinkId: link.id,
         addedByUserId: user.id,
+        originalMoveId: move.id,
       };
       await shareToJournal(sharedMove);
       syncJournal(); // push immediately so partner sees it without waiting for foreground

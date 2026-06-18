@@ -5,6 +5,7 @@ import { C } from '@/constants/theme';
 
 type TabIconProps = { color: string; size: number };
 
+const HomeIcon = ({ color, size }: TabIconProps) => <Ionicons name="home-outline" size={size} color={color} />;
 const LibraryIcon = ({ color, size }: TabIconProps) => <Ionicons name="library" size={size} color={color} />;
 const AddIcon = ({ color, size }: TabIconProps) => <Ionicons name="add-circle" size={size} color={color} />;
 const JournalIcon = ({ color, size }: TabIconProps) => <Ionicons name="people" size={size} color={color} />;
@@ -46,6 +47,10 @@ export default function TabLayout() {
         tabBarInactiveTintColor: C.textSecondary,
       }}
     >
+      <Tabs.Screen
+        name="home"
+        options={{ title: 'Home', tabBarIcon: HomeIcon }}
+      />
       <Tabs.Screen
         name="index"
         options={{ title: 'Library', tabBarIcon: LibraryIcon }}

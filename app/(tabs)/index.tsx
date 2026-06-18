@@ -6,6 +6,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { useMoves } from '@/hooks/useMoves';
 import { useSongs } from '@/hooks/useSongs';
 import { useLineDances } from '@/hooks/useLineDances';
+import { usePartnerLink } from '@/hooks/usePartnerLink';
+import { usePartnerJournal } from '@/hooks/usePartnerJournal';
+import { useAuth } from '@/context/AuthContext';
 import { useSortedLineDances } from '@/hooks/useSortedLineDances';
 import { useSortedSongs, SongSortKey } from '@/hooks/useSortedSongs';
 import { CategorySection } from '@/components/CategorySection';
@@ -30,9 +33,12 @@ const SONG_SORT_OPTIONS = [
 
 export default function LibraryScreen() {
   const router = useRouter();
+  const { user } = useAuth();
   const { moves, reload: reloadMoves, deleteMove } = useMoves();
   const { songs, reload: reloadSongs, deleteSong } = useSongs();
   const { lineDances, reload: reloadLineDances, deleteLineDance } = useLineDances();
+  const { link } = usePartnerLink();
+  const { items: journalItems } = usePartnerJournal(link?.id ?? '');
   const [segment, setSegment] = useState<Segment>('Moves');
 
   // Songs search + sort
@@ -57,6 +63,15 @@ export default function LibraryScreen() {
     () => Object.fromEntries(CATEGORIES.map((cat) => [cat, moves.filter((m) => m.category === cat)])),
     [moves]
   );
+
+  const sharedMoveIds = useMemo(() => {
+    if (!link || link.status !== 'linked') return new Set<string>();
+    return new Set(
+      journalItems
+        .filter((m) => m.addedByUserId === user?.id && m.originalMoveId)
+        .map((m) => m.originalMoveId as string)
+    );
+  }, [journalItems, link, user?.id]);
 
   const filteredSongs = useSortedSongs(songs, songSortKey, songSortDir, songSearch);
   const filteredLineDances = useSortedLineDances(lineDances, ldSortKey, ldSortDir, ldSearch);
@@ -109,6 +124,7 @@ export default function LibraryScreen() {
                   onPressMove={(id) => router.push({ pathname: '/move/[id]', params: { id } })}
                   onEditMove={(id) => router.push({ pathname: '/edit/[id]', params: { id } })}
                   onDeleteMove={deleteMove}
+                  sharedMoveIds={sharedMoveIds}
                 />
               )}
             />

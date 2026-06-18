@@ -170,6 +170,7 @@ export default function AddScreen() {
           id: Crypto.randomUUID(),
           partnerLinkId: link!.id,
           addedByUserId: user!.id,
+          originalMoveId: move.id,
         };
         await shareToJournal(sharedMove);
       }

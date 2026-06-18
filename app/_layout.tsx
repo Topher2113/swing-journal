@@ -28,7 +28,7 @@ function RootLayoutInner() {
       // Logged in but hasn't completed onboarding yet
       router.replace('/(auth)/onboarding' as never);
     } else if (session && profile && inAuthGroup) {
-      router.replace('/(tabs)');
+      router.replace('/(tabs)/home' as never);
     }
   }, [session, loading, profile, profileLoading, segments]);
 
@@ -53,6 +53,7 @@ function RootLayoutInner() {
       <Stack.Screen name="line-dance/[id]" options={{ headerBackTitle: 'Library' }} />
       <Stack.Screen name="edit-line-dance/[id]" options={{ title: 'Edit Line Dance', headerBackTitle: 'Detail' }} />
       <Stack.Screen name="shared-move/[id]" options={{ title: '', headerBackTitle: 'Journal' }} />
+      <Stack.Screen name="edit-profile" options={{ title: 'Edit Profile', headerBackTitle: 'Profile' }} />
     </Stack>
   );
 }
