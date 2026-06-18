@@ -46,6 +46,8 @@ export const CATEGORY_SHORT: Record<Category, string> = {
   'Lifts & Tricks': 'Lifts',
 };
 
+export const CATEGORY_LABELS = CATEGORIES.map((c) => CATEGORY_SHORT[c]);
+
 export const DIFFICULTY_ORDER: Record<Difficulty, number> = {
   Beginner: 0,
   Intermediate: 1,

@@ -7,6 +7,7 @@ import { usePartnerLink } from '@/hooks/usePartnerLink';
 import { usePartnerJournal } from '@/hooks/usePartnerJournal';
 import { useAuth } from '@/context/AuthContext';
 import { DifficultyBadge } from '@/components/DifficultyBadge';
+import { SectionHeader } from '@/components/SectionHeader';
 import { C, RADIUS } from '@/constants/theme';
 import { Move } from '@/types/Move';
 
@@ -87,15 +88,7 @@ export default function HomeScreen() {
         <Text style={styles.greeting}>{greeting(name)}</Text>
 
         {/* Recent Moves */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Recent Moves</Text>
-          <Pressable
-            onPress={() => router.push('/(tabs)')}
-            style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
-          >
-            <Text style={styles.seeAll}>See all →</Text>
-          </Pressable>
-        </View>
+        <SectionHeader title="Recent Moves" onSeeAll={() => router.push('/(tabs)')} />
         {recentMoves.length === 0 ? (
           <Text style={styles.empty}>No moves yet — add one from the Add tab!</Text>
         ) : (
@@ -111,15 +104,7 @@ export default function HomeScreen() {
         {/* Practice These */}
         {practiceMoves.length > 0 && (
           <>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Practice These</Text>
-              <Pressable
-                onPress={() => router.push('/(tabs)')}
-                style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
-              >
-                <Text style={styles.seeAll}>See all →</Text>
-              </Pressable>
-            </View>
+            <SectionHeader title="Practice These" onSeeAll={() => router.push('/(tabs)')} />
             {practiceMoves.map((move) => (
               <MoveRow
                 key={move.id}
@@ -133,15 +118,7 @@ export default function HomeScreen() {
         {/* Partner's Latest */}
         {link?.status === 'linked' && (
           <>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Partner's Latest</Text>
-              <Pressable
-                onPress={() => router.push('/(tabs)/journal' as never)}
-                style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
-              >
-                <Text style={styles.seeAll}>See all →</Text>
-              </Pressable>
-            </View>
+            <SectionHeader title="Partner's Latest" onSeeAll={() => router.push('/(tabs)/journal' as never)} />
             {partnerMoves.length === 0 ? (
               <Text style={styles.empty}>Your partner hasn't shared any moves yet.</Text>
             ) : (
@@ -182,31 +159,13 @@ const styles = StyleSheet.create({
     padding: 20,
     gap: 12,
     paddingBottom: 48,
-    paddingTop: 56,
+    paddingTop: 80,
   },
   greeting: {
     fontSize: 26,
     fontWeight: '700',
     color: C.textPrimary,
     marginBottom: 8,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 12,
-    marginBottom: 4,
-  },
-  sectionTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: C.textPrimary,
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
-  },
-  seeAll: {
-    fontSize: 13,
-    color: C.accent,
   },
   empty: {
     fontSize: 14,

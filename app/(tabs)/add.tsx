@@ -21,7 +21,8 @@ import { usePartnerJournal } from '@/hooks/usePartnerJournal';
 import { useAuth } from '@/context/AuthContext';
 import { uploadVideo, isLocalUri } from '@/lib/videoStorage';
 import { useSongSearch } from '@/hooks/useSongSearch';
-import { useVideoRecorder } from '@/hooks/useVideoRecorder';
+import { useVideoPickerHandlers } from '@/hooks/useVideoPickerHandlers';
+import { useDebounceSearch } from '@/hooks/useDebounceSearch';
 import { useMotionRecorder } from '@/hooks/useMotionRecorder';
 import { AlbumArt } from '@/components/AlbumArt';
 import { SaveButton } from '@/components/SaveButton';
@@ -32,13 +33,12 @@ import { StepListEditor } from '@/components/StepListEditor';
 import { LinkedSongPicker } from '@/components/LinkedSongPicker';
 import { MotionRecorderButton } from '@/components/MotionRecorderButton';
 import { Ionicons } from '@expo/vector-icons';
-import { CATEGORIES, DIFFICULTIES, CATEGORY_SHORT, Category, Difficulty, SharedMove } from '@/types/Move';
+import { CATEGORIES, CATEGORY_LABELS, CATEGORY_SHORT, DIFFICULTIES, Category, Difficulty, SharedMove } from '@/types/Move';
 import { LineDanceStep } from '@/types/LineDance';
 import { SpotifyTrackResult } from '@/types/Song';
 import { C, RADIUS } from '@/constants/theme';
 import { MOTION_TRACKING_ENABLED } from '@/constants/features';
 
-const CATEGORY_LABELS = CATEGORIES.map((c) => CATEGORY_SHORT[c]);
 const ADD_SEGMENTS = ['Move', 'Line Dance', 'Song'];
 type AddSegment = 'Move' | 'Line Dance' | 'Song';
 
@@ -51,7 +51,6 @@ export default function AddScreen() {
   const { upsertLocal: shareToJournal } = usePartnerJournal(link?.id ?? '');
   const { user } = useAuth();
   const { search: searchSpotify, loading: searchLoading } = useSongSearch();
-  const { recordVideo, pickVideo } = useVideoRecorder();
   const { isRecording, frames, start: startMotion, stop: stopMotion, clear: clearMotion } =
     useMotionRecorder();
 
@@ -70,12 +69,16 @@ export default function AddScreen() {
   const [saveToJournal, setSaveToJournal] = useState(false);
 
   // Song form state
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<SpotifyTrackResult[]>([]);
+  const {
+    query: searchQuery,
+    results: searchResults,
+    setResults: setSearchResults,
+    setQuery: setSearchQuery,
+    handleChange: handleSearchQueryChange,
+  } = useDebounceSearch<SpotifyTrackResult>(searchSpotify);
   const [attachedTrack, setAttachedTrack] = useState<SpotifyTrackResult | null>(null);
   const [songNotes, setSongNotes] = useState('');
   const [songSaving, setSongSaving] = useState(false);
-  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Line Dance form state
   const [ldName, setLdName] = useState('');
@@ -111,27 +114,17 @@ export default function AddScreen() {
       setLdLinkedSongId(null);
       setLdNotes('');
       setSaveToJournal(false);
-      return () => {
-        if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
-      };
     }, [clearMotion, segmentParam])
   );
 
   // ── Move handlers ────────────────────────────────────────────────────────────
 
+  const { handleRecord, handlePick } = useVideoPickerHandlers(setVideoUri);
+  const { handleRecord: handleLdRecord, handlePick: handleLdPick } = useVideoPickerHandlers(setLdVideoUri);
+
   const handleCategoryChange = (label: string) => {
     const full = CATEGORIES[CATEGORY_LABELS.indexOf(label)];
     if (full) setCategory(full);
-  };
-
-  const handleRecord = async () => {
-    const uri = await recordVideo();
-    if (uri) setVideoUri(uri);
-  };
-
-  const handlePick = async () => {
-    const uri = await pickVideo();
-    if (uri) setVideoUri(uri);
   };
 
   const handleClear = useCallback(() => setVideoUri(null), []);
@@ -184,17 +177,8 @@ export default function AddScreen() {
   // ── Song handlers ────────────────────────────────────────────────────────────
 
   const handleSearchChange = (text: string) => {
-    setSearchQuery(text);
     if (attachedTrack) setAttachedTrack(null);
-    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
-    if (text.trim()) {
-      searchDebounceRef.current = setTimeout(async () => {
-        const results = await searchSpotify(text);
-        setSearchResults(results);
-      }, 400);
-    } else {
-      setSearchResults([]);
-    }
+    handleSearchQueryChange(text);
   };
 
   const handleAttachTrack = (track: SpotifyTrackResult) => {
@@ -222,16 +206,6 @@ export default function AddScreen() {
   };
 
   // ── Line Dance handlers ──────────────────────────────────────────────────────
-
-  const handleLdRecord = async () => {
-    const uri = await recordVideo();
-    if (uri) setLdVideoUri(uri);
-  };
-
-  const handleLdPick = async () => {
-    const uri = await pickVideo();
-    if (uri) setLdVideoUri(uri);
-  };
 
   const handleLdClear = useCallback(() => setLdVideoUri(null), []);
 

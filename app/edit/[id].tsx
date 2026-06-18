@@ -10,24 +10,23 @@ import {
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useMove } from '@/hooks/useMove';
-import { useVideoRecorder } from '@/hooks/useVideoRecorder';
+import { useMoves } from '@/hooks/useMoves';
+import { useVideoPickerHandlers } from '@/hooks/useVideoPickerHandlers';
 import { useMotionRecorder } from '@/hooks/useMotionRecorder';
-import { saveMove } from '@/storage/moves';
 import { SegmentedControl } from '@/components/SegmentedControl';
 import { SaveButton } from '@/components/SaveButton';
 import { VideoPickerButtons } from '@/components/VideoPickerButtons';
 import { MotionRecorderButton } from '@/components/MotionRecorderButton';
-import { CATEGORIES, DIFFICULTIES, CATEGORY_SHORT, Category, Difficulty } from '@/types/Move';
-import { C, RADIUS } from '@/constants/theme';
+import { CATEGORIES, CATEGORY_LABELS, CATEGORY_SHORT, DIFFICULTIES, Category, Difficulty } from '@/types/Move';
+import { C } from '@/constants/theme';
+import { cs } from '@/constants/commonStyles';
 import { MOTION_TRACKING_ENABLED } from '@/constants/features';
-
-const CATEGORY_LABELS = CATEGORIES.map((c) => CATEGORY_SHORT[c]);
 
 export default function EditMoveScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { move } = useMove(id);
-  const { recordVideo, pickVideo } = useVideoRecorder();
+  const { updateMove } = useMoves();
   const { isRecording, frames, start: startMotion, stop: stopMotion, seed: seedMotion, clear: clearMotion } = useMotionRecorder();
 
   const [name, setName] = useState('');
@@ -49,26 +48,18 @@ export default function EditMoveScreen() {
     seedMotion(move.motionData ?? null);
   }, [move, seedMotion]);
 
+  const { handleRecord, handlePick } = useVideoPickerHandlers(setVideoUri);
+
   const handleCategoryChange = (label: string) => {
     const full = CATEGORIES[CATEGORY_LABELS.indexOf(label)];
     if (full) setCategory(full);
-  };
-
-  const handleRecord = async () => {
-    const uri = await recordVideo();
-    if (uri) setVideoUri(uri);
-  };
-
-  const handlePick = async () => {
-    const uri = await pickVideo();
-    if (uri) setVideoUri(uri);
   };
 
   const handleSave = async () => {
     if (!move || !name.trim()) return;
     setSaving(true);
     try {
-      await saveMove({
+      await updateMove({
         ...move,
         name: name.trim(),
         category,
@@ -76,6 +67,7 @@ export default function EditMoveScreen() {
         notes,
         videoUri,
         motionData: MOTION_TRACKING_ENABLED ? frames : null,
+        updatedAt: new Date().toISOString(),
       });
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       router.back();
@@ -88,17 +80,17 @@ export default function EditMoveScreen() {
     <>
       <Stack.Screen options={{ title: 'Edit Move' }} />
       <KeyboardAvoidingView
-        style={styles.flex}
+        style={cs.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <ScrollView
-          style={styles.container}
-          contentContainerStyle={styles.content}
+          style={cs.container}
+          contentContainerStyle={cs.content}
           keyboardShouldPersistTaps="handled"
         >
-          <Text style={styles.label}>Move name</Text>
+          <Text style={cs.label}>Move name</Text>
           <TextInput
-            style={styles.input}
+            style={cs.textInput}
             value={name}
             onChangeText={setName}
             placeholder="e.g. Triple Dip"
@@ -106,23 +98,23 @@ export default function EditMoveScreen() {
             returnKeyType="done"
           />
 
-          <Text style={styles.label}>Category</Text>
+          <Text style={cs.label}>Category</Text>
           <SegmentedControl
             options={CATEGORY_LABELS}
             value={CATEGORY_SHORT[category]}
             onChange={handleCategoryChange}
           />
 
-          <Text style={styles.label}>Difficulty</Text>
+          <Text style={cs.label}>Difficulty</Text>
           <SegmentedControl
             options={DIFFICULTIES}
             value={difficulty}
             onChange={(v) => setDifficulty(v as Difficulty)}
           />
 
-          <Text style={styles.label}>Notes</Text>
+          <Text style={cs.label}>Notes</Text>
           <TextInput
-            style={[styles.input, styles.multiline]}
+            style={[cs.textInput, styles.multiline]}
             value={notes}
             onChangeText={setNotes}
             placeholder="Cues, timing, things to remember…"
@@ -132,7 +124,7 @@ export default function EditMoveScreen() {
             textAlignVertical="top"
           />
 
-          <Text style={styles.label}>Video (optional)</Text>
+          <Text style={cs.label}>Video (optional)</Text>
           <VideoPickerButtons
             videoUri={videoUri}
             onRecord={handleRecord}
@@ -142,7 +134,7 @@ export default function EditMoveScreen() {
 
           {MOTION_TRACKING_ENABLED && (
             <>
-              <Text style={styles.label}>Motion Capture (optional)</Text>
+              <Text style={cs.label}>Motion Capture (optional)</Text>
               <MotionRecorderButton
                 isRecording={isRecording}
                 frames={frames}
@@ -161,35 +153,6 @@ export default function EditMoveScreen() {
 }
 
 const styles = StyleSheet.create({
-  flex: {
-    flex: 1,
-    backgroundColor: C.bg,
-  },
-  container: {
-    flex: 1,
-    backgroundColor: C.bg,
-  },
-  content: {
-    padding: 20,
-    gap: 12,
-    paddingBottom: 40,
-  },
-  label: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: C.textPrimary,
-    marginTop: 6,
-    marginBottom: 2,
-  },
-  input: {
-    backgroundColor: C.surface,
-    borderRadius: RADIUS.control,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 16,
-    color: C.textPrimary,
-    minHeight: 50,
-  },
   multiline: {
     minHeight: 120,
   },

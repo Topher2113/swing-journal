@@ -4,7 +4,7 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as Crypto from 'expo-crypto';
 import { useMove } from '@/hooks/useMove';
-import { saveMove } from '@/storage/moves';
+import { useMoves } from '@/hooks/useMoves';
 import { usePartnerLink } from '@/hooks/usePartnerLink';
 import { usePartnerJournal } from '@/hooks/usePartnerJournal';
 import { useAuth } from '@/context/AuthContext';
@@ -21,6 +21,7 @@ export default function MoveDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { move, setMove } = useMove(id);
+  const { updateMove } = useMoves();
   const { link, loading: linkLoading } = usePartnerLink();
   const { upsertLocal: shareToJournal, sync: syncJournal } = usePartnerJournal(link?.id ?? '');
   const { user } = useAuth();
@@ -30,7 +31,7 @@ export default function MoveDetailScreen() {
   const handleIncrement = async () => {
     if (!move) return;
     const updated = { ...move, practiceCount: move.practiceCount + 1 };
-    await saveMove(updated);
+    await updateMove(updated);
     setMove(updated);
   };
 
