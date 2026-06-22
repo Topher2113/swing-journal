@@ -1,6 +1,7 @@
 import { useCallback, useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Stack, useRouter, useFocusEffect } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useMoves } from '@/hooks/useMoves';
 import { usePartnerLink } from '@/hooks/usePartnerLink';
@@ -80,11 +81,12 @@ export default function HomeScreen() {
   }, [journalItems, link, user?.id]);
 
   const name = profile?.name?.split(' ')[0] ?? 'Dancer';
+  const insets = useSafeAreaInsets();
 
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingTop: insets.top + 20 }]}>
         <Text style={styles.greeting}>{greeting(name)}</Text>
 
         {/* Recent Moves */}
@@ -159,7 +161,6 @@ const styles = StyleSheet.create({
     padding: 20,
     gap: 12,
     paddingBottom: 48,
-    paddingTop: 100,
   },
   greeting: {
     fontSize: 26,
