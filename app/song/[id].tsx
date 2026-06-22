@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
@@ -13,21 +14,18 @@ export default function SongDetailScreen() {
   const router = useRouter();
   const { song, loading } = useSong(id);
 
+  const headerRight = useCallback(() => (
+    <Pressable
+      onPress={() => router.push(`/edit-song/${id}`)}
+      style={({ pressed }) => ({ opacity: pressed ? 0.5 : 1, paddingHorizontal: 8 })}
+    >
+      <Ionicons name="pencil-outline" size={20} color={C.textPrimary} />
+    </Pressable>
+  ), [router, id]);
+
   return (
     <>
-      <Stack.Screen
-        options={{
-          title: song?.title ?? '…',
-          headerRight: () => (
-            <Pressable
-              onPress={() => router.push(`/edit-song/${id}`)}
-              style={({ pressed }) => ({ opacity: pressed ? 0.5 : 1, paddingHorizontal: 8 })}
-            >
-              <Ionicons name="pencil-outline" size={20} color={C.textPrimary} />
-            </Pressable>
-          ),
-        }}
-      />
+      <Stack.Screen options={{ title: song?.title ?? '…', headerRight }} />
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
         {loading ? (
           <>

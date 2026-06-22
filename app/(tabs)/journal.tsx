@@ -17,7 +17,7 @@ import { C } from '@/constants/theme';
 export default function JournalScreen() {
   const { link, loading, generateInviteCode, redeemInviteCode, cancelInviteCode } = usePartnerLink();
 
-  if (loading) return null;
+  if (loading) return <View style={styles.container} />;
 
   if (!link || link.status !== 'linked') {
     return (

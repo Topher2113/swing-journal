@@ -84,21 +84,18 @@ export default function MoveDetailScreen() {
     }
   };
 
+  const headerRight = useCallback(() => (
+    <Pressable
+      onPress={() => router.push({ pathname: '/edit/[id]', params: { id } })}
+      style={({ pressed }) => ({ opacity: pressed ? 0.5 : 1, paddingHorizontal: 8 })}
+    >
+      <Ionicons name="pencil-outline" size={20} color={C.textPrimary} />
+    </Pressable>
+  ), [router, id]);
+
   return (
     <>
-      <Stack.Screen
-        options={{
-          title: move?.name ?? '…',
-          headerRight: () => (
-            <Pressable
-              onPress={() => router.push({ pathname: '/edit/[id]', params: { id } })}
-              style={({ pressed }) => ({ opacity: pressed ? 0.5 : 1, paddingHorizontal: 8 })}
-            >
-              <Ionicons name="pencil-outline" size={20} color={C.textPrimary} />
-            </Pressable>
-          ),
-        }}
-      />
+      <Stack.Screen options={{ title: move?.name ?? '…', headerRight }} />
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
         {move?.videoUri && <VideoPlayer uri={move.videoUri} />}
 

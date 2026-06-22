@@ -28,8 +28,11 @@ export function useSyncedStorage<T extends SyncableEntity>(config: SyncedStorage
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const itemsRef = useRef<T[]>([]);
+  const mountedRef = useRef(true);
   const configRef = useRef(config);
   configRef.current = config;
+
+  useEffect(() => () => { mountedRef.current = false; }, []);
 
   const setItemsBoth = useCallback((next: T[]) => {
     itemsRef.current = next;
@@ -65,12 +68,13 @@ export function useSyncedStorage<T extends SyncableEntity>(config: SyncedStorage
       const remote = (remoteRows ?? []).map(cfg.fromRow).filter((r) => !dels.has(r.id));
 
       const merged = mergeByUpdatedAt(itemsRef.current, remote, pending);
+      if (!mountedRef.current) return;
       setItemsBoth(merged);
       await AsyncStorage.setItem(cfg.storageKey, JSON.stringify(merged));
     } catch {
       // offline or Supabase unreachable — local data stays source of truth, retried on next sync
     } finally {
-      setSyncing(false);
+      if (mountedRef.current) setSyncing(false);
     }
   }, [setItemsBoth]);
 
