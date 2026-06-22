@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as Crypto from 'expo-crypto';
 import { useMove } from '@/hooks/useMove';
@@ -23,10 +23,24 @@ export default function MoveDetailScreen() {
   const { move, setMove } = useMove(id);
   const { updateMove } = useMoves();
   const { link, loading: linkLoading } = usePartnerLink();
-  const { upsertLocal: shareToJournal, sync: syncJournal } = usePartnerJournal(link?.id ?? '');
+  const { items: journalItems, loading: journalLoading, upsertLocal: shareToJournal, sync: syncJournal, reload: reloadJournal } = usePartnerJournal(link?.id ?? '');
   const { user } = useAuth();
-  const [shared, setShared] = useState(false);
   const [sharing, setSharing] = useState(false);
+
+  // Reload from AsyncStorage immediately, then sync from Supabase in background.
+  // This ensures isShared is correct even after sharing from another session or device.
+  useFocusEffect(
+    useCallback(() => {
+      reloadJournal();
+      if (link?.id) syncJournal();
+    }, [reloadJournal, link?.id, syncJournal])
+  );
+
+  const existingSharedMove = useMemo(
+    () => journalItems.find((m) => m.originalMoveId === move?.id && m.addedByUserId === user?.id),
+    [journalItems, move?.id, user?.id]
+  );
+  const isShared = !!existingSharedMove;
 
   const handleIncrement = async () => {
     if (!move) return;
@@ -39,22 +53,20 @@ export default function MoveDetailScreen() {
     if (!move || !link || !user || sharing) return;
     setSharing(true);
     try {
-      // If the video is a local file, upload it to Supabase Storage so the partner can view it
       let shareVideoUri = move.videoUri;
       if (shareVideoUri && isLocalUri(shareVideoUri)) {
         shareVideoUri = await uploadVideo(shareVideoUri, user.id);
       }
       const sharedMove: SharedMove = {
         ...move,
-        id: Crypto.randomUUID(),
+        id: existingSharedMove?.id ?? Crypto.randomUUID(),
         videoUri: shareVideoUri,
         partnerLinkId: link.id,
         addedByUserId: user.id,
         originalMoveId: move.id,
       };
       await shareToJournal(sharedMove);
-      syncJournal(); // push immediately so partner sees it without waiting for foreground
-      setShared(true);
+      syncJournal();
     } finally {
       setSharing(false);
     }
@@ -103,37 +115,34 @@ export default function MoveDetailScreen() {
               </Pressable>
             )}
 
-            {!linkLoading && link?.status === 'linked' && (
-              <Pressable
-                style={({ pressed }) => [
-                  styles.shareBtn,
-                  shared && styles.shareBtnDone,
-                  { opacity: pressed && !sharing ? 0.8 : 1 },
-                ]}
-                android_ripple={{ color: 'transparent' }}
-                onPress={handleShare}
-                disabled={shared || sharing}
-              >
-                {sharing ? (
-                  <>
-                    <ActivityIndicator size="small" color={C.accent} />
-                    <Text style={styles.shareBtnText}>
-                      {move?.videoUri ? 'Uploading video…' : 'Sharing…'}
-                    </Text>
-                  </>
-                ) : (
-                  <>
-                    <Ionicons
-                      name={shared ? 'checkmark-circle-outline' : 'share-outline'}
-                      size={18}
-                      color={shared ? '#86EFAC' : C.accent}
-                    />
-                    <Text style={[styles.shareBtnText, shared && styles.shareBtnTextDone]}>
-                      {shared ? 'Shared to journal' : 'Share to partner journal'}
-                    </Text>
-                  </>
-                )}
-              </Pressable>
+            {!linkLoading && !journalLoading && link?.status === 'linked' && (
+              isShared ? (
+                <View style={styles.sharedBadge}>
+                  <Ionicons name="checkmark-circle-outline" size={18} color="#86EFAC" />
+                  <Text style={styles.sharedBadgeText}>Shared to journal</Text>
+                </View>
+              ) : (
+                <Pressable
+                  style={({ pressed }) => [styles.shareBtn, { opacity: pressed && !sharing ? 0.8 : 1 }]}
+                  android_ripple={{ color: 'transparent' }}
+                  onPress={handleShare}
+                  disabled={sharing}
+                >
+                  {sharing ? (
+                    <>
+                      <ActivityIndicator size="small" color={C.accent} />
+                      <Text style={styles.shareBtnText}>
+                        {move?.videoUri ? 'Uploading video…' : 'Sharing…'}
+                      </Text>
+                    </>
+                  ) : (
+                    <>
+                      <Ionicons name="share-outline" size={18} color={C.accent} />
+                      <Text style={styles.shareBtnText}>Share to partner journal</Text>
+                    </>
+                  )}
+                </Pressable>
+              )
             )}
           </>
         )}
@@ -201,16 +210,25 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: C.border,
   },
-  shareBtnDone: {
-    borderColor: '#14532D',
-    backgroundColor: '#14532D33',
-  },
   shareBtnText: {
     fontSize: 15,
     fontWeight: '600',
     color: C.accent,
   },
-  shareBtnTextDone: {
+  sharedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: '#14532D33',
+    borderRadius: RADIUS.card,
+    padding: 16,
+    minHeight: 52,
+    borderWidth: 1,
+    borderColor: '#14532D',
+  },
+  sharedBadgeText: {
+    fontSize: 15,
+    fontWeight: '600',
     color: '#86EFAC',
   },
 });

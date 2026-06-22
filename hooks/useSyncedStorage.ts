@@ -15,6 +15,14 @@ export type SyncedStorageConfig<T extends SyncableEntity> = {
   fromRow: (row: Record<string, unknown>) => T;
 };
 
+// Shared across all hook instances for the same table so that sync() on one
+// instance cannot re-add a row that another instance is in the middle of deleting.
+const pendingDeletionsByTable = new Map<string, Set<string>>();
+function getPendingDeletions(table: string): Set<string> {
+    if (!pendingDeletionsByTable.has(table)) pendingDeletionsByTable.set(table, new Set());
+    return pendingDeletionsByTable.get(table)!;
+}
+
 export function useSyncedStorage<T extends SyncableEntity>(config: SyncedStorageConfig<T>) {
   const [items, setItems] = useState<T[]>([]);
   const [loading, setLoading] = useState(true);
@@ -34,9 +42,11 @@ export function useSyncedStorage<T extends SyncableEntity>(config: SyncedStorage
     setLoading(false);
   }, [setItemsBoth]);
 
+  // Re-run whenever the storageKey changes (e.g. partnerLinkId goes from '' to a real ID)
   useEffect(() => {
+    setLoading(true);
     loadLocal();
-  }, [loadLocal]);
+  }, [loadLocal, config.storageKey]);
 
   const sync = useCallback(async () => {
     setSyncing(true);
@@ -51,7 +61,8 @@ export function useSyncedStorage<T extends SyncableEntity>(config: SyncedStorage
 
       const { data: remoteRows, error } = await supabase.from(cfg.table).select('*');
       if (error) throw error;
-      const remote = (remoteRows ?? []).map(cfg.fromRow);
+      const dels = getPendingDeletions(cfg.table);
+      const remote = (remoteRows ?? []).map(cfg.fromRow).filter((r) => !dels.has(r.id));
 
       const merged = mergeByUpdatedAt(itemsRef.current, remote, pending);
       setItemsBoth(merged);
@@ -75,10 +86,13 @@ export function useSyncedStorage<T extends SyncableEntity>(config: SyncedStorage
   }, [setItemsBoth, sync]);
 
   const removeLocal = useCallback(async (id: string) => {
+    const dels = getPendingDeletions(configRef.current.table);
+    dels.add(id);
     const updated = itemsRef.current.filter((i) => i.id !== id);
     setItemsBoth(updated);
     await AsyncStorage.setItem(configRef.current.storageKey, JSON.stringify(updated));
-    supabase.from(configRef.current.table).delete().eq('id', id).then(() => {});
+    await supabase.from(configRef.current.table).delete().eq('id', id);
+    dels.delete(id);
   }, [setItemsBoth]);
 
   return { items, loading, syncing, upsertLocal, removeLocal, sync, reload: loadLocal };
@@ -86,11 +100,17 @@ export function useSyncedStorage<T extends SyncableEntity>(config: SyncedStorage
 
 // Items just pushed in this sync pass keep their local version even if the
 // immediately-following select returns a stale (pre-write) remote row.
+// Items absent from remote that were already synced are treated as remotely deleted and dropped.
 export function mergeByUpdatedAt<T extends SyncableEntity>(local: T[], remote: T[], justPushed: T[]): T[] {
+  // Capture which local IDs are still pending BEFORE we overwrite syncStatus below.
+  const pendingIds = new Set(local.filter((i) => i.syncStatus === 'pending').map((i) => i.id));
+
   const byId = new Map<string, T>();
   for (const item of local) byId.set(item.id, { ...item, syncStatus: 'synced' as const });
 
   const justPushedIds = new Set(justPushed.map((i) => i.id));
+  const remoteIds = new Set(remote.map((r) => r.id));
+
   for (const r of remote) {
     if (justPushedIds.has(r.id)) continue;
     const existing = byId.get(r.id);
@@ -102,6 +122,15 @@ export function mergeByUpdatedAt<T extends SyncableEntity>(local: T[], remote: T
   for (const id of justPushedIds) {
     const item = byId.get(id);
     if (item) byId.set(id, { ...item, syncStatus: 'synced' as const });
+  }
+
+  // Drop items that have been deleted on the server.
+  // Keep an item if: it exists in remote, it was just pushed (may not appear in remote yet),
+  // or it is still pending locally (not yet pushed at all).
+  for (const id of byId.keys()) {
+    if (!remoteIds.has(id) && !justPushedIds.has(id) && !pendingIds.has(id)) {
+      byId.delete(id);
+    }
   }
 
   return Array.from(byId.values());

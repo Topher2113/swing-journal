@@ -1,6 +1,6 @@
 import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
-import { Stack, useRouter } from 'expo-router';
-import { useState } from 'react';
+import { Stack, useFocusEffect, useRouter } from 'expo-router';
+import { useCallback, useState } from 'react';
 import { usePartnerLink } from '@/hooks/usePartnerLink';
 import { usePartnerJournal } from '@/hooks/usePartnerJournal';
 import { useAuth } from '@/context/AuthContext';
@@ -39,7 +39,15 @@ export default function JournalScreen() {
 function JournalLinked({ link }: { link: PartnerLink }) {
   const router = useRouter();
   const { user } = useAuth();
-  const { items, syncing, sync } = usePartnerJournal(link.id);
+  const { items, syncing, sync, reload } = usePartnerJournal(link.id);
+
+  // Reload from AsyncStorage whenever this screen regains focus so removals
+  // made in the shared-move detail screen are reflected immediately.
+  useFocusEffect(
+    useCallback(() => {
+      reload();
+    }, [reload])
+  );
   const [sortKey, setSortKey] = useState('createdAt');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
 
@@ -51,7 +59,7 @@ function JournalLinked({ link }: { link: PartnerLink }) {
 
   return (
     <View style={styles.container}>
-      <Stack.Screen options={{ title: 'Journal', headerShown: true }} />
+      <Stack.Screen options={{ title: 'Partner Journal', headerShown: true }} />
       <PartnerJournalHeader
         partnerEmail={partnerEmail}
         partnerName={partnerName}

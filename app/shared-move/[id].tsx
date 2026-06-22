@@ -1,7 +1,8 @@
 import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { usePartnerLink } from '@/hooks/usePartnerLink';
 import { usePartnerJournal } from '@/hooks/usePartnerJournal';
 import { useAuth } from '@/context/AuthContext';
@@ -13,6 +14,8 @@ import { PracticeCounter } from '@/components/PracticeCounter';
 import { C, RADIUS } from '@/constants/theme';
 import { MOTION_TRACKING_ENABLED } from '@/constants/features';
 
+const SAVED_FROM_JOURNAL_KEY = '@saved-shared-moves';
+
 export default function SharedMoveDetailScreen() {
   const { id, partnerLinkId } = useLocalSearchParams<{ id: string; partnerLinkId: string }>();
   const router = useRouter();
@@ -22,9 +25,16 @@ export default function SharedMoveDetailScreen() {
   const { user } = useAuth();
 
   const { addMove } = useMoves();
-  const [saved, setSaved] = useState(false);
+  const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    AsyncStorage.getItem(SAVED_FROM_JOURNAL_KEY).then((json) => {
+      if (json) setSavedIds(new Set(JSON.parse(json)));
+    });
+  }, []);
 
   const move = useMemo(() => items.find((m) => m.id === id) ?? null, [items, id]);
+  const isSaved = savedIds.has(move?.id ?? '');
 
   const handleIncrement = async () => {
     if (!move) return;
@@ -32,7 +42,7 @@ export default function SharedMoveDetailScreen() {
   };
 
   const handleSaveToLibrary = async () => {
-    if (!move || saved) return;
+    if (!move || isSaved) return;
     await addMove({
       name: move.name,
       category: move.category,
@@ -41,7 +51,10 @@ export default function SharedMoveDetailScreen() {
       videoUri: move.videoUri,
       motionData: move.motionData,
     });
-    setSaved(true);
+    const next = new Set(savedIds);
+    next.add(move.id);
+    setSavedIds(next);
+    await AsyncStorage.setItem(SAVED_FROM_JOURNAL_KEY, JSON.stringify([...next]));
   };
 
   const isOwn = move?.addedByUserId === user?.id;
@@ -89,21 +102,23 @@ export default function SharedMoveDetailScreen() {
 
         <PracticeCounter count={move.practiceCount} onIncrement={handleIncrement} />
 
-        <Pressable
-          style={({ pressed }) => [styles.saveBtn, saved && styles.saveBtnDone, { opacity: pressed ? 0.8 : 1 }]}
-          android_ripple={{ color: 'transparent' }}
-          onPress={handleSaveToLibrary}
-          disabled={saved}
-        >
-          <Ionicons
-            name={saved ? 'checkmark-circle-outline' : 'bookmark-outline'}
-            size={18}
-            color={saved ? '#86EFAC' : C.accent}
-          />
-          <Text style={[styles.saveBtnText, saved && styles.saveBtnTextDone]}>
-            {saved ? 'Saved to your library' : 'Save to my library'}
-          </Text>
-        </Pressable>
+        {!isOwn && (
+          <Pressable
+            style={({ pressed }) => [styles.saveBtn, isSaved && styles.saveBtnDone, { opacity: pressed ? 0.8 : 1 }]}
+            android_ripple={{ color: 'transparent' }}
+            onPress={handleSaveToLibrary}
+            disabled={isSaved}
+          >
+            <Ionicons
+              name={isSaved ? 'checkmark-circle-outline' : 'bookmark-outline'}
+              size={18}
+              color={isSaved ? '#86EFAC' : C.accent}
+            />
+            <Text style={[styles.saveBtnText, isSaved && styles.saveBtnTextDone]}>
+              {isSaved ? 'Saved to your library' : 'Save to my library'}
+            </Text>
+          </Pressable>
+        )}
 
         {isOwn && (
           <Pressable

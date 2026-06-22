@@ -11,8 +11,12 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useMove } from '@/hooks/useMove';
 import { useMoves } from '@/hooks/useMoves';
+import { usePartnerLink } from '@/hooks/usePartnerLink';
+import { usePartnerJournal } from '@/hooks/usePartnerJournal';
 import { useVideoPickerHandlers } from '@/hooks/useVideoPickerHandlers';
 import { useMotionRecorder } from '@/hooks/useMotionRecorder';
+import { useAuth } from '@/context/AuthContext';
+import { uploadVideo, isLocalUri } from '@/lib/videoStorage';
 import { SegmentedControl } from '@/components/SegmentedControl';
 import { SaveButton } from '@/components/SaveButton';
 import { VideoPickerButtons } from '@/components/VideoPickerButtons';
@@ -27,6 +31,9 @@ export default function EditMoveScreen() {
   const router = useRouter();
   const { move } = useMove(id);
   const { updateMove } = useMoves();
+  const { user } = useAuth();
+  const { link } = usePartnerLink();
+  const { items: journalItems, upsertLocal: shareToJournal, sync: syncJournal } = usePartnerJournal(link?.id ?? '');
   const { isRecording, frames, start: startMotion, stop: stopMotion, seed: seedMotion, clear: clearMotion } = useMotionRecorder();
 
   const [name, setName] = useState('');
@@ -69,6 +76,26 @@ export default function EditMoveScreen() {
         motionData: MOTION_TRACKING_ENABLED ? frames : null,
         updatedAt: new Date().toISOString(),
       });
+
+      const existingShared = journalItems.find(
+        (m) => m.originalMoveId === id && m.addedByUserId === user?.id
+      );
+      if (existingShared && link) {
+        let sharedVideoUri = videoUri;
+        if (sharedVideoUri && isLocalUri(sharedVideoUri)) {
+          sharedVideoUri = await uploadVideo(sharedVideoUri, user!.id);
+        }
+        await shareToJournal({
+          ...existingShared,
+          name: name.trim(),
+          category,
+          difficulty,
+          notes,
+          videoUri: sharedVideoUri ?? existingShared.videoUri,
+        });
+        syncJournal();
+      }
+
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       router.back();
     } finally {

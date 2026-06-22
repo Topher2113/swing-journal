@@ -61,7 +61,7 @@ export default function TabLayout() {
       />
       <Tabs.Screen
         name="journal"
-        options={{ title: 'Journal', tabBarIcon: JournalIcon }}
+        options={{ title: 'Partner', tabBarIcon: JournalIcon }}
       />
       <Tabs.Screen
         name="stats"
