@@ -47,14 +47,16 @@ export function MoveCard({ move, onPress, onEdit, onDelete, isShared }: Props) {
       >
         <View style={[styles.dot, { backgroundColor: move.videoUri ? C.accent : C.border }]} />
         <View style={styles.info}>
-          <Text style={styles.name} numberOfLines={1}>{move.name}</Text>
+          <View style={styles.nameRow}>
+            {isShared && <Ionicons name="link-outline" size={13} color={C.accent} />}
+            <Text style={styles.name} numberOfLines={1}>{move.name}</Text>
+          </View>
           <View style={styles.meta}>
             <DifficultyBadge difficulty={move.difficulty} />
             <Text style={styles.practice}>↻ {move.practiceCount}</Text>
           </View>
         </View>
         <View style={styles.trailingIcons}>
-          {isShared && <Ionicons name="link-outline" size={13} color={C.accent} />}
           <Ionicons name="ellipsis-horizontal" size={16} color={C.textSecondary} />
           <Ionicons name="chevron-forward" size={20} color="#636366" />
         </View>
@@ -85,10 +87,16 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: 6,
   },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
   name: {
     fontSize: 16,
     fontWeight: '600',
     color: C.textPrimary,
+    flexShrink: 1,
   },
   meta: {
     flexDirection: 'row',

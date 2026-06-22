@@ -159,7 +159,7 @@ const styles = StyleSheet.create({
     padding: 20,
     gap: 12,
     paddingBottom: 48,
-    paddingTop: 80,
+    paddingTop: 100,
   },
   greeting: {
     fontSize: 26,

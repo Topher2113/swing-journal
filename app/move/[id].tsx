@@ -1,8 +1,9 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as Crypto from 'expo-crypto';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useMove } from '@/hooks/useMove';
 import { useMoves } from '@/hooks/useMoves';
 import { usePartnerLink } from '@/hooks/usePartnerLink';
@@ -26,6 +27,7 @@ export default function MoveDetailScreen() {
   const { items: journalItems, loading: journalLoading, upsertLocal: shareToJournal, sync: syncJournal, reload: reloadJournal } = usePartnerJournal(link?.id ?? '');
   const { user } = useAuth();
   const [sharing, setSharing] = useState(false);
+  const [savedFromJournal, setSavedFromJournal] = useState(false);
 
   // Reload from AsyncStorage immediately, then sync from Supabase in background.
   // This ensures isShared is correct even after sharing from another session or device.
@@ -35,6 +37,16 @@ export default function MoveDetailScreen() {
       if (link?.id) syncJournal();
     }, [reloadJournal, link?.id, syncJournal])
   );
+
+  useEffect(() => {
+    if (!id) return;
+    AsyncStorage.getItem('@saved-shared-moves').then((json) => {
+      if (!json) return;
+      const parsed = JSON.parse(json);
+      if (Array.isArray(parsed)) return;
+      setSavedFromJournal(Object.values(parsed).includes(id));
+    });
+  }, [id]);
 
   const existingSharedMove = useMemo(
     () => journalItems.find((m) => m.originalMoveId === move?.id && m.addedByUserId === user?.id),
@@ -115,7 +127,7 @@ export default function MoveDetailScreen() {
               </Pressable>
             )}
 
-            {!linkLoading && !journalLoading && link?.status === 'linked' && (
+            {!linkLoading && !journalLoading && link?.status === 'linked' && !savedFromJournal && (
               isShared ? (
                 <View style={styles.sharedBadge}>
                   <Ionicons name="checkmark-circle-outline" size={18} color="#86EFAC" />
