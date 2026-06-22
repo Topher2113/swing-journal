@@ -52,8 +52,8 @@ export default function TabLayout() {
         options={{ title: 'Home', tabBarIcon: HomeIcon }}
       />
       <Tabs.Screen
-        name="index"
-        options={{ title: 'Library', tabBarIcon: LibraryIcon }}
+        name="(library)"
+        options={{ title: 'Library', headerShown: false, tabBarIcon: LibraryIcon }}
       />
       <Tabs.Screen
         name="add"
@@ -64,8 +64,8 @@ export default function TabLayout() {
         options={{ title: 'Partner', tabBarIcon: JournalIcon }}
       />
       <Tabs.Screen
-        name="stats"
-        options={{ title: 'Profile', tabBarIcon: ProfileIcon }}
+        name="(profile)"
+        options={{ title: 'Profile', headerShown: false, tabBarIcon: ProfileIcon }}
       />
     </Tabs>
   );

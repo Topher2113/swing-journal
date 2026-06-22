@@ -31,4 +31,16 @@ export const cs = StyleSheet.create({
     color: C.textPrimary,
     minHeight: 50,
   },
+  textInputError: {
+    borderWidth: 1.5,
+    borderColor: '#EF4444',
+  },
+  fieldError: {
+    fontSize: 12,
+    color: '#EF4444',
+    marginTop: -6,
+  },
+  multiline: {
+    minHeight: 120,
+  },
 });

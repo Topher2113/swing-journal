@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
-  View,
+  ScrollView,
   Text,
   TextInput,
   StyleSheet,
@@ -92,7 +92,7 @@ export default function SignInScreen() {
       } else {
         const { error: err } = await signIn(email.trim(), password);
         if (err) throw err;
-        router.replace('/(tabs)');
+        router.replace('/(tabs)/home' as never);
       }
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
@@ -114,7 +114,7 @@ export default function SignInScreen() {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <View style={styles.inner}>
+      <ScrollView contentContainerStyle={styles.inner} keyboardShouldPersistTaps="handled">
         <Text style={styles.title}>Swing Journal</Text>
         <Text style={styles.subtitle}>
           {mode === 'signin' ? 'Sign in to your account' : 'Create an account'}
@@ -176,7 +176,7 @@ export default function SignInScreen() {
               : 'Already have an account? Sign In'}
           </Text>
         </Pressable>
-      </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
@@ -187,7 +187,7 @@ const styles = StyleSheet.create({
     backgroundColor: C.bg,
   },
   inner: {
-    flex: 1,
+    flexGrow: 1,
     justifyContent: 'center',
     paddingHorizontal: 24,
     gap: 12,

@@ -3,22 +3,15 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
 } from 'react-native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useLineDance } from '@/hooks/useLineDance';
 import { useVideoPickerHandlers } from '@/hooks/useVideoPickerHandlers';
-import { SegmentedControl } from '@/components/SegmentedControl';
-import { StepListEditor } from '@/components/StepListEditor';
-import { VideoPickerButtons } from '@/components/VideoPickerButtons';
-import { LinkedSongPicker } from '@/components/LinkedSongPicker';
 import { SaveButton } from '@/components/SaveButton';
-import { DIFFICULTIES, Difficulty } from '@/types/Move';
+import { LineDanceFormFields } from '@/components/LineDanceFormFields';
+import { Difficulty } from '@/types/Move';
 import { LineDanceStep } from '@/types/LineDance';
-import { C } from '@/constants/theme';
 import { cs } from '@/constants/commonStyles';
 
 export default function EditLineDanceScreen() {
@@ -87,48 +80,22 @@ export default function EditLineDanceScreen() {
           contentContainerStyle={cs.content}
           keyboardShouldPersistTaps="handled"
         >
-          <Text style={cs.label}>Name</Text>
-          <TextInput
-            style={[cs.textInput, nameError ? cs.textInputError : null]}
-            value={name}
-            onChangeText={(t) => { setName(t); if (nameError) setNameError(null); }}
-            placeholder="e.g. Cotton Eye Joe"
-            placeholderTextColor={C.textSecondary}
-            returnKeyType="done"
-          />
-          {nameError && <Text style={styles.fieldError}>{nameError}</Text>}
-
-          <Text style={cs.label}>Difficulty</Text>
-          <SegmentedControl
-            options={DIFFICULTIES}
-            value={difficulty}
-            onChange={(v) => setDifficulty(v as Difficulty)}
-          />
-
-          <Text style={cs.label}>Steps (optional)</Text>
-          <StepListEditor steps={steps} onChange={setSteps} />
-
-          <Text style={cs.label}>Video (optional)</Text>
-          <VideoPickerButtons
+          <LineDanceFormFields
+            name={name}
+            onNameChange={(t) => { setName(t); if (nameError) setNameError(null); }}
+            nameError={nameError}
+            difficulty={difficulty}
+            onDifficultyChange={setDifficulty}
+            steps={steps}
+            onStepsChange={setSteps}
             videoUri={videoUri}
             onRecord={handleRecord}
             onPick={handlePick}
-            onClear={handleClear}
-          />
-
-          <Text style={cs.label}>Linked Song (optional)</Text>
-          <LinkedSongPicker linkedSongId={linkedSongId} onChange={setLinkedSongId} />
-
-          <Text style={cs.label}>Notes (optional)</Text>
-          <TextInput
-            style={[cs.textInput, styles.multiline]}
-            value={notes}
-            onChangeText={setNotes}
-            placeholder="Cues, styling notes, things to remember…"
-            placeholderTextColor={C.textSecondary}
-            multiline
-            numberOfLines={4}
-            textAlignVertical="top"
+            onClearVideo={handleClear}
+            linkedSongId={linkedSongId}
+            onLinkedSongChange={setLinkedSongId}
+            notes={notes}
+            onNotesChange={setNotes}
           />
 
           <SaveButton label="Save Changes" saving={saving} disabled={!name.trim()} onPress={handleSave} />
@@ -138,17 +105,3 @@ export default function EditLineDanceScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  inputError: {
-    borderWidth: 1.5,
-    borderColor: '#EF4444',
-  },
-  fieldError: {
-    fontSize: 12,
-    color: '#EF4444',
-    marginTop: -6,
-  },
-  multiline: {
-    minHeight: 120,
-  },
-});

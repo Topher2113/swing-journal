@@ -112,8 +112,12 @@ export default function VerifyEmailScreen() {
           )}
         </Pressable>
 
-        <Pressable onPress={() => router.replace('/(auth)/sign-in' as never)}>
-          <Text style={styles.backLink}>← Back to sign in</Text>
+        <Pressable
+          style={({ pressed }) => [styles.backRow, { opacity: pressed ? 0.8 : 1 }]}
+          onPress={() => router.replace('/(auth)/sign-in' as never)}
+        >
+          <Ionicons name="arrow-back" size={16} color={C.textSecondary} />
+          <Text style={styles.backLink}>Back to sign in</Text>
         </Pressable>
       </View>
     </View>
@@ -192,9 +196,14 @@ const styles = StyleSheet.create({
   buttonTextMuted: {
     color: C.textSecondary,
   },
+  backRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 8,
+  },
   backLink: {
     color: C.textSecondary,
     fontSize: 14,
-    marginTop: 8,
   },
 });

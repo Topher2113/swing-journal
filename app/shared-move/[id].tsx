@@ -24,17 +24,26 @@ export default function SharedMoveDetailScreen() {
   const { items, upsertLocal, removeLocal } = usePartnerJournal(resolvedLinkId);
   const { user } = useAuth();
 
-  const { addMove } = useMoves();
-  const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
+  const { moves, addMove } = useMoves();
+  const [savedMap, setSavedMap] = useState<Record<string, string>>({});
 
   useEffect(() => {
     AsyncStorage.getItem(SAVED_FROM_JOURNAL_KEY).then((json) => {
-      if (json) setSavedIds(new Set(JSON.parse(json)));
+      if (!json) return;
+      const parsed = JSON.parse(json);
+      if (Array.isArray(parsed)) {
+        const migrated: Record<string, string> = {};
+        for (const id of parsed) migrated[id] = '';
+        setSavedMap(migrated);
+      } else {
+        setSavedMap(parsed);
+      }
     });
   }, []);
 
   const move = useMemo(() => items.find((m) => m.id === id) ?? null, [items, id]);
-  const isSaved = savedIds.has(move?.id ?? '');
+  const libraryMoveId = savedMap[move?.id ?? ''];
+  const isSaved = libraryMoveId !== undefined && (libraryMoveId === '' || moves.some((m) => m.id === libraryMoveId));
 
   const handleIncrement = async () => {
     if (!move) return;
@@ -43,7 +52,7 @@ export default function SharedMoveDetailScreen() {
 
   const handleSaveToLibrary = async () => {
     if (!move || isSaved) return;
-    await addMove({
+    const created = await addMove({
       name: move.name,
       category: move.category,
       difficulty: move.difficulty,
@@ -51,10 +60,9 @@ export default function SharedMoveDetailScreen() {
       videoUri: move.videoUri,
       motionData: move.motionData,
     });
-    const next = new Set(savedIds);
-    next.add(move.id);
-    setSavedIds(next);
-    await AsyncStorage.setItem(SAVED_FROM_JOURNAL_KEY, JSON.stringify([...next]));
+    const next = { ...savedMap, [move.id]: created.id };
+    setSavedMap(next);
+    await AsyncStorage.setItem(SAVED_FROM_JOURNAL_KEY, JSON.stringify(next));
   };
 
   const isOwn = move?.addedByUserId === user?.id;

@@ -88,7 +88,7 @@ export default function HomeScreen() {
         <Text style={styles.greeting}>{greeting(name)}</Text>
 
         {/* Recent Moves */}
-        <SectionHeader title="Recent Moves" onSeeAll={() => router.push('/(tabs)')} />
+        <SectionHeader title="Recent Moves" onSeeAll={() => router.push('/(tabs)/(library)' as never)} />
         {recentMoves.length === 0 ? (
           <Text style={styles.empty}>No moves yet — add one from the Add tab!</Text>
         ) : (
@@ -104,7 +104,7 @@ export default function HomeScreen() {
         {/* Practice These */}
         {practiceMoves.length > 0 && (
           <>
-            <SectionHeader title="Practice These" onSeeAll={() => router.push('/(tabs)')} />
+            <SectionHeader title="Practice These" onSeeAll={() => router.push('/(tabs)/(library)' as never)} />
             {practiceMoves.map((move) => (
               <MoveRow
                 key={move.id}

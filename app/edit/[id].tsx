@@ -3,9 +3,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
 } from 'react-native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
@@ -17,12 +14,9 @@ import { useVideoPickerHandlers } from '@/hooks/useVideoPickerHandlers';
 import { useMotionRecorder } from '@/hooks/useMotionRecorder';
 import { useAuth } from '@/context/AuthContext';
 import { uploadVideo, isLocalUri } from '@/lib/videoStorage';
-import { SegmentedControl } from '@/components/SegmentedControl';
 import { SaveButton } from '@/components/SaveButton';
-import { VideoPickerButtons } from '@/components/VideoPickerButtons';
-import { MotionRecorderButton } from '@/components/MotionRecorderButton';
-import { CATEGORIES, CATEGORY_LABELS, CATEGORY_SHORT, DIFFICULTIES, Category, Difficulty } from '@/types/Move';
-import { C } from '@/constants/theme';
+import { MoveFormFields } from '@/components/MoveFormFields';
+import { CATEGORIES, CATEGORY_LABELS, Category, Difficulty } from '@/types/Move';
 import { cs } from '@/constants/commonStyles';
 import { MOTION_TRACKING_ENABLED } from '@/constants/features';
 
@@ -115,62 +109,25 @@ export default function EditMoveScreen() {
           contentContainerStyle={cs.content}
           keyboardShouldPersistTaps="handled"
         >
-          <Text style={cs.label}>Move name</Text>
-          <TextInput
-            style={cs.textInput}
-            value={name}
-            onChangeText={setName}
-            placeholder="e.g. Triple Dip"
-            placeholderTextColor={C.textSecondary}
-            returnKeyType="done"
-          />
-
-          <Text style={cs.label}>Category</Text>
-          <SegmentedControl
-            options={CATEGORY_LABELS}
-            value={CATEGORY_SHORT[category]}
-            onChange={handleCategoryChange}
-          />
-
-          <Text style={cs.label}>Difficulty</Text>
-          <SegmentedControl
-            options={DIFFICULTIES}
-            value={difficulty}
-            onChange={(v) => setDifficulty(v as Difficulty)}
-          />
-
-          <Text style={cs.label}>Notes</Text>
-          <TextInput
-            style={[cs.textInput, styles.multiline]}
-            value={notes}
-            onChangeText={setNotes}
-            placeholder="Cues, timing, things to remember…"
-            placeholderTextColor={C.textSecondary}
-            multiline
-            numberOfLines={4}
-            textAlignVertical="top"
-          />
-
-          <Text style={cs.label}>Video (optional)</Text>
-          <VideoPickerButtons
+          <MoveFormFields
+            name={name}
+            onNameChange={setName}
+            category={category}
+            onCategoryChange={handleCategoryChange}
+            difficulty={difficulty}
+            onDifficultyChange={setDifficulty}
+            notes={notes}
+            onNotesChange={setNotes}
             videoUri={videoUri}
             onRecord={handleRecord}
             onPick={handlePick}
-            onClear={() => setVideoUri(null)}
+            onClearVideo={() => setVideoUri(null)}
+            isRecording={isRecording}
+            motionFrames={frames}
+            onStartMotion={startMotion}
+            onStopMotion={stopMotion}
+            onDiscardMotion={clearMotion}
           />
-
-          {MOTION_TRACKING_ENABLED && (
-            <>
-              <Text style={cs.label}>Motion Capture (optional)</Text>
-              <MotionRecorderButton
-                isRecording={isRecording}
-                frames={frames}
-                onStart={startMotion}
-                onStop={stopMotion}
-                onDiscard={clearMotion}
-              />
-            </>
-          )}
 
           <SaveButton label="Save Changes" saving={saving} disabled={!name.trim()} onPress={handleSave} />
         </ScrollView>
@@ -179,8 +136,3 @@ export default function EditMoveScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  multiline: {
-    minHeight: 120,
-  },
-});

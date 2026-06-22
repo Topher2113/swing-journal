@@ -32,6 +32,8 @@ import { VideoPickerButtons } from '@/components/VideoPickerButtons';
 import { StepListEditor } from '@/components/StepListEditor';
 import { LinkedSongPicker } from '@/components/LinkedSongPicker';
 import { MotionRecorderButton } from '@/components/MotionRecorderButton';
+import { MoveFormFields } from '@/components/MoveFormFields';
+import { LineDanceFormFields } from '@/components/LineDanceFormFields';
 import { Ionicons } from '@expo/vector-icons';
 import { CATEGORIES, CATEGORY_LABELS, CATEGORY_SHORT, DIFFICULTIES, Category, Difficulty, SharedMove } from '@/types/Move';
 import { LineDanceStep } from '@/types/LineDance';
@@ -168,7 +170,7 @@ export default function AddScreen() {
         await shareToJournal(sharedMove);
       }
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      router.replace('/(tabs)');
+      router.replace('/(tabs)/(library)' as never);
     } finally {
       setSaving(false);
     }
@@ -199,7 +201,7 @@ export default function AddScreen() {
         notes: songNotes.trim(),
       });
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      router.replace('/(tabs)');
+      router.replace('/(tabs)/(library)' as never);
     } finally {
       setSongSaving(false);
     }
@@ -227,7 +229,7 @@ export default function AddScreen() {
         practiceCount: 0,
       });
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      router.replace('/(tabs)');
+      router.replace('/(tabs)/(library)' as never);
     } finally {
       setLdSaving(false);
     }
@@ -263,63 +265,26 @@ export default function AddScreen() {
               contentContainerStyle={styles.content}
               keyboardShouldPersistTaps="handled"
             >
-              <Text style={styles.label}>Move name</Text>
-              <TextInput
-                style={[styles.input, nameError ? styles.inputError : null]}
-                value={name}
-                onChangeText={(t) => { setName(t); if (nameError) setNameError(null); }}
-                placeholder="e.g. Triple Dip"
-                placeholderTextColor={C.textSecondary}
-                returnKeyType="done"
-              />
-              {nameError && <Text style={styles.fieldError}>{nameError}</Text>}
-
-              <Text style={styles.label}>Category</Text>
-              <SegmentedControl
-                options={CATEGORY_LABELS}
-                value={CATEGORY_SHORT[category]}
-                onChange={handleCategoryChange}
-              />
-
-              <Text style={styles.label}>Difficulty</Text>
-              <SegmentedControl
-                options={DIFFICULTIES}
-                value={difficulty}
-                onChange={(v) => setDifficulty(v as Difficulty)}
-              />
-
-              <Text style={styles.label}>Notes</Text>
-              <TextInput
-                style={[styles.input, styles.multiline]}
-                value={notes}
-                onChangeText={setNotes}
-                placeholder="Cues, timing, things to remember…"
-                placeholderTextColor={C.textSecondary}
-                multiline
-                numberOfLines={4}
-                textAlignVertical="top"
-              />
-
-              <Text style={styles.label}>Video (optional)</Text>
-              <VideoPickerButtons
+              <MoveFormFields
+                name={name}
+                onNameChange={(t) => { setName(t); if (nameError) setNameError(null); }}
+                nameError={nameError}
+                category={category}
+                onCategoryChange={handleCategoryChange}
+                difficulty={difficulty}
+                onDifficultyChange={setDifficulty}
+                notes={notes}
+                onNotesChange={setNotes}
                 videoUri={videoUri}
                 onRecord={handleRecord}
                 onPick={handlePick}
-                onClear={handleClear}
+                onClearVideo={handleClear}
+                isRecording={isRecording}
+                motionFrames={frames}
+                onStartMotion={startMotion}
+                onStopMotion={stopMotion}
+                onDiscardMotion={clearMotion}
               />
-
-              {MOTION_TRACKING_ENABLED && (
-                <>
-                  <Text style={styles.label}>Motion Capture (optional)</Text>
-                  <MotionRecorderButton
-                    isRecording={isRecording}
-                    frames={frames}
-                    onStart={startMotion}
-                    onStop={stopMotion}
-                    onDiscard={clearMotion}
-                  />
-                </>
-              )}
 
               {link?.status === 'linked' && (
                 <Pressable
@@ -426,48 +391,22 @@ export default function AddScreen() {
               contentContainerStyle={styles.content}
               keyboardShouldPersistTaps="handled"
             >
-              <Text style={styles.label}>Name</Text>
-              <TextInput
-                style={[styles.input, ldNameError ? styles.inputError : null]}
-                value={ldName}
-                onChangeText={(t) => { setLdName(t); if (ldNameError) setLdNameError(null); }}
-                placeholder="e.g. Cotton Eye Joe"
-                placeholderTextColor={C.textSecondary}
-                returnKeyType="done"
-              />
-              {ldNameError && <Text style={styles.fieldError}>{ldNameError}</Text>}
-
-              <Text style={styles.label}>Difficulty</Text>
-              <SegmentedControl
-                options={DIFFICULTIES}
-                value={ldDifficulty}
-                onChange={(v) => setLdDifficulty(v as Difficulty)}
-              />
-
-              <Text style={styles.label}>Steps (optional)</Text>
-              <StepListEditor steps={ldSteps} onChange={setLdSteps} />
-
-              <Text style={styles.label}>Video (optional)</Text>
-              <VideoPickerButtons
+              <LineDanceFormFields
+                name={ldName}
+                onNameChange={(t) => { setLdName(t); if (ldNameError) setLdNameError(null); }}
+                nameError={ldNameError}
+                difficulty={ldDifficulty}
+                onDifficultyChange={setLdDifficulty}
+                steps={ldSteps}
+                onStepsChange={setLdSteps}
                 videoUri={ldVideoUri}
                 onRecord={handleLdRecord}
                 onPick={handleLdPick}
-                onClear={handleLdClear}
-              />
-
-              <Text style={styles.label}>Linked Song (optional)</Text>
-              <LinkedSongPicker linkedSongId={ldLinkedSongId} onChange={setLdLinkedSongId} />
-
-              <Text style={styles.label}>Notes (optional)</Text>
-              <TextInput
-                style={[styles.input, styles.multiline]}
-                value={ldNotes}
-                onChangeText={setLdNotes}
-                placeholder="Cues, styling notes, things to remember…"
-                placeholderTextColor={C.textSecondary}
-                multiline
-                numberOfLines={4}
-                textAlignVertical="top"
+                onClearVideo={handleLdClear}
+                linkedSongId={ldLinkedSongId}
+                onLinkedSongChange={setLdLinkedSongId}
+                notes={ldNotes}
+                onNotesChange={setLdNotes}
               />
 
               <SaveButton label="Save Line Dance" saving={ldSaving} onPress={handleSaveLineDance} />
@@ -496,7 +435,7 @@ const styles = StyleSheet.create({
   content: {
     padding: 20,
     gap: 12,
-    paddingBottom: 40,
+    paddingBottom: 100,
   },
   label: {
     fontSize: 15,
@@ -513,15 +452,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: C.textPrimary,
     minHeight: 50,
-  },
-  inputError: {
-    borderWidth: 1.5,
-    borderColor: '#EF4444',
-  },
-  fieldError: {
-    fontSize: 12,
-    color: '#EF4444',
-    marginTop: -6,
   },
   multiline: {
     minHeight: 120,

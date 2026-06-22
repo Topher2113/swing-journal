@@ -100,7 +100,7 @@ export default function ProfileScreen() {
             key={category}
             style={({ pressed }) => [styles.catItem, { opacity: pressed ? 0.7 : 1 }]}
             android_ripple={{ color: 'transparent' }}
-            onPress={() => router.push({ pathname: '/category/[category]', params: { category } })}
+            onPress={() => router.push({ pathname: '/profile-category/[category]', params: { category } })}
           >
             <View style={styles.catRow}>
               <Text style={styles.catName}>{category}</Text>
