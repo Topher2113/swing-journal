@@ -8,10 +8,8 @@ import { SectionHeader } from '@/components/SectionHeader';
 import { SaveButton } from '@/components/SaveButton';
 import VerifyEmailScreen from '@/app/(auth)/verify-email';
 import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/context/AuthContext';
 
-// ── Module mocks ──────────────────────────────────────────────────────────────
-
-// ThemeContext: every component calls useTheme(); return dark palette so styles resolve.
 jest.mock('@/context/ThemeContext', () => ({
   useTheme: () => ({
     colors: require('@/constants/theme').darkColors,
@@ -21,19 +19,17 @@ jest.mock('@/context/ThemeContext', () => ({
   }),
 }));
 
-// expo-router: VerifyEmailScreen reads the email param and calls router.replace.
 jest.mock('expo-router', () => ({
   router: { replace: jest.fn(), push: jest.fn() },
   useLocalSearchParams: () => ({ email: 'dancer@example.com' }),
 }));
 
-// AuthContext: VerifyEmailScreen reads linkError to surface deep-link failures.
+// jest.fn() so individual tests can override with mockReturnValueOnce
 jest.mock('@/context/AuthContext', () => ({
-  useAuth: () => ({ linkError: null, clearLinkError: jest.fn() }),
+  useAuth: jest.fn(() => ({ linkError: null, clearLinkError: jest.fn() })),
 }));
 
-// Vector icons: Ionicons renders native font glyphs which crash in Jest.
-// Replace with a plain Text element so RNTL can still find surrounding elements.
+// Ionicons uses native fonts that crash in Jest — swap for a plain Text node
 jest.mock('@expo/vector-icons', () => {
   const { Text } = require('react-native');
   return {
@@ -42,24 +38,19 @@ jest.mock('@expo/vector-icons', () => {
   };
 });
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
 beforeEach(() => {
   jest.clearAllMocks();
 });
-
-// ── SearchBar ─────────────────────────────────────────────────────────────────
 
 describe('SearchBar', () => {
   it('renders the placeholder text in the text input', async () => {
     await render(<SearchBar value="" onChange={jest.fn()} />);
 
-    // getByPlaceholderText — verify the input is findable by its placeholder
     expect(screen.getByPlaceholderText('Search…')).toBeOnTheScreen();
   });
 
   it('reflects typed text in the input display value', async () => {
-    // Wrap in a stateful parent so the controlled TextInput re-renders with the new value
+    // Stateful wrapper so the controlled TextInput re-renders with the new value
     function SearchBarWithState() {
       const [val, setVal] = React.useState('');
       return <SearchBar value={val} onChange={setVal} placeholder="Find a move…" />;
@@ -70,7 +61,6 @@ describe('SearchBar', () => {
 
     await user.type(screen.getByPlaceholderText('Find a move…'), 'salsa');
 
-    // getByDisplayValue — the input now shows what the user typed
     expect(screen.getByDisplayValue('salsa')).toBeOnTheScreen();
   });
 
@@ -79,43 +69,43 @@ describe('SearchBar', () => {
     const user = userEvent.setup();
     await render(<SearchBar value="spin" onChange={onChange} />);
 
-    // getByLabelText — targets the clear Pressable via accessibilityLabel="Clear search"
     await user.press(screen.getByLabelText('Clear search'));
 
     expect(onChange).toHaveBeenCalledWith('');
   });
 });
 
-// ── SegmentedControl ──────────────────────────────────────────────────────────
-
 describe('SegmentedControl', () => {
   it('calls onChange with the correct option value when the user presses a segment', async () => {
     const onChange = jest.fn();
     const user = userEvent.setup();
     await render(
-      <SegmentedControl
-        options={['Moves', 'Songs', 'Line Dances']}
-        value="Moves"
-        onChange={onChange}
-      />,
+      <SegmentedControl options={['Moves', 'Songs', 'Line Dances']} value="Moves" onChange={onChange} />,
     );
 
-    // getByText — all option labels are visible text
     await user.press(screen.getByText('Songs'));
 
     expect(onChange).toHaveBeenCalledWith('Songs');
   });
-});
 
-// ── SectionHeader ─────────────────────────────────────────────────────────────
+  it('still fires onChange when the user presses the already-active segment', async () => {
+    const onChange = jest.fn();
+    const user = userEvent.setup();
+    await render(
+      <SegmentedControl options={['Moves', 'Songs', 'Line Dances']} value="Moves" onChange={onChange} />,
+    );
+
+    await user.press(screen.getByText('Moves'));
+
+    expect(onChange).toHaveBeenCalledWith('Moves');
+  });
+});
 
 describe('SectionHeader', () => {
   it('renders the section title and hides the "See all" button when no callback is provided', async () => {
     await render(<SectionHeader title="Recent Moves" />);
 
     expect(screen.getByText('Recent Moves')).toBeOnTheScreen();
-
-    // queryByText — returns null rather than throwing when the element is absent
     expect(screen.queryByText('See all →')).toBeNull();
   });
 
@@ -130,14 +120,11 @@ describe('SectionHeader', () => {
   });
 });
 
-// ── SaveButton ────────────────────────────────────────────────────────────────
-
 describe('SaveButton', () => {
-  it('displays the label when idle and switches to "Saving…" while an operation is in progress', async () => {
+  it('displays the label when idle and switches to "Saving…" while saving', async () => {
     const onPress = jest.fn();
     await render(<SaveButton label="Save Move" saving={false} onPress={onPress} />);
 
-    // getByRole — Pressable exposes role="button" via the prop added during cleanup
     expect(screen.getByRole('button')).toBeOnTheScreen();
     expect(screen.getByText('Save Move')).toBeOnTheScreen();
 
@@ -145,26 +132,39 @@ describe('SaveButton', () => {
 
     expect(screen.getByText('Saving…')).toBeOnTheScreen();
   });
+
+  it('fires onPress when the button is enabled', async () => {
+    const onPress = jest.fn();
+    const user = userEvent.setup();
+    await render(<SaveButton label="Save Move" saving={false} onPress={onPress} />);
+
+    await user.press(screen.getByRole('button'));
+
+    expect(onPress).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not fire onPress when the disabled prop is set', async () => {
+    const onPress = jest.fn();
+    const user = userEvent.setup();
+    await render(<SaveButton label="Save Move" saving={false} disabled onPress={onPress} />);
+
+    await user.press(screen.getByRole('button'));
+
+    expect(onPress).not.toHaveBeenCalled();
+  });
 });
 
-// ── VerifyEmailScreen (async component) ───────────────────────────────────────
-// VerifyEmailScreen calls supabase.auth.resend — an async network operation — when
-// the user presses "Resend Email". These tests cover the async success and error paths.
-
 describe('VerifyEmailScreen', () => {
-  // Fake timers prevent the 60-second cooldown interval from firing after each test.
-  // RNTL's waitFor and findBy* both handle fake timers automatically.
+  // Fake timers stop the 60-second cooldown interval from leaking between tests
   beforeEach(() => jest.useFakeTimers());
   afterEach(() => jest.useRealTimers());
 
   it('shows a success message after the user requests an email resend', async () => {
-    // Default supabase mock resolves with { error: null } — no override needed.
     const user = userEvent.setup();
     await render(<VerifyEmailScreen />);
 
     await user.press(screen.getByText('Resend Email'));
 
-    // findByText — async query that resolves once state updates after the Promise settles
     expect(
       await screen.findByText('Email resent! Check your inbox and spam folder.'),
     ).toBeOnTheScreen();
@@ -177,18 +177,48 @@ describe('VerifyEmailScreen', () => {
     const user = userEvent.setup();
     await render(<VerifyEmailScreen />);
 
-    // queryByText — confirm error is absent before any action
     expect(screen.queryByText(/Too many resend attempts/)).toBeNull();
 
     await user.press(screen.getByText('Resend Email'));
 
-    // waitFor — explicitly polls until the async resend resolves and the error state is set
     await waitFor(() => {
       expect(
-        screen.getByText(
-          'Too many resend attempts. Please wait a few minutes before trying again.',
-        ),
+        screen.getByText('Too many resend attempts. Please wait a few minutes before trying again.'),
       ).toBeOnTheScreen();
     });
+  });
+
+  it('displays a linkError from AuthContext on mount without user action', async () => {
+    (useAuth as jest.Mock).mockReturnValueOnce({
+      linkError: 'Your link has expired.',
+      clearLinkError: jest.fn(),
+    });
+    await render(<VerifyEmailScreen />);
+
+    expect(await screen.findByText('Your link has expired.')).toBeOnTheScreen();
+  });
+
+  it('navigates back to sign-in when the "Back to sign in" button is pressed', async () => {
+    const { router } = require('expo-router');
+    const user = userEvent.setup();
+    await render(<VerifyEmailScreen />);
+
+    await user.press(screen.getByText('Back to sign in'));
+
+    expect(router.replace).toHaveBeenCalledWith('/(auth)/sign-in');
+  });
+
+  it('shows a generic error when the resend call fails for a non-rate-limit reason', async () => {
+    (supabase.auth.resend as any).mockResolvedValueOnce({
+      error: new Error('network error'),
+    });
+    const user = userEvent.setup();
+    await render(<VerifyEmailScreen />);
+
+    await user.press(screen.getByText('Resend Email'));
+
+    expect(
+      await screen.findByText('Could not resend. Check your connection and try again.'),
+    ).toBeOnTheScreen();
   });
 });
