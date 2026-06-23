@@ -11,6 +11,7 @@ import {
   View,
 } from 'react-native';
 import { Stack, useRouter, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import PagerView from 'react-native-pager-view';
 import * as Haptics from 'expo-haptics';
 import * as Crypto from 'expo-crypto';
 import { useMoves } from '@/hooks/useMoves';
@@ -63,6 +64,7 @@ export default function AddScreen() {
 
   // Move form state
   const scrollRef = useRef<ScrollView>(null);
+  const pagerRef = useRef<PagerView>(null);
   const [name, setName] = useState('');
   const [nameError, setNameError] = useState<string | null>(null);
   const [category, setCategory] = useState<Category>('Footwork');
@@ -98,6 +100,7 @@ export default function AddScreen() {
     useCallback(() => {
       if (segmentParam === 'Move' || segmentParam === 'Line Dance' || segmentParam === 'Song') {
         setSegment(segmentParam as AddSegment);
+        pagerRef.current?.setPageWithoutAnimation(ADD_SEGMENTS.indexOf(segmentParam));
       }
       setName('');
       setNameError(null);
@@ -350,21 +353,26 @@ export default function AddScreen() {
   return (
     <>
       <Stack.Screen options={{ headerTitle }} />
-      <View style={styles.flex}>
+      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <View style={styles.segmentWrap}>
           <SegmentedControl
             options={ADD_SEGMENTS}
             value={segment}
-            onChange={(v) => setSegment(v as AddSegment)}
+            onChange={(v) => {
+              setSegment(v as AddSegment);
+              pagerRef.current?.setPage(ADD_SEGMENTS.indexOf(v));
+            }}
           />
         </View>
 
-        {/* ── Move ─────────────────────────────────────────────────────────── */}
-        {segment === 'Move' && (
-          <KeyboardAvoidingView
-            style={styles.flex}
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          >
+        <PagerView
+          ref={pagerRef}
+          style={styles.flex}
+          initialPage={0}
+          onPageSelected={(e) => setSegment(ADD_SEGMENTS[e.nativeEvent.position] as AddSegment)}
+        >
+          {/* ── Move — page 0 ────────────────────────────────────────────────── */}
+          <View key="0" style={styles.flex}>
             <ScrollView
               ref={scrollRef}
               style={styles.container}
@@ -406,15 +414,39 @@ export default function AddScreen() {
 
               <SaveButton label="Save Move" saving={saving} onPress={handleSave} />
             </ScrollView>
-          </KeyboardAvoidingView>
-        )}
+          </View>
 
-        {/* ── Song ─────────────────────────────────────────────────────────── */}
-        {segment === 'Song' && (
-          <KeyboardAvoidingView
-            style={styles.flex}
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          >
+          {/* ── Line Dance — page 1 ──────────────────────────────────────────── */}
+          <View key="1" style={styles.flex}>
+            <ScrollView
+              style={styles.container}
+              contentContainerStyle={styles.content}
+              keyboardShouldPersistTaps="handled"
+            >
+              <LineDanceFormFields
+                name={ldName}
+                onNameChange={(t) => { setLdName(t); if (ldNameError) setLdNameError(null); }}
+                nameError={ldNameError}
+                difficulty={ldDifficulty}
+                onDifficultyChange={setLdDifficulty}
+                steps={ldSteps}
+                onStepsChange={setLdSteps}
+                videoUri={ldVideoUri}
+                onRecord={handleLdRecord}
+                onPick={handleLdPick}
+                onClearVideo={handleLdClear}
+                linkedSongId={ldLinkedSongId}
+                onLinkedSongChange={setLdLinkedSongId}
+                notes={ldNotes}
+                onNotesChange={setLdNotes}
+              />
+
+              <SaveButton label="Save Line Dance" saving={ldSaving} onPress={handleSaveLineDance} />
+            </ScrollView>
+          </View>
+
+          {/* ── Song — page 2 ────────────────────────────────────────────────── */}
+          <View key="2" style={styles.flex}>
             <ScrollView
               style={styles.container}
               contentContainerStyle={styles.content}
@@ -483,43 +515,9 @@ export default function AddScreen() {
                 </>
               )}
             </ScrollView>
-          </KeyboardAvoidingView>
-        )}
-
-        {/* ── Line Dance ───────────────────────────────────────────────────── */}
-        {segment === 'Line Dance' && (
-          <KeyboardAvoidingView
-            style={styles.flex}
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          >
-            <ScrollView
-              style={styles.container}
-              contentContainerStyle={styles.content}
-              keyboardShouldPersistTaps="handled"
-            >
-              <LineDanceFormFields
-                name={ldName}
-                onNameChange={(t) => { setLdName(t); if (ldNameError) setLdNameError(null); }}
-                nameError={ldNameError}
-                difficulty={ldDifficulty}
-                onDifficultyChange={setLdDifficulty}
-                steps={ldSteps}
-                onStepsChange={setLdSteps}
-                videoUri={ldVideoUri}
-                onRecord={handleLdRecord}
-                onPick={handleLdPick}
-                onClearVideo={handleLdClear}
-                linkedSongId={ldLinkedSongId}
-                onLinkedSongChange={setLdLinkedSongId}
-                notes={ldNotes}
-                onNotesChange={setLdNotes}
-              />
-
-              <SaveButton label="Save Line Dance" saving={ldSaving} onPress={handleSaveLineDance} />
-            </ScrollView>
-          </KeyboardAvoidingView>
-        )}
-      </View>
+          </View>
+        </PagerView>
+      </KeyboardAvoidingView>
     </>
   );
 }

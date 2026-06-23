@@ -72,7 +72,7 @@ export default function HomeScreen() {
     },
     content: {
       padding: 20,
-      gap: 12,
+      gap: 6,
       paddingBottom: 48,
     },
     greeting: {

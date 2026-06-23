@@ -171,7 +171,7 @@ export default function VerifyEmailScreen() {
         </Text>
 
         <Text style={styles.hint}>
-          Tap the link in the email to confirm your account. The app will open automatically and sign you in.
+          Tap the link in the email <Text style={styles.emailHighlight}>on your phone</Text> to confirm your account. The app will open automatically and sign you in.
         </Text>
         <Text style={styles.hint}>
           Don't see it? Check your spam or junk folder.

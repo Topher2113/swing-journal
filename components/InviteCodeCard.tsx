@@ -56,8 +56,8 @@ export function InviteCodeCard({ link, onGenerate, onRedeem, onCancel }: Props) 
   const handleShare = () => {
     if (!link) return;
     Share.share({
-      message: `Join my Swing Journal! Use code: ${link.inviteCode}`,
-      title: 'Swing Journal Partner Invite',
+      message: `Join my Dance Journal! Use code: ${link.inviteCode}`,
+      title: 'Dance Journal Partner Invite',
     });
   };
 

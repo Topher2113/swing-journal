@@ -178,7 +178,7 @@ export default function SignInScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView contentContainerStyle={styles.inner} keyboardShouldPersistTaps="handled">
-        <Text style={styles.title}>Swing Journal</Text>
+        <Text style={styles.title}>Dance Journal</Text>
         <Text style={styles.subtitle}>
           {mode === 'signin' ? 'Sign in to your account' : 'Create an account'}
         </Text>
