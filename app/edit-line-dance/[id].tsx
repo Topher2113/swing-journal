@@ -12,9 +12,10 @@ import { SaveButton } from '@/components/SaveButton';
 import { LineDanceFormFields } from '@/components/LineDanceFormFields';
 import { Difficulty } from '@/types/Move';
 import { LineDanceStep } from '@/types/LineDance';
-import { cs } from '@/constants/commonStyles';
+import { useCommonStyles } from '@/constants/commonStyles';
 
 export default function EditLineDanceScreen() {
+  const cs = useCommonStyles();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { lineDance, updateLineDance } = useLineDance(id);
@@ -55,7 +56,7 @@ export default function EditLineDanceScreen() {
         ...lineDance,
         name: name.trim(),
         difficulty,
-        steps: steps.filter((s) => s.name.trim()).map((s, i) => ({ ...s, order: i + 1 })),
+        steps: steps.filter((s) => s.name.trim() || s.description.trim()).map((s, i) => ({ ...s, order: i + 1 })),
         videoUri,
         linkedSongId,
         notes: notes.trim(),

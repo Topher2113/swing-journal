@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { FlatList, StyleSheet, View } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useMoves } from '@/hooks/useMoves';
@@ -7,11 +7,12 @@ import { MoveCard } from '@/components/MoveCard';
 import { SearchBar } from '@/components/SearchBar';
 import { SortDropdown } from '@/components/SortDropdown';
 import { EmptyState } from '@/components/EmptyState';
-import { C } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 
 type Props = { category: string };
 
 export function CategoryMovesList({ category }: Props) {
+  const { colors: C } = useTheme();
   const router = useRouter();
   const { moves, reload, deleteMove } = useMoves();
 
@@ -32,6 +33,18 @@ export function CategoryMovesList({ category }: Props) {
     setSortKey(key as SortKey);
     setSortDir(dir);
   };
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: C.bg,
+    },
+    list: {
+      paddingHorizontal: 16,
+      paddingTop: 8,
+      paddingBottom: 32,
+    },
+  }), [C]);
 
   return (
     <View style={styles.container}>
@@ -62,15 +75,3 @@ export function CategoryMovesList({ category }: Props) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: C.bg,
-  },
-  list: {
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 32,
-  },
-});

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -11,7 +11,8 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { PartnerLink } from '@/types/Auth';
-import { C, RADIUS } from '@/constants/theme';
+import { RADIUS } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 
 type Props = {
   link: PartnerLink | null;
@@ -21,6 +22,7 @@ type Props = {
 };
 
 export function InviteCodeCard({ link, onGenerate, onRedeem, onCancel }: Props) {
+  const { colors: C } = useTheme();
   const [redeemCode, setRedeemCode] = useState('');
   const [generating, setGenerating] = useState(false);
   const [redeeming, setRedeeming] = useState(false);
@@ -54,10 +56,124 @@ export function InviteCodeCard({ link, onGenerate, onRedeem, onCancel }: Props) 
   const handleShare = () => {
     if (!link) return;
     Share.share({
-      message: `Join my Swing Journal! Use code: ${link.inviteCode}`,
-      title: 'Swing Journal Partner Invite',
+      message: `Join my Dance Journal! Use code: ${link.inviteCode}`,
+      title: 'Dance Journal Partner Invite',
     });
   };
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      paddingHorizontal: 24,
+      paddingTop: 40,
+    },
+    section: {
+      alignItems: 'center',
+      gap: 12,
+    },
+    icon: {
+      marginBottom: 4,
+    },
+    heading: {
+      fontSize: 22,
+      fontWeight: '700',
+      color: C.textPrimary,
+      textAlign: 'center',
+    },
+    body: {
+      fontSize: 15,
+      color: C.textSecondary,
+      textAlign: 'center',
+      lineHeight: 22,
+    },
+    code: {
+      fontSize: 36,
+      fontWeight: '700',
+      color: C.accent,
+      letterSpacing: 3,
+      fontFamily: 'monospace',
+    },
+    button: {
+      backgroundColor: C.accent,
+      borderRadius: RADIUS.control,
+      paddingVertical: 14,
+      paddingHorizontal: 24,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      minWidth: 200,
+      marginTop: 4,
+    },
+    buttonPressed: {
+      backgroundColor: C.accentDark,
+    },
+    buttonText: {
+      color: C.textPrimary,
+      fontSize: 15,
+      fontWeight: '600',
+    },
+    divider: {
+      marginVertical: 24,
+      alignItems: 'center',
+    },
+    dividerText: {
+      color: C.textSecondary,
+      fontSize: 13,
+    },
+    redeemRow: {
+      flexDirection: 'row',
+      gap: 10,
+    },
+    redeemInput: {
+      flex: 1,
+      backgroundColor: C.surface,
+      borderRadius: RADIUS.control,
+      padding: 14,
+      fontSize: 16,
+      color: C.textPrimary,
+      borderWidth: 1,
+      borderColor: C.border,
+      letterSpacing: 1,
+    },
+    redeemBtn: {
+      backgroundColor: C.accent,
+      borderRadius: RADIUS.control,
+      paddingHorizontal: 20,
+      alignItems: 'center',
+      justifyContent: 'center',
+      minWidth: 70,
+    },
+    waitingRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      marginTop: 8,
+    },
+    waitingText: {
+      color: C.textSecondary,
+      fontSize: 14,
+    },
+    error: {
+      color: C.error,
+      fontSize: 14,
+      textAlign: 'center',
+      marginTop: 8,
+    },
+    cancelBtn: {
+      marginTop: 'auto',
+      marginBottom: 32,
+      alignItems: 'center',
+      padding: 12,
+    },
+    cancelBtnPressed: {
+      opacity: 0.6,
+    },
+    cancelText: {
+      color: C.error,
+      fontSize: 15,
+      fontWeight: '500',
+    },
+  }), [C]);
 
   if (!link) {
     return (
@@ -153,117 +269,3 @@ export function InviteCodeCard({ link, onGenerate, onRedeem, onCancel }: Props) 
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 40,
-  },
-  section: {
-    alignItems: 'center',
-    gap: 12,
-  },
-  icon: {
-    marginBottom: 4,
-  },
-  heading: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: C.textPrimary,
-    textAlign: 'center',
-  },
-  body: {
-    fontSize: 15,
-    color: C.textSecondary,
-    textAlign: 'center',
-    lineHeight: 22,
-  },
-  code: {
-    fontSize: 36,
-    fontWeight: '700',
-    color: C.accent,
-    letterSpacing: 3,
-    fontFamily: 'monospace',
-  },
-  button: {
-    backgroundColor: C.accent,
-    borderRadius: RADIUS.control,
-    paddingVertical: 14,
-    paddingHorizontal: 24,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    minWidth: 200,
-    marginTop: 4,
-  },
-  buttonPressed: {
-    backgroundColor: C.accentDark,
-  },
-  buttonText: {
-    color: C.textPrimary,
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  divider: {
-    marginVertical: 24,
-    alignItems: 'center',
-  },
-  dividerText: {
-    color: C.textSecondary,
-    fontSize: 13,
-  },
-  redeemRow: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  redeemInput: {
-    flex: 1,
-    backgroundColor: C.surface,
-    borderRadius: RADIUS.control,
-    padding: 14,
-    fontSize: 16,
-    color: C.textPrimary,
-    borderWidth: 1,
-    borderColor: C.border,
-    letterSpacing: 1,
-  },
-  redeemBtn: {
-    backgroundColor: C.accent,
-    borderRadius: RADIUS.control,
-    paddingHorizontal: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    minWidth: 70,
-  },
-  waitingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginTop: 8,
-  },
-  waitingText: {
-    color: C.textSecondary,
-    fontSize: 14,
-  },
-  error: {
-    color: C.error,
-    fontSize: 14,
-    textAlign: 'center',
-    marginTop: 8,
-  },
-  cancelBtn: {
-    marginTop: 'auto',
-    marginBottom: 32,
-    alignItems: 'center',
-    padding: 12,
-  },
-  cancelBtnPressed: {
-    opacity: 0.6,
-  },
-  cancelText: {
-    color: C.error,
-    fontSize: 15,
-    fontWeight: '500',
-  },
-});

@@ -11,12 +11,14 @@ import { VideoPlayer } from '@/components/VideoPlayer';
 import { DifficultyBadge } from '@/components/DifficultyBadge';
 import { NotesBox } from '@/components/NotesBox';
 import { PracticeCounter } from '@/components/PracticeCounter';
-import { C, RADIUS } from '@/constants/theme';
+import { RADIUS } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 import { MOTION_TRACKING_ENABLED } from '@/constants/features';
 
 const SAVED_FROM_JOURNAL_KEY = '@saved-shared-moves';
 
 export default function SharedMoveDetailScreen() {
+  const { colors: C } = useTheme();
   const { id, partnerLinkId } = useLocalSearchParams<{ id: string; partnerLinkId: string }>();
   const router = useRouter();
   const { link } = usePartnerLink();
@@ -67,6 +69,97 @@ export default function SharedMoveDetailScreen() {
 
   const isOwn = move?.addedByUserId === user?.id;
   const addedByLabel = isOwn ? 'Added by you' : 'Added by partner';
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: C.bg,
+    },
+    content: {
+      padding: 16,
+      gap: 16,
+      paddingBottom: 40,
+    },
+    centered: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: C.bg,
+    },
+    name: {
+      fontSize: 26,
+      fontWeight: '700',
+      color: C.textPrimary,
+    },
+    badges: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+    },
+    categoryBadge: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: C.accent,
+      backgroundColor: C.accentDark + '33',
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: RADIUS.badge,
+      overflow: 'hidden',
+    },
+    addedBy: {
+      fontSize: 13,
+      color: C.textSecondary,
+      fontStyle: 'italic',
+    },
+    motionNote: {
+      backgroundColor: C.surface,
+      borderRadius: RADIUS.card,
+      padding: 12,
+    },
+    motionNoteText: {
+      fontSize: 13,
+      color: C.textSecondary,
+    },
+    saveBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      backgroundColor: C.surface,
+      borderRadius: RADIUS.card,
+      padding: 16,
+      minHeight: 52,
+      borderWidth: 1,
+      borderColor: C.border,
+    },
+    saveBtnDone: {
+      borderColor: C.successBg,
+      backgroundColor: C.successBg + '33',
+    },
+    saveBtnText: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: C.accent,
+    },
+    saveBtnTextDone: {
+      color: C.success,
+    },
+    removeBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      backgroundColor: C.surface,
+      borderRadius: RADIUS.card,
+      padding: 16,
+      minHeight: 52,
+      borderWidth: 1,
+      borderColor: C.errorBorder,
+    },
+    removeBtnText: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: C.error,
+    },
+  }), [C]);
 
   const handleRemove = () => {
     if (!move) return;
@@ -134,7 +227,7 @@ export default function SharedMoveDetailScreen() {
             android_ripple={{ color: 'transparent' }}
             onPress={handleRemove}
           >
-            <Ionicons name="trash-outline" size={18} color="#FCA5A5" />
+            <Ionicons name="trash-outline" size={18} color={C.error} />
             <Text style={styles.removeBtnText}>Remove from journal</Text>
           </Pressable>
         )}
@@ -148,94 +241,3 @@ export default function SharedMoveDetailScreen() {
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: C.bg,
-  },
-  content: {
-    padding: 16,
-    gap: 16,
-    paddingBottom: 40,
-  },
-  centered: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: C.bg,
-  },
-  name: {
-    fontSize: 26,
-    fontWeight: '700',
-    color: C.textPrimary,
-  },
-  badges: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  categoryBadge: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: C.accent,
-    backgroundColor: C.accentDark + '33',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: RADIUS.badge,
-    overflow: 'hidden',
-  },
-  addedBy: {
-    fontSize: 13,
-    color: C.textSecondary,
-    fontStyle: 'italic',
-  },
-  motionNote: {
-    backgroundColor: C.surface,
-    borderRadius: RADIUS.card,
-    padding: 12,
-  },
-  motionNoteText: {
-    fontSize: 13,
-    color: C.textSecondary,
-  },
-  saveBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    backgroundColor: C.surface,
-    borderRadius: RADIUS.card,
-    padding: 16,
-    minHeight: 52,
-    borderWidth: 1,
-    borderColor: C.border,
-  },
-  saveBtnDone: {
-    borderColor: C.successBg,
-    backgroundColor: C.successBg + '33',
-  },
-  saveBtnText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: C.accent,
-  },
-  saveBtnTextDone: {
-    color: C.success,
-  },
-  removeBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    backgroundColor: C.surface,
-    borderRadius: RADIUS.card,
-    padding: 16,
-    minHeight: 52,
-    borderWidth: 1,
-    borderColor: C.errorBorder,
-  },
-  removeBtnText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: C.error,
-  },
-});

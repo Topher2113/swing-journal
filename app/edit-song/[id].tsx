@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -15,14 +15,17 @@ import * as Haptics from 'expo-haptics';
 import { useSong } from '@/hooks/useSong';
 import { useSongSearch } from '@/hooks/useSongSearch';
 import { useDebounceSearch } from '@/hooks/useDebounceSearch';
+import { useTheme } from '@/context/ThemeContext';
 import { AlbumArt } from '@/components/AlbumArt';
 import { SaveButton } from '@/components/SaveButton';
 import { SongSearchResultRow } from '@/components/SongSearchResultRow';
 import { SpotifyTrackResult } from '@/types/Song';
-import { C, RADIUS } from '@/constants/theme';
-import { cs } from '@/constants/commonStyles';
+import { RADIUS } from '@/constants/theme';
+import { useCommonStyles } from '@/constants/commonStyles';
 
 export default function EditSongScreen() {
+  const { colors: C } = useTheme();
+  const cs = useCommonStyles();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { song, updateSong } = useSong(id);
@@ -44,6 +47,62 @@ export default function EditSongScreen() {
   } = useDebounceSearch<SpotifyTrackResult>(searchSpotify);
   const [saving, setSaving] = useState(false);
   const seeded = useRef(false);
+
+  const styles = useMemo(() => StyleSheet.create({
+    multiline: {
+      minHeight: 120,
+    },
+    loader: {
+      marginVertical: 16,
+    },
+    noResults: {
+      fontSize: 14,
+      color: C.textSecondary,
+      textAlign: 'center',
+      marginTop: 16,
+    },
+    cancelBtn: {
+      alignSelf: 'flex-start',
+      paddingVertical: 8,
+    },
+    cancelBtnText: {
+      fontSize: 15,
+      color: C.accent,
+      fontWeight: '600',
+    },
+    attachedRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: C.surface,
+      borderRadius: RADIUS.card,
+      padding: 12,
+      gap: 12,
+    },
+    attachedInfo: {
+      flex: 1,
+      gap: 3,
+    },
+    attachedTitle: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: C.textPrimary,
+    },
+    attachedArtist: {
+      fontSize: 13,
+      color: C.textSecondary,
+    },
+    changeBtn: {
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      backgroundColor: C.border,
+      borderRadius: RADIUS.chip,
+    },
+    changeBtnText: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: C.textPrimary,
+    },
+  }), [C]);
 
   useEffect(() => {
     if (!song || seeded.current) return;
@@ -173,58 +232,3 @@ export default function EditSongScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  multiline: {
-    minHeight: 120,
-  },
-  loader: {
-    marginVertical: 16,
-  },
-  noResults: {
-    fontSize: 14,
-    color: C.textSecondary,
-    textAlign: 'center',
-    marginTop: 16,
-  },
-  cancelBtn: {
-    alignSelf: 'flex-start',
-    paddingVertical: 8,
-  },
-  cancelBtnText: {
-    fontSize: 15,
-    color: C.accent,
-    fontWeight: '600',
-  },
-  attachedRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: C.surface,
-    borderRadius: RADIUS.card,
-    padding: 12,
-    gap: 12,
-  },
-  attachedInfo: {
-    flex: 1,
-    gap: 3,
-  },
-  attachedTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: C.textPrimary,
-  },
-  attachedArtist: {
-    fontSize: 13,
-    color: C.textSecondary,
-  },
-  changeBtn: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    backgroundColor: C.border,
-    borderRadius: RADIUS.chip,
-  },
-  changeBtnText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: C.textPrimary,
-  },
-});

@@ -1,11 +1,16 @@
+import { useMemo } from 'react';
 import { Stack } from 'expo-router';
-import { C } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 
 export default function LibraryLayout() {
+  const { colors: C } = useTheme();
+
+  const headerStyle = useMemo(() => ({ backgroundColor: C.bg }), [C]);
+
   return (
     <Stack
       screenOptions={{
-        headerStyle: { backgroundColor: C.bg },
+        headerStyle,
         headerTintColor: C.textPrimary,
       }}
     >

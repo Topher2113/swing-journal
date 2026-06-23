@@ -1,7 +1,7 @@
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { Stack, useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
 import { useLineDance } from '@/hooks/useLineDance';
 import { useSongs } from '@/hooks/useSongs';
 import { Skeleton, SkeletonRow } from '@/components/Skeleton';
@@ -11,13 +11,21 @@ import { DifficultyBadge } from '@/components/DifficultyBadge';
 import { StepListView } from '@/components/StepListView';
 import { PracticeCounter } from '@/components/PracticeCounter';
 import { NotesBox } from '@/components/NotesBox';
-import { C, RADIUS } from '@/constants/theme';
+import { RADIUS } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 
 export default function LineDanceDetailScreen() {
+  const { colors: C } = useTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { lineDance, incrementPractice, loading } = useLineDance(id);
+  const { lineDance, incrementPractice, loading, reload } = useLineDance(id);
   const { songs } = useSongs();
+
+  useFocusEffect(
+    useCallback(() => {
+      reload();
+    }, [reload])
+  );
 
   const linkedSong = lineDance?.linkedSongId
     ? (songs.find((s) => s.id === lineDance.linkedSongId) ?? null)
@@ -31,6 +39,69 @@ export default function LineDanceDetailScreen() {
       <Ionicons name="pencil-outline" size={20} color={C.textPrimary} />
     </Pressable>
   ), [router, id]);
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: C.bg,
+    },
+    content: {
+      padding: 16,
+      gap: 16,
+      paddingBottom: 40,
+    },
+    name: {
+      fontSize: 26,
+      fontWeight: '700',
+      color: C.textPrimary,
+    },
+    badges: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+    },
+    stepCount: {
+      fontSize: 13,
+      color: C.textSecondary,
+    },
+    sectionLabel: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: C.textPrimary,
+      marginBottom: -4,
+    },
+    linkedSongRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: C.surface,
+      borderRadius: RADIUS.card,
+      padding: 12,
+      gap: 12,
+    },
+    linkedInfo: {
+      flex: 1,
+      gap: 3,
+    },
+    linkedTitle: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: C.textPrimary,
+    },
+    linkedArtist: {
+      fontSize: 13,
+      color: C.textSecondary,
+    },
+    notFound: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingTop: 80,
+    },
+    notFoundText: {
+      fontSize: 16,
+      color: C.textSecondary,
+    },
+  }), [C]);
 
   return (
     <>
@@ -97,66 +168,3 @@ export default function LineDanceDetailScreen() {
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: C.bg,
-  },
-  content: {
-    padding: 16,
-    gap: 16,
-    paddingBottom: 40,
-  },
-  name: {
-    fontSize: 26,
-    fontWeight: '700',
-    color: C.textPrimary,
-  },
-  badges: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  stepCount: {
-    fontSize: 13,
-    color: C.textSecondary,
-  },
-  sectionLabel: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: C.textPrimary,
-    marginBottom: -4,
-  },
-  linkedSongRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: C.surface,
-    borderRadius: RADIUS.card,
-    padding: 12,
-    gap: 12,
-  },
-  linkedInfo: {
-    flex: 1,
-    gap: 3,
-  },
-  linkedTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: C.textPrimary,
-  },
-  linkedArtist: {
-    fontSize: 13,
-    color: C.textSecondary,
-  },
-  notFound: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingTop: 80,
-  },
-  notFoundText: {
-    fontSize: 16,
-    color: C.textSecondary,
-  },
-});

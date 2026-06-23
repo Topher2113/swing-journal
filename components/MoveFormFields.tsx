@@ -4,8 +4,8 @@ import { VideoPickerButtons } from '@/components/VideoPickerButtons';
 import { MotionRecorderButton } from '@/components/MotionRecorderButton';
 import { CATEGORY_LABELS, CATEGORY_SHORT, DIFFICULTIES, Category, Difficulty } from '@/types/Move';
 import type { MotionFrame } from '@/types/Move';
-import { C } from '@/constants/theme';
-import { cs } from '@/constants/commonStyles';
+import { useTheme } from '@/context/ThemeContext';
+import { useCommonStyles } from '@/constants/commonStyles';
 import { MOTION_TRACKING_ENABLED } from '@/constants/features';
 
 type Props = {
@@ -30,6 +30,8 @@ type Props = {
 };
 
 export function MoveFormFields(props: Props) {
+  const { colors: C } = useTheme();
+  const cs = useCommonStyles();
   const {
     name, onNameChange, nameError,
     category, onCategoryChange,

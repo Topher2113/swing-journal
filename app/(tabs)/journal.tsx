@@ -1,6 +1,6 @@
 import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
 import { Stack, useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { usePartnerLink } from '@/hooks/usePartnerLink';
 import { usePartnerJournal } from '@/hooks/usePartnerJournal';
 import { useAuth } from '@/context/AuthContext';
@@ -11,18 +11,33 @@ import { SortDropdown } from '@/components/SortDropdown';
 import { EmptyState } from '@/components/EmptyState';
 import { PartnerLink } from '@/types/Auth';
 import { useSortedSharedMoves, JOURNAL_SORT_OPTIONS } from '@/hooks/useSortedSharedMoves';
-import { C } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 
 
 export default function JournalScreen() {
+  const { colors: C } = useTheme();
   const { link, loading, generateInviteCode, redeemInviteCode, cancelInviteCode } = usePartnerLink();
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: C.bg,
+    },
+    sortRow: {
+      paddingTop: 12,
+    },
+    list: {
+      padding: 16,
+      paddingBottom: 32,
+    },
+  }), [C]);
 
   if (loading) return <View style={styles.container} />;
 
   if (!link || link.status !== 'linked') {
     return (
       <View style={styles.container}>
-        <Stack.Screen options={{ title: 'Journal' }} />
+        <Stack.Screen options={{ headerTitle: 'Journal' }} />
         <InviteCodeCard
           link={link}
           onGenerate={generateInviteCode}
@@ -37,6 +52,7 @@ export default function JournalScreen() {
 }
 
 function JournalLinked({ link }: { link: PartnerLink }) {
+  const { colors: C } = useTheme();
   const router = useRouter();
   const { user } = useAuth();
   const { items, syncing, sync, reload } = usePartnerJournal(link.id);
@@ -57,9 +73,23 @@ function JournalLinked({ link }: { link: PartnerLink }) {
   const partnerEmail = isUserA ? (link.userEmailB ?? 'Partner') : link.userEmailA;
   const partnerName = isUserA ? link.userNameB : link.userNameA;
 
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: C.bg,
+    },
+    sortRow: {
+      paddingTop: 12,
+    },
+    list: {
+      padding: 16,
+      paddingBottom: 32,
+    },
+  }), [C]);
+
   return (
     <View style={styles.container}>
-      <Stack.Screen options={{ title: 'Partner Journal', headerShown: true }} />
+      <Stack.Screen options={{ headerTitle: 'Partner Journal', headerShown: true }} />
       <PartnerJournalHeader
         partnerEmail={partnerEmail}
         partnerName={partnerName}
@@ -95,17 +125,3 @@ function JournalLinked({ link }: { link: PartnerLink }) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: C.bg,
-  },
-  sortRow: {
-    paddingTop: 12,
-  },
-  list: {
-    padding: 16,
-    paddingBottom: 32,
-  },
-});

@@ -1,7 +1,9 @@
+import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { AlbumArt } from './AlbumArt';
 import { SpotifyTrackResult } from '@/types/Song';
-import { C, RADIUS } from '@/constants/theme';
+import { RADIUS } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 
 type Props = {
   track: SpotifyTrackResult;
@@ -9,8 +11,36 @@ type Props = {
 };
 
 export function SongSearchResultRow({ track, onPress }: Props) {
+  const { colors: C } = useTheme();
   const artUrl = track.album.images[0]?.url ?? null;
   const artistNames = track.artists.map((a) => a.name).join(', ');
+
+  const styles = useMemo(() => StyleSheet.create({
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      paddingVertical: 10,
+      paddingHorizontal: 16,
+      backgroundColor: C.surface,
+      borderRadius: RADIUS.card,
+      marginBottom: 6,
+      minHeight: 68,
+    },
+    info: {
+      flex: 1,
+      gap: 4,
+    },
+    title: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: C.textPrimary,
+    },
+    artist: {
+      fontSize: 13,
+      color: C.textSecondary,
+    },
+  }), [C]);
 
   return (
     <Pressable
@@ -26,30 +56,3 @@ export function SongSearchResultRow({ track, onPress }: Props) {
     </Pressable>
   );
 }
-
-const styles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    backgroundColor: C.surface,
-    borderRadius: RADIUS.card,
-    marginBottom: 6,
-    minHeight: 68,
-  },
-  info: {
-    flex: 1,
-    gap: 4,
-  },
-  title: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: C.textPrimary,
-  },
-  artist: {
-    fontSize: 13,
-    color: C.textSecondary,
-  },
-});

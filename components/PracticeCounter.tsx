@@ -1,14 +1,63 @@
+import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import * as Haptics from 'expo-haptics';
-import { C, RADIUS } from '@/constants/theme';
+import { RADIUS } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 
 type Props = { count: number; onIncrement: () => void };
 
 export function PracticeCounter({ count, onIncrement }: Props) {
+  const { colors: C } = useTheme();
+
   const handlePress = () => {
     onIncrement();
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
   };
+
+  const styles = useMemo(() => StyleSheet.create({
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      backgroundColor: C.surface,
+      borderRadius: RADIUS.card,
+      padding: 16,
+    },
+    countBox: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    icon: {
+      fontSize: 22,
+      color: C.accent,
+    },
+    count: {
+      fontSize: 28,
+      fontWeight: '600',
+      color: C.textPrimary,
+    },
+    label: {
+      fontSize: 14,
+      color: C.textSecondary,
+      alignSelf: 'flex-end',
+      marginBottom: 3,
+    },
+    btn: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      backgroundColor: C.accent,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    btnText: {
+      fontSize: 28,
+      fontWeight: '300',
+      color: C.textPrimary,
+      lineHeight: 32,
+    },
+  }), [C]);
 
   return (
     <View style={styles.row}>
@@ -27,48 +76,3 @@ export function PracticeCounter({ count, onIncrement }: Props) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: C.surface,
-    borderRadius: RADIUS.card,
-    padding: 16,
-  },
-  countBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  icon: {
-    fontSize: 22,
-    color: C.accent,
-  },
-  count: {
-    fontSize: 28,
-    fontWeight: '600',
-    color: C.textPrimary,
-  },
-  label: {
-    fontSize: 14,
-    color: C.textSecondary,
-    alignSelf: 'flex-end',
-    marginBottom: 3,
-  },
-  btn: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: C.accent,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  btnText: {
-    fontSize: 28,
-    fontWeight: '300',
-    color: C.textPrimary,
-    lineHeight: 32,
-  },
-});

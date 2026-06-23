@@ -1,12 +1,12 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import { Ionicons } from '@expo/vector-icons';
 import { DifficultyBadge } from './DifficultyBadge';
 import { SwipeActions } from './SwipeActions';
 import { Move } from '@/types/Move';
-import { C } from '@/constants/theme';
-import { cs } from '@/constants/commonStyles';
+import { useTheme } from '@/context/ThemeContext';
+import { useCommonStyles } from '@/constants/commonStyles';
 
 type Props = {
   move: Move;
@@ -17,6 +17,8 @@ type Props = {
 };
 
 export function MoveCard({ move, onPress, onEdit, onDelete, isShared }: Props) {
+  const { colors: C } = useTheme();
+  const cs = useCommonStyles();
   const swipeableRef = useRef<any>(null);
 
   const handleEdit = useCallback(() => {
@@ -34,6 +36,19 @@ export function MoveCard({ move, onPress, onEdit, onDelete, isShared }: Props) {
       ]
     );
   }, [move.name, onDelete]);
+
+  const styles = useMemo(() => StyleSheet.create({
+    nameRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+    },
+    trailingIcons: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+  }), [C]);
 
   return (
     <ReanimatedSwipeable
@@ -65,16 +80,3 @@ export function MoveCard({ move, onPress, onEdit, onDelete, isShared }: Props) {
     </ReanimatedSwipeable>
   );
 }
-
-const styles = StyleSheet.create({
-  nameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-  },
-  trailingIcons: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-});

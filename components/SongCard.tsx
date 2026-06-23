@@ -1,12 +1,12 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { AlbumArt } from './AlbumArt';
 import { SwipeActions } from './SwipeActions';
 import { Song } from '@/types/Song';
-import { C } from '@/constants/theme';
-import { cs } from '@/constants/commonStyles';
+import { useTheme } from '@/context/ThemeContext';
+import { useCommonStyles } from '@/constants/commonStyles';
 
 type Props = {
   song: Song;
@@ -16,6 +16,8 @@ type Props = {
 };
 
 export function SongCard({ song, onPress, onEdit, onDelete }: Props) {
+  const { colors: C } = useTheme();
+  const cs = useCommonStyles();
   const swipeableRef = useRef<any>(null);
 
   const handleEdit = useCallback(() => {
@@ -33,6 +35,27 @@ export function SongCard({ song, onPress, onEdit, onDelete }: Props) {
       ]
     );
   }, [song.title, onDelete]);
+
+  const styles = useMemo(() => StyleSheet.create({
+    info: {
+      flex: 1,
+      gap: 4,
+    },
+    title: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: C.textPrimary,
+    },
+    artist: {
+      fontSize: 13,
+      color: C.textSecondary,
+    },
+    trailingIcons: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+  }), [C]);
 
   return (
     <ReanimatedSwipeable
@@ -58,24 +81,3 @@ export function SongCard({ song, onPress, onEdit, onDelete }: Props) {
     </ReanimatedSwipeable>
   );
 }
-
-const styles = StyleSheet.create({
-  info: {
-    flex: 1,
-    gap: 4,
-  },
-  title: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: C.textPrimary,
-  },
-  artist: {
-    fontSize: 13,
-    color: C.textSecondary,
-  },
-  trailingIcons: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-});

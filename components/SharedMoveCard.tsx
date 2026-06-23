@@ -1,9 +1,10 @@
+import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { DifficultyBadge } from './DifficultyBadge';
 import { SharedMove } from '@/types/Move';
-import { C } from '@/constants/theme';
-import { cs } from '@/constants/commonStyles';
+import { useTheme } from '@/context/ThemeContext';
+import { useCommonStyles } from '@/constants/commonStyles';
 
 type Props = {
   move: SharedMove;
@@ -12,6 +13,38 @@ type Props = {
 };
 
 export function SharedMoveCard({ move, isOwn, onPress }: Props) {
+  const { colors: C } = useTheme();
+  const cs = useCommonStyles();
+
+  const styles = useMemo(() => StyleSheet.create({
+    topRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    pill: {
+      paddingHorizontal: 8,
+      paddingVertical: 2,
+      borderRadius: 20,
+    },
+    pillOwn: {
+      backgroundColor: C.accent + '33',
+    },
+    pillPartner: {
+      backgroundColor: C.border,
+    },
+    pillText: {
+      fontSize: 11,
+      fontWeight: '600',
+    },
+    pillTextOwn: {
+      color: C.accent,
+    },
+    pillTextPartner: {
+      color: C.textSecondary,
+    },
+  }), [C]);
+
   return (
     <Pressable
       style={({ pressed }) => [cs.listCard, { opacity: pressed ? 0.85 : 1 }]}
@@ -37,32 +70,3 @@ export function SharedMoveCard({ move, isOwn, onPress }: Props) {
     </Pressable>
   );
 }
-
-const styles = StyleSheet.create({
-  topRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  pill: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 20,
-  },
-  pillOwn: {
-    backgroundColor: C.accent + '33',
-  },
-  pillPartner: {
-    backgroundColor: C.border,
-  },
-  pillText: {
-    fontSize: 11,
-    fontWeight: '600',
-  },
-  pillTextOwn: {
-    color: C.accent,
-  },
-  pillTextPartner: {
-    color: C.textSecondary,
-  },
-});

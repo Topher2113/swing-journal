@@ -3,7 +3,8 @@ import { PanResponder, Pressable, StyleSheet, Text, View } from 'react-native';
 import { GLView } from 'expo-gl';
 import { Ionicons } from '@expo/vector-icons';
 import { MotionFrame } from '@/types/Move';
-import { C, RADIUS } from '@/constants/theme';
+import { RADIUS } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 
 type Props = { frames: MotionFrame[]; fullScreen?: boolean };
 
@@ -60,6 +61,7 @@ function m4Mul(a: Float32Array, b: Float32Array): Float32Array {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function MotionTrailViewer({ frames, fullScreen = false }: Props) {
+  const { colors: C } = useTheme();
   const [isReplaying, setIsReplaying] = useState(false);
   const [ready, setReady] = useState(false);
 
@@ -306,6 +308,46 @@ export function MotionTrailViewer({ frames, fullScreen = false }: Props) {
     })
   ).current;
 
+  const styles = useMemo(() => StyleSheet.create({
+    fullRoot: { flex: 1, backgroundColor: C.bg },
+    overlay: {
+      position: 'absolute', bottom: 0, left: 0, right: 0,
+      padding: 20, paddingBottom: 40, gap: 10,
+      backgroundColor: 'rgba(0,0,0,0.5)',
+    },
+    card: { backgroundColor: C.surface, borderRadius: RADIUS.card, overflow: 'hidden' },
+    header: {
+      flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+      padding: 14, paddingBottom: 10,
+    },
+    title: { fontSize: 15, fontWeight: '600', color: C.textPrimary },
+    canvas: {
+      height: 300, marginHorizontal: 14,
+      borderRadius: RADIUS.control, backgroundColor: C.bg, overflow: 'hidden',
+    },
+    legend: {
+      flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+      padding: 12, paddingTop: 10,
+    },
+    sub: { fontSize: 11, color: C.textSecondary, marginTop: 2 },
+    replayBtn: {
+      flexDirection: 'row', alignItems: 'center', gap: 5,
+      paddingHorizontal: 12, paddingVertical: 6,
+      backgroundColor: C.border, borderRadius: RADIUS.badge, alignSelf: 'flex-start',
+    },
+    replayTxt: { fontSize: 12, fontWeight: '600', color: C.accent },
+    loading: {
+      ...StyleSheet.absoluteFillObject,
+      alignItems: 'center', justifyContent: 'center', backgroundColor: C.bg,
+    },
+    loadingTxt: { fontSize: 13, color: C.textSecondary },
+    legendRow: { flexDirection: 'row', gap: 12, alignItems: 'center' },
+    legendItem: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+    dot: { width: 8, height: 8, borderRadius: 4 },
+    legendTxt: { fontSize: 11, color: C.textSecondary },
+    axisHint:  { fontSize: 11, color: C.textSecondary },
+  }), [C]);
+
   // ── Full-screen layout ────────────────────────────────────────────────────
   if (fullScreen) {
     return (
@@ -389,43 +431,3 @@ export function MotionTrailViewer({ frames, fullScreen = false }: Props) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  fullRoot: { flex: 1, backgroundColor: C.bg },
-  overlay: {
-    position: 'absolute', bottom: 0, left: 0, right: 0,
-    padding: 20, paddingBottom: 40, gap: 10,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-  },
-  card: { backgroundColor: C.surface, borderRadius: RADIUS.card, overflow: 'hidden' },
-  header: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    padding: 14, paddingBottom: 10,
-  },
-  title: { fontSize: 15, fontWeight: '600', color: C.textPrimary },
-  canvas: {
-    height: 300, marginHorizontal: 14,
-    borderRadius: RADIUS.control, backgroundColor: C.bg, overflow: 'hidden',
-  },
-  legend: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    padding: 12, paddingTop: 10,
-  },
-  sub: { fontSize: 11, color: C.textSecondary, marginTop: 2 },
-  replayBtn: {
-    flexDirection: 'row', alignItems: 'center', gap: 5,
-    paddingHorizontal: 12, paddingVertical: 6,
-    backgroundColor: C.border, borderRadius: RADIUS.badge, alignSelf: 'flex-start',
-  },
-  replayTxt: { fontSize: 12, fontWeight: '600', color: C.accent },
-  loading: {
-    ...StyleSheet.absoluteFillObject,
-    alignItems: 'center', justifyContent: 'center', backgroundColor: C.bg,
-  },
-  loadingTxt: { fontSize: 13, color: C.textSecondary },
-  legendRow: { flexDirection: 'row', gap: 12, alignItems: 'center' },
-  legendItem: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  dot: { width: 8, height: 8, borderRadius: 4 },
-  legendTxt: { fontSize: 11, color: C.textSecondary },
-  axisHint:  { fontSize: 11, color: C.textSecondary },
-});

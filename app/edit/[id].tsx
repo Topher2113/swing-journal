@@ -17,10 +17,11 @@ import { uploadVideo, isLocalUri } from '@/lib/videoStorage';
 import { SaveButton } from '@/components/SaveButton';
 import { MoveFormFields } from '@/components/MoveFormFields';
 import { CATEGORIES, CATEGORY_LABELS, Category, Difficulty } from '@/types/Move';
-import { cs } from '@/constants/commonStyles';
+import { useCommonStyles } from '@/constants/commonStyles';
 import { MOTION_TRACKING_ENABLED } from '@/constants/features';
 
 export default function EditMoveScreen() {
+  const cs = useCommonStyles();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { move } = useMove(id);

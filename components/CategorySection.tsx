@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { MoveCard } from './MoveCard';
 import { Move, Category } from '@/types/Move';
-import { C } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 
 type Props = {
   category: Category;
@@ -26,6 +26,8 @@ export function CategorySection({
   onDeleteMove,
   sharedMoveIds,
 }: Props) {
+  const { colors: C } = useTheme();
+
   const isEmpty = moves.length === 0;
   const sorted = useMemo(
     () => [...moves].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
@@ -33,6 +35,57 @@ export function CategorySection({
   );
   const preview = sorted.slice(0, PREVIEW_COUNT);
   const remaining = moves.length - PREVIEW_COUNT;
+
+  const styles = useMemo(() => StyleSheet.create({
+    section: {
+      marginBottom: 14,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 8,
+      paddingVertical: 10,
+      minHeight: 52,
+    },
+    headerDisabled: {
+      opacity: 0.35,
+    },
+    categoryName: {
+      fontSize: 20,
+      fontWeight: '700',
+      color: C.textPrimary,
+    },
+    categoryNameDisabled: {
+      color: C.textSecondary,
+    },
+    headerRight: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+    },
+    count: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: C.accent,
+    },
+    countDisabled: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: C.textSecondary,
+    },
+    moreRow: {
+      alignItems: 'center',
+      paddingVertical: 8,
+      minHeight: 44,
+      justifyContent: 'center',
+    },
+    moreText: {
+      fontSize: 14,
+      color: C.accent,
+      opacity: 0.8,
+    },
+  }), [C]);
 
   return (
     <View style={styles.section}>
@@ -81,54 +134,3 @@ export function CategorySection({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  section: {
-    marginBottom: 14,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 8,
-    paddingVertical: 10,
-    minHeight: 52,
-  },
-  headerDisabled: {
-    opacity: 0.35,
-  },
-  categoryName: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: C.textPrimary,
-  },
-  categoryNameDisabled: {
-    color: C.textSecondary,
-  },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  count: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: C.accent,
-  },
-  countDisabled: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: C.textSecondary,
-  },
-  moreRow: {
-    alignItems: 'center',
-    paddingVertical: 8,
-    minHeight: 44,
-    justifyContent: 'center',
-  },
-  moreText: {
-    fontSize: 14,
-    color: C.accent,
-    opacity: 0.8,
-  },
-});

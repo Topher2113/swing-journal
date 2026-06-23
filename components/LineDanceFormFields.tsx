@@ -5,8 +5,8 @@ import { StepListEditor } from '@/components/StepListEditor';
 import { LinkedSongPicker } from '@/components/LinkedSongPicker';
 import { DIFFICULTIES, Difficulty } from '@/types/Move';
 import { LineDanceStep } from '@/types/LineDance';
-import { C } from '@/constants/theme';
-import { cs } from '@/constants/commonStyles';
+import { useTheme } from '@/context/ThemeContext';
+import { useCommonStyles } from '@/constants/commonStyles';
 
 type Props = {
   name: string;
@@ -27,6 +27,8 @@ type Props = {
 };
 
 export function LineDanceFormFields(props: Props) {
+  const { colors: C } = useTheme();
+  const cs = useCommonStyles();
   const {
     name, onNameChange, nameError,
     difficulty, onDifficultyChange,

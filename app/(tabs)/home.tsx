@@ -7,10 +7,11 @@ import { useMoves } from '@/hooks/useMoves';
 import { usePartnerLink } from '@/hooks/usePartnerLink';
 import { usePartnerJournal } from '@/hooks/usePartnerJournal';
 import { useAuth } from '@/context/AuthContext';
+import { useTheme } from '@/context/ThemeContext';
+import { MoveCard } from '@/components/MoveCard';
 import { DifficultyBadge } from '@/components/DifficultyBadge';
 import { SectionHeader } from '@/components/SectionHeader';
-import { C, RADIUS } from '@/constants/theme';
-import { Move } from '@/types/Move';
+import { RADIUS } from '@/constants/theme';
 
 function greeting(name: string): string {
   const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -21,30 +22,11 @@ function greeting(name: string): string {
   return `Good evening, ${name}!`;
 }
 
-function MoveRow({ move, onPress }: { move: Move; onPress: () => void }) {
-  return (
-    <Pressable
-      style={({ pressed }) => [styles.row, { opacity: pressed ? 0.8 : 1 }]}
-      android_ripple={{ color: 'transparent' }}
-      onPress={onPress}
-    >
-      <View style={[styles.dot, { backgroundColor: move.videoUri ? C.accent : C.border }]} />
-      <View style={styles.rowInfo}>
-        <Text style={styles.rowName} numberOfLines={1}>{move.name}</Text>
-        <View style={styles.rowMeta}>
-          <DifficultyBadge difficulty={move.difficulty} />
-          <Text style={styles.rowPractice}>↻ {move.practiceCount}</Text>
-        </View>
-      </View>
-      <Ionicons name="chevron-forward" size={18} color={C.textSecondary} />
-    </Pressable>
-  );
-}
-
 export default function HomeScreen() {
+  const { colors: C } = useTheme();
   const router = useRouter();
   const { profile, user } = useAuth();
-  const { moves, reload: reloadMoves } = useMoves();
+  const { moves, reload: reloadMoves, deleteMove } = useMoves();
   const { link } = usePartnerLink();
   const { items: journalItems, sync } = usePartnerJournal(link?.id ?? '');
 
@@ -83,6 +65,63 @@ export default function HomeScreen() {
   const name = profile?.name?.split(' ')[0] ?? 'Dancer';
   const insets = useSafeAreaInsets();
 
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: C.bg,
+    },
+    content: {
+      padding: 20,
+      paddingBottom: 48,
+    },
+    greeting: {
+      fontSize: 26,
+      fontWeight: '700',
+      color: C.textPrimary,
+      marginBottom: 8,
+    },
+    empty: {
+      fontSize: 14,
+      color: C.textSecondary,
+      fontStyle: 'italic',
+      paddingVertical: 8,
+    },
+    partnerRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: C.surface,
+      borderRadius: RADIUS.card,
+      paddingVertical: 14,
+      paddingHorizontal: 16,
+      gap: 12,
+      minHeight: 64,
+    },
+    dot: {
+      width: 10,
+      height: 10,
+      borderRadius: 5,
+      flexShrink: 0,
+    },
+    rowInfo: {
+      flex: 1,
+      gap: 6,
+    },
+    rowName: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: C.textPrimary,
+    },
+    rowMeta: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    rowPractice: {
+      fontSize: 13,
+      color: C.textSecondary,
+    },
+  }), [C]);
+
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
@@ -90,15 +129,17 @@ export default function HomeScreen() {
         <Text style={styles.greeting}>{greeting(name)}</Text>
 
         {/* Recent Moves */}
-        <SectionHeader title="Recent Moves" onSeeAll={() => router.push('/(tabs)/(library)' as never)} />
+        <SectionHeader title="Recent Moves" onSeeAll={() => router.push({ pathname: '/(tabs)/(library)', params: { segment: 'Moves' } } as never)} />
         {recentMoves.length === 0 ? (
           <Text style={styles.empty}>No moves yet — add one from the Add tab!</Text>
         ) : (
           recentMoves.map((move) => (
-            <MoveRow
+            <MoveCard
               key={move.id}
               move={move}
               onPress={() => router.push({ pathname: '/move/[id]', params: { id: move.id } })}
+              onEdit={() => router.push({ pathname: '/edit/[id]', params: { id: move.id } })}
+              onDelete={() => deleteMove(move.id)}
             />
           ))
         )}
@@ -106,12 +147,14 @@ export default function HomeScreen() {
         {/* Practice These */}
         {practiceMoves.length > 0 && (
           <>
-            <SectionHeader title="Practice These" onSeeAll={() => router.push('/(tabs)/(library)' as never)} />
+            <SectionHeader title="Practice These" onSeeAll={() => router.push({ pathname: '/(tabs)/(library)', params: { segment: 'Moves' } } as never)} />
             {practiceMoves.map((move) => (
-              <MoveRow
+              <MoveCard
                 key={move.id}
                 move={move}
                 onPress={() => router.push({ pathname: '/move/[id]', params: { id: move.id } })}
+                onEdit={() => router.push({ pathname: '/edit/[id]', params: { id: move.id } })}
+                onDelete={() => deleteMove(move.id)}
               />
             ))}
           </>
@@ -127,7 +170,7 @@ export default function HomeScreen() {
               partnerMoves.map((move) => (
                 <Pressable
                   key={move.id}
-                  style={({ pressed }) => [styles.row, { opacity: pressed ? 0.8 : 1 }]}
+                  style={({ pressed }) => [styles.partnerRow, { opacity: pressed ? 0.8 : 1 }]}
                   android_ripple={{ color: 'transparent' }}
                   onPress={() =>
                     router.push({ pathname: '/shared-move/[id]', params: { id: move.id } })
@@ -151,61 +194,3 @@ export default function HomeScreen() {
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: C.bg,
-  },
-  content: {
-    padding: 20,
-    gap: 12,
-    paddingBottom: 48,
-  },
-  greeting: {
-    fontSize: 26,
-    fontWeight: '700',
-    color: C.textPrimary,
-    marginBottom: 8,
-  },
-  empty: {
-    fontSize: 14,
-    color: C.textSecondary,
-    fontStyle: 'italic',
-    paddingVertical: 8,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: C.surface,
-    borderRadius: RADIUS.card,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    gap: 12,
-    minHeight: 64,
-  },
-  dot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    flexShrink: 0,
-  },
-  rowInfo: {
-    flex: 1,
-    gap: 6,
-  },
-  rowName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: C.textPrimary,
-  },
-  rowMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  rowPractice: {
-    fontSize: 13,
-    color: C.textSecondary,
-  },
-});

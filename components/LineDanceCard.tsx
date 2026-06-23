@@ -5,8 +5,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { DifficultyBadge } from './DifficultyBadge';
 import { SwipeActions } from './SwipeActions';
 import { LineDance } from '@/types/LineDance';
-import { C } from '@/constants/theme';
-import { cs } from '@/constants/commonStyles';
+import { useTheme } from '@/context/ThemeContext';
+import { useCommonStyles } from '@/constants/commonStyles';
 
 type Props = {
   lineDance: LineDance;
@@ -16,6 +16,8 @@ type Props = {
 };
 
 export function LineDanceCard({ lineDance, onPress, onEdit, onDelete }: Props) {
+  const { colors: C } = useTheme();
+  const cs = useCommonStyles();
   const swipeableRef = useRef<any>(null);
 
   const handleEdit = useCallback(() => {

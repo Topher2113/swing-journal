@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -9,14 +9,9 @@ import { useStats } from '@/hooks/useStats';
 import { useAuth } from '@/context/AuthContext';
 import { signOut } from '@/lib/auth';
 import { StatCard } from '@/components/StatCard';
-import { C, RADIUS } from '@/constants/theme';
+import { RADIUS } from '@/constants/theme';
+import { useTheme, ThemeMode } from '@/context/ThemeContext';
 import type { Difficulty } from '@/types/Move';
-
-const DIFFICULTY_COLORS: Record<Difficulty, string> = {
-  Beginner: '#22C55E',
-  Intermediate: '#F59E0B',
-  Advanced: '#EF4444',
-};
 
 const DANCE_PREF_LABELS = {
   swing: 'Swing',
@@ -31,6 +26,7 @@ const LEVEL_LABELS = {
 };
 
 export default function ProfileScreen() {
+  const { colors: C, mode, setMode } = useTheme();
   const router = useRouter();
   const { user, profile } = useAuth();
   const { moves, reload: reloadMoves } = useMoves();
@@ -72,6 +68,133 @@ export default function ProfileScreen() {
       },
     ]);
   };
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: C.bg,
+    },
+    content: {
+      padding: 16,
+      gap: 16,
+      paddingBottom: 48,
+    },
+    metricRow: {
+      flexDirection: 'row',
+      gap: 14,
+    },
+    sectionTitle: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: C.textPrimary,
+      letterSpacing: 0.5,
+      textTransform: 'uppercase',
+      marginBottom: -8,
+    },
+    card: {
+      backgroundColor: C.surface,
+      borderRadius: RADIUS.card,
+      padding: 18,
+      gap: 14,
+    },
+    catItem: {
+      gap: 6,
+    },
+    catRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    catName: {
+      fontSize: 16,
+      color: C.textPrimary,
+    },
+    catCount: {
+      fontSize: 15,
+      color: C.textSecondary,
+    },
+    barBg: {
+      height: 8,
+      backgroundColor: C.border,
+      borderRadius: 4,
+    },
+    barFill: {
+      height: 8,
+      backgroundColor: C.accent,
+      borderRadius: 4,
+    },
+    diffRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: 8,
+    },
+    diffLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+    },
+    diffDot: {
+      width: 12,
+      height: 12,
+      borderRadius: 6,
+    },
+    profileRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 14,
+      paddingVertical: 4,
+    },
+    profileInfo: {
+      flex: 1,
+      gap: 2,
+    },
+    profileValue: {
+      fontSize: 16,
+      color: C.textPrimary,
+      fontWeight: '500',
+    },
+    profileLabel: {
+      fontSize: 12,
+      color: C.textSecondary,
+    },
+    divider: {
+      height: 0.5,
+      backgroundColor: C.border,
+      marginHorizontal: -18,
+    },
+    logoutBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      backgroundColor: C.surface,
+      borderRadius: RADIUS.card,
+      padding: 16,
+      borderWidth: 1,
+      borderColor: C.errorBorder,
+    },
+    logoutBtnPressed: {
+      opacity: 0.7,
+    },
+    logoutText: {
+      color: C.error,
+      fontSize: 15,
+      fontWeight: '600',
+    },
+    sectionTitleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: -8,
+    },
+  }), [C]);
+
+  const difficultyColors = useMemo<Record<Difficulty, string>>(() => ({
+    Beginner: C.beginner.text,
+    Intermediate: C.intermediate.text,
+    Advanced: C.advanced.text,
+  }), [C]);
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -123,7 +246,7 @@ export default function ProfileScreen() {
         {byDifficulty.map(({ difficulty, count }) => (
           <View key={difficulty} style={styles.diffRow}>
             <View style={styles.diffLeft}>
-              <View style={[styles.diffDot, { backgroundColor: DIFFICULTY_COLORS[difficulty] }]} />
+              <View style={[styles.diffDot, { backgroundColor: difficultyColors[difficulty] }]} />
               <Text style={styles.catName}>{difficulty}</Text>
             </View>
             <Text style={styles.catCount}>{count}</Text>
@@ -136,11 +259,37 @@ export default function ProfileScreen() {
         {ldByDifficulty.map(({ difficulty, count }) => (
           <View key={difficulty} style={styles.diffRow}>
             <View style={styles.diffLeft}>
-              <View style={[styles.diffDot, { backgroundColor: DIFFICULTY_COLORS[difficulty] }]} />
+              <View style={[styles.diffDot, { backgroundColor: difficultyColors[difficulty] }]} />
               <Text style={styles.catName}>{difficulty}</Text>
             </View>
             <Text style={styles.catCount}>{count}</Text>
           </View>
+        ))}
+      </View>
+
+      {/* ── Appearance ── */}
+      <Text style={styles.sectionTitle}>Appearance</Text>
+      <View style={styles.card}>
+        {(['Dark', 'Light', 'System'] as const).map((option, i) => (
+          <React.Fragment key={option}>
+            {i > 0 && <View style={styles.divider} />}
+            <Pressable
+              style={({ pressed }) => [styles.profileRow, { opacity: pressed ? 0.7 : 1 }]}
+              onPress={() => setMode(option.toLowerCase() as ThemeMode)}
+            >
+              <Ionicons
+                name={option === 'Dark' ? 'moon-outline' : option === 'Light' ? 'sunny-outline' : 'phone-portrait-outline'}
+                size={18}
+                color={C.textSecondary}
+              />
+              <View style={styles.profileInfo}>
+                <Text style={styles.profileValue}>{option}</Text>
+              </View>
+              {mode === option.toLowerCase() && (
+                <Ionicons name="checkmark" size={20} color={C.accent} />
+              )}
+            </Pressable>
+          </React.Fragment>
         ))}
       </View>
 
@@ -196,131 +345,10 @@ export default function ProfileScreen() {
         style={({ pressed }) => [styles.logoutBtn, pressed && styles.logoutBtnPressed]}
         onPress={handleLogout}
       >
-        <Ionicons name="log-out-outline" size={18} color="#FCA5A5" />
+        <Ionicons name="log-out-outline" size={18} color={C.error} />
         <Text style={styles.logoutText}>Sign Out</Text>
       </Pressable>
 
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: C.bg,
-  },
-  content: {
-    padding: 16,
-    gap: 16,
-    paddingBottom: 48,
-  },
-  metricRow: {
-    flexDirection: 'row',
-    gap: 14,
-  },
-  sectionTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: C.textPrimary,
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
-    marginBottom: -8,
-  },
-  card: {
-    backgroundColor: C.surface,
-    borderRadius: RADIUS.card,
-    padding: 18,
-    gap: 14,
-  },
-  catItem: {
-    gap: 6,
-  },
-  catRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  catName: {
-    fontSize: 16,
-    color: C.textPrimary,
-  },
-  catCount: {
-    fontSize: 15,
-    color: C.textSecondary,
-  },
-  barBg: {
-    height: 8,
-    backgroundColor: C.border,
-    borderRadius: 4,
-  },
-  barFill: {
-    height: 8,
-    backgroundColor: C.accent,
-    borderRadius: 4,
-  },
-  diffRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 8,
-  },
-  diffLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  diffDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-  },
-  profileRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-    paddingVertical: 4,
-  },
-  profileInfo: {
-    flex: 1,
-    gap: 2,
-  },
-  profileValue: {
-    fontSize: 16,
-    color: C.textPrimary,
-    fontWeight: '500',
-  },
-  profileLabel: {
-    fontSize: 12,
-    color: C.textSecondary,
-  },
-  divider: {
-    height: 0.5,
-    backgroundColor: C.border,
-    marginHorizontal: -18,
-  },
-  logoutBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: C.surface,
-    borderRadius: RADIUS.card,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: C.errorBorder,
-  },
-  logoutBtnPressed: {
-    opacity: 0.7,
-  },
-  logoutText: {
-    color: C.error,
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  sectionTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: -8,
-  },
-});

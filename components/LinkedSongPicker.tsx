@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -17,13 +17,15 @@ import { useSongs } from '@/hooks/useSongs';
 import { useSongSearch } from '@/hooks/useSongSearch';
 import { SongSearchResultRow } from '@/components/SongSearchResultRow';
 import { SpotifyTrackResult } from '@/types/Song';
-import { C, RADIUS } from '@/constants/theme';
+import { RADIUS } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 
 type Props = { linkedSongId: string | null; onChange: (id: string | null) => void };
 
 type ModalMode = 'browse' | 'search';
 
 export function LinkedSongPicker({ linkedSongId, onChange }: Props) {
+  const { colors: C } = useTheme();
   const { songs, addSong } = useSongs();
   const { search: searchSpotify, loading: searchLoading } = useSongSearch();
 
@@ -90,6 +92,156 @@ export function LinkedSongPicker({ linkedSongId, onChange }: Props) {
       setAdding(false);
     }
   };
+
+  const styles = useMemo(() => StyleSheet.create({
+    linkedRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: C.surface,
+      borderRadius: RADIUS.card,
+      padding: 10,
+      gap: 10,
+    },
+    linkedInfo: {
+      flex: 1,
+      gap: 2,
+    },
+    linkedTitle: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: C.textPrimary,
+    },
+    linkedArtist: {
+      fontSize: 12,
+      color: C.textSecondary,
+    },
+    chip: {
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+      backgroundColor: C.border,
+      borderRadius: RADIUS.chip,
+    },
+    chipRemove: {
+      backgroundColor: 'transparent',
+    },
+    chipText: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: C.textPrimary,
+    },
+    chipRemoveText: {
+      color: C.deleteSwipe,
+    },
+    linkBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      backgroundColor: C.surface,
+      borderRadius: RADIUS.card,
+      paddingVertical: 14,
+      paddingHorizontal: 16,
+    },
+    linkBtnText: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: C.accent,
+    },
+    modalContainer: {
+      flex: 1,
+      justifyContent: 'flex-end',
+    },
+    backdrop: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: 'rgba(0,0,0,0.5)',
+    },
+    sheet: {
+      backgroundColor: C.surface,
+      borderTopLeftRadius: 20,
+      borderTopRightRadius: 20,
+      maxHeight: '75%',
+      paddingBottom: 34,
+    },
+    sheetHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: 16,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: C.border,
+    },
+    sheetHeading: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: C.textPrimary,
+    },
+    cancelText: {
+      fontSize: 15,
+      color: C.accent,
+    },
+    searchWrap: {
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: C.border,
+    },
+    searchInput: {
+      backgroundColor: C.bg,
+      borderRadius: RADIUS.control,
+      paddingHorizontal: 14,
+      paddingVertical: 10,
+      fontSize: 15,
+      color: C.textPrimary,
+    },
+    loader: {
+      marginVertical: 16,
+    },
+    sheetList: {
+      padding: 12,
+      gap: 4,
+    },
+    sheetRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: C.bg,
+      borderRadius: RADIUS.card,
+      padding: 10,
+      gap: 12,
+    },
+    sheetInfo: {
+      flex: 1,
+      gap: 3,
+    },
+    sheetTitle: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: C.textPrimary,
+    },
+    sheetArtist: {
+      fontSize: 13,
+      color: C.textSecondary,
+    },
+    spotifyRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      backgroundColor: C.bg,
+      borderRadius: RADIUS.card,
+      padding: 14,
+      marginTop: 4,
+    },
+    spotifyRowText: {
+      flex: 1,
+      fontSize: 14,
+      fontWeight: '600',
+      color: C.accent,
+    },
+    emptyText: {
+      fontSize: 14,
+      color: C.textSecondary,
+      textAlign: 'center',
+      paddingVertical: 16,
+    },
+  }), [C]);
 
   return (
     <>
@@ -245,153 +397,3 @@ export function LinkedSongPicker({ linkedSongId, onChange }: Props) {
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  linkedRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: C.surface,
-    borderRadius: RADIUS.card,
-    padding: 10,
-    gap: 10,
-  },
-  linkedInfo: {
-    flex: 1,
-    gap: 2,
-  },
-  linkedTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: C.textPrimary,
-  },
-  linkedArtist: {
-    fontSize: 12,
-    color: C.textSecondary,
-  },
-  chip: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    backgroundColor: C.border,
-    borderRadius: RADIUS.chip,
-  },
-  chipRemove: {
-    backgroundColor: 'transparent',
-  },
-  chipText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: C.textPrimary,
-  },
-  chipRemoveText: {
-    color: '#EF4444',
-  },
-  linkBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: C.surface,
-    borderRadius: RADIUS.card,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-  },
-  linkBtnText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: C.accent,
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'flex-end',
-  },
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-  },
-  sheet: {
-    backgroundColor: C.surface,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    maxHeight: '75%',
-    paddingBottom: 34,
-  },
-  sheetHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 16,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: C.border,
-  },
-  sheetHeading: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: C.textPrimary,
-  },
-  cancelText: {
-    fontSize: 15,
-    color: C.accent,
-  },
-  searchWrap: {
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: C.border,
-  },
-  searchInput: {
-    backgroundColor: C.bg,
-    borderRadius: RADIUS.control,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    fontSize: 15,
-    color: C.textPrimary,
-  },
-  loader: {
-    marginVertical: 16,
-  },
-  sheetList: {
-    padding: 12,
-    gap: 4,
-  },
-  sheetRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: C.bg,
-    borderRadius: RADIUS.card,
-    padding: 10,
-    gap: 12,
-  },
-  sheetInfo: {
-    flex: 1,
-    gap: 3,
-  },
-  sheetTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: C.textPrimary,
-  },
-  sheetArtist: {
-    fontSize: 13,
-    color: C.textSecondary,
-  },
-  spotifyRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    backgroundColor: C.bg,
-    borderRadius: RADIUS.card,
-    padding: 14,
-    marginTop: 4,
-  },
-  spotifyRowText: {
-    flex: 1,
-    fontSize: 14,
-    fontWeight: '600',
-    color: C.accent,
-  },
-  emptyText: {
-    fontSize: 14,
-    color: C.textSecondary,
-    textAlign: 'center',
-    paddingVertical: 16,
-  },
-});

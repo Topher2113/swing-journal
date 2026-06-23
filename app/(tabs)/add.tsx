@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -11,6 +11,7 @@ import {
   View,
 } from 'react-native';
 import { Stack, useRouter, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import PagerView from 'react-native-pager-view';
 import * as Haptics from 'expo-haptics';
 import * as Crypto from 'expo-crypto';
 import { useMoves } from '@/hooks/useMoves';
@@ -28,23 +29,21 @@ import { AlbumArt } from '@/components/AlbumArt';
 import { SaveButton } from '@/components/SaveButton';
 import { SegmentedControl } from '@/components/SegmentedControl';
 import { SongSearchResultRow } from '@/components/SongSearchResultRow';
-import { VideoPickerButtons } from '@/components/VideoPickerButtons';
-import { StepListEditor } from '@/components/StepListEditor';
-import { LinkedSongPicker } from '@/components/LinkedSongPicker';
-import { MotionRecorderButton } from '@/components/MotionRecorderButton';
 import { MoveFormFields } from '@/components/MoveFormFields';
 import { LineDanceFormFields } from '@/components/LineDanceFormFields';
 import { Ionicons } from '@expo/vector-icons';
-import { CATEGORIES, CATEGORY_LABELS, CATEGORY_SHORT, DIFFICULTIES, Category, Difficulty, SharedMove } from '@/types/Move';
+import { CATEGORIES, CATEGORY_LABELS, Category, Difficulty, SharedMove } from '@/types/Move';
 import { LineDanceStep } from '@/types/LineDance';
 import { SpotifyTrackResult } from '@/types/Song';
-import { C, RADIUS } from '@/constants/theme';
+import { RADIUS } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 import { MOTION_TRACKING_ENABLED } from '@/constants/features';
 
 const ADD_SEGMENTS = ['Move', 'Line Dance', 'Song'];
 type AddSegment = 'Move' | 'Line Dance' | 'Song';
 
 export default function AddScreen() {
+  const { colors: C } = useTheme();
   const router = useRouter();
   const { addMove } = useMoves();
   const { addSong } = useSongs();
@@ -61,6 +60,7 @@ export default function AddScreen() {
 
   // Move form state
   const scrollRef = useRef<ScrollView>(null);
+  const pagerRef = useRef<PagerView>(null);
   const [name, setName] = useState('');
   const [nameError, setNameError] = useState<string | null>(null);
   const [category, setCategory] = useState<Category>('Footwork');
@@ -96,6 +96,7 @@ export default function AddScreen() {
     useCallback(() => {
       if (segmentParam === 'Move' || segmentParam === 'Line Dance' || segmentParam === 'Song') {
         setSegment(segmentParam as AddSegment);
+        pagerRef.current?.setPageWithoutAnimation(ADD_SEGMENTS.indexOf(segmentParam));
       }
       setName('');
       setNameError(null);
@@ -222,7 +223,7 @@ export default function AddScreen() {
       await addLineDance({
         name: ldName.trim(),
         difficulty: ldDifficulty,
-        steps: ldSteps.filter((s) => s.name.trim()).map((s, i) => ({ ...s, order: i + 1 })),
+        steps: ldSteps.filter((s) => s.name.trim() || s.description.trim()).map((s, i) => ({ ...s, order: i + 1 })),
         videoUri: ldVideoUri,
         linkedSongId: ldLinkedSongId,
         notes: ldNotes.trim(),
@@ -241,24 +242,133 @@ export default function AddScreen() {
     segment === 'Move' ? 'Add Move' : segment === 'Song' ? 'Add Song' : 'Add Line Dance';
   const attachedArtUrl = attachedTrack?.album.images[0]?.url ?? null;
 
+  const styles = useMemo(() => StyleSheet.create({
+    flex: {
+      flex: 1,
+      backgroundColor: C.bg,
+    },
+    segmentWrap: {
+      paddingHorizontal: 20,
+      paddingTop: 12,
+      paddingBottom: 8,
+    },
+    container: {
+      flex: 1,
+      backgroundColor: C.bg,
+    },
+    content: {
+      padding: 20,
+      gap: 12,
+      paddingBottom: 100,
+    },
+    label: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: C.textPrimary,
+      marginTop: 6,
+      marginBottom: 2,
+    },
+    input: {
+      backgroundColor: C.surface,
+      borderRadius: RADIUS.control,
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      fontSize: 16,
+      color: C.textPrimary,
+      minHeight: 50,
+    },
+    multiline: {
+      minHeight: 120,
+    },
+    loader: {
+      marginVertical: 16,
+    },
+    noResults: {
+      fontSize: 14,
+      color: C.textSecondary,
+      textAlign: 'center',
+      marginTop: 16,
+    },
+    attachedRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: C.surface,
+      borderRadius: RADIUS.card,
+      padding: 12,
+      gap: 12,
+    },
+    attachedInfo: {
+      flex: 1,
+      gap: 3,
+    },
+    attachedTitle: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: C.textPrimary,
+    },
+    attachedArtist: {
+      fontSize: 13,
+      color: C.textSecondary,
+    },
+    changeBtn: {
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      backgroundColor: C.border,
+      borderRadius: RADIUS.chip,
+    },
+    changeBtnText: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: C.textPrimary,
+    },
+    journalToggle: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      paddingVertical: 4,
+    },
+    checkbox: {
+      width: 20,
+      height: 20,
+      borderRadius: 4,
+      borderWidth: 1.5,
+      borderColor: C.textSecondary,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    checkboxChecked: {
+      backgroundColor: C.accent,
+      borderColor: C.accent,
+    },
+    journalToggleText: {
+      fontSize: 14,
+      color: C.textSecondary,
+    },
+  }), [C]);
+
   return (
     <>
       <Stack.Screen options={{ headerTitle }} />
-      <View style={styles.flex}>
+      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <View style={styles.segmentWrap}>
           <SegmentedControl
             options={ADD_SEGMENTS}
             value={segment}
-            onChange={(v) => setSegment(v as AddSegment)}
+            onChange={(v) => {
+              setSegment(v as AddSegment);
+              pagerRef.current?.setPage(ADD_SEGMENTS.indexOf(v));
+            }}
           />
         </View>
 
-        {/* ── Move ─────────────────────────────────────────────────────────── */}
-        {segment === 'Move' && (
-          <KeyboardAvoidingView
-            style={styles.flex}
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          >
+        <PagerView
+          ref={pagerRef}
+          style={styles.flex}
+          initialPage={0}
+          onPageSelected={(e) => setSegment(ADD_SEGMENTS[e.nativeEvent.position] as AddSegment)}
+        >
+          {/* ── Move — page 0 ────────────────────────────────────────────────── */}
+          <View key="0" style={styles.flex}>
             <ScrollView
               ref={scrollRef}
               style={styles.container}
@@ -300,15 +410,39 @@ export default function AddScreen() {
 
               <SaveButton label="Save Move" saving={saving} onPress={handleSave} />
             </ScrollView>
-          </KeyboardAvoidingView>
-        )}
+          </View>
 
-        {/* ── Song ─────────────────────────────────────────────────────────── */}
-        {segment === 'Song' && (
-          <KeyboardAvoidingView
-            style={styles.flex}
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          >
+          {/* ── Line Dance — page 1 ──────────────────────────────────────────── */}
+          <View key="1" style={styles.flex}>
+            <ScrollView
+              style={styles.container}
+              contentContainerStyle={styles.content}
+              keyboardShouldPersistTaps="handled"
+            >
+              <LineDanceFormFields
+                name={ldName}
+                onNameChange={(t) => { setLdName(t); if (ldNameError) setLdNameError(null); }}
+                nameError={ldNameError}
+                difficulty={ldDifficulty}
+                onDifficultyChange={setLdDifficulty}
+                steps={ldSteps}
+                onStepsChange={setLdSteps}
+                videoUri={ldVideoUri}
+                onRecord={handleLdRecord}
+                onPick={handleLdPick}
+                onClearVideo={handleLdClear}
+                linkedSongId={ldLinkedSongId}
+                onLinkedSongChange={setLdLinkedSongId}
+                notes={ldNotes}
+                onNotesChange={setLdNotes}
+              />
+
+              <SaveButton label="Save Line Dance" saving={ldSaving} onPress={handleSaveLineDance} />
+            </ScrollView>
+          </View>
+
+          {/* ── Song — page 2 ────────────────────────────────────────────────── */}
+          <View key="2" style={styles.flex}>
             <ScrollView
               style={styles.container}
               contentContainerStyle={styles.content}
@@ -377,147 +511,9 @@ export default function AddScreen() {
                 </>
               )}
             </ScrollView>
-          </KeyboardAvoidingView>
-        )}
-
-        {/* ── Line Dance ───────────────────────────────────────────────────── */}
-        {segment === 'Line Dance' && (
-          <KeyboardAvoidingView
-            style={styles.flex}
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          >
-            <ScrollView
-              style={styles.container}
-              contentContainerStyle={styles.content}
-              keyboardShouldPersistTaps="handled"
-            >
-              <LineDanceFormFields
-                name={ldName}
-                onNameChange={(t) => { setLdName(t); if (ldNameError) setLdNameError(null); }}
-                nameError={ldNameError}
-                difficulty={ldDifficulty}
-                onDifficultyChange={setLdDifficulty}
-                steps={ldSteps}
-                onStepsChange={setLdSteps}
-                videoUri={ldVideoUri}
-                onRecord={handleLdRecord}
-                onPick={handleLdPick}
-                onClearVideo={handleLdClear}
-                linkedSongId={ldLinkedSongId}
-                onLinkedSongChange={setLdLinkedSongId}
-                notes={ldNotes}
-                onNotesChange={setLdNotes}
-              />
-
-              <SaveButton label="Save Line Dance" saving={ldSaving} onPress={handleSaveLineDance} />
-            </ScrollView>
-          </KeyboardAvoidingView>
-        )}
-      </View>
+          </View>
+        </PagerView>
+      </KeyboardAvoidingView>
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  flex: {
-    flex: 1,
-    backgroundColor: C.bg,
-  },
-  segmentWrap: {
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 8,
-  },
-  container: {
-    flex: 1,
-    backgroundColor: C.bg,
-  },
-  content: {
-    padding: 20,
-    gap: 12,
-    paddingBottom: 100,
-  },
-  label: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: C.textPrimary,
-    marginTop: 6,
-    marginBottom: 2,
-  },
-  input: {
-    backgroundColor: C.surface,
-    borderRadius: RADIUS.control,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 16,
-    color: C.textPrimary,
-    minHeight: 50,
-  },
-  multiline: {
-    minHeight: 120,
-  },
-  loader: {
-    marginVertical: 16,
-  },
-  noResults: {
-    fontSize: 14,
-    color: C.textSecondary,
-    textAlign: 'center',
-    marginTop: 16,
-  },
-  attachedRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: C.surface,
-    borderRadius: RADIUS.card,
-    padding: 12,
-    gap: 12,
-  },
-  attachedInfo: {
-    flex: 1,
-    gap: 3,
-  },
-  attachedTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: C.textPrimary,
-  },
-  attachedArtist: {
-    fontSize: 13,
-    color: C.textSecondary,
-  },
-  changeBtn: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    backgroundColor: C.border,
-    borderRadius: RADIUS.chip,
-  },
-  changeBtnText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: C.textPrimary,
-  },
-  journalToggle: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    paddingVertical: 4,
-  },
-  checkbox: {
-    width: 20,
-    height: 20,
-    borderRadius: 4,
-    borderWidth: 1.5,
-    borderColor: C.textSecondary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  checkboxChecked: {
-    backgroundColor: C.accent,
-    borderColor: C.accent,
-  },
-  journalToggleText: {
-    fontSize: 14,
-    color: C.textSecondary,
-  },
-});
