@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { Stack, useRouter, useFocusEffect } from 'expo-router';
+import { Stack, useRouter, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useMoves } from '@/hooks/useMoves';
 import { useSongs } from '@/hooks/useSongs';
@@ -33,6 +33,7 @@ const SONG_SORT_OPTIONS = [
 
 export default function LibraryScreen() {
   const router = useRouter();
+  const { segment: segmentParam } = useLocalSearchParams<{ segment?: string }>();
   const { user } = useAuth();
   const { moves, reload: reloadMoves, deleteMove } = useMoves();
   const { songs, reload: reloadSongs, deleteSong } = useSongs();
@@ -40,6 +41,14 @@ export default function LibraryScreen() {
   const { link } = usePartnerLink();
   const { items: journalItems } = usePartnerJournal(link?.id ?? '');
   const [segment, setSegment] = useState<Segment>('Moves');
+
+  useFocusEffect(
+    useCallback(() => {
+      if (segmentParam === 'Moves' || segmentParam === 'Line Dances' || segmentParam === 'Songs') {
+        setSegment(segmentParam);
+      }
+    }, [segmentParam])
+  );
 
   // Songs search + sort
   const [songSearch, setSongSearch] = useState('');

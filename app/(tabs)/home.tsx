@@ -90,7 +90,7 @@ export default function HomeScreen() {
         <Text style={styles.greeting}>{greeting(name)}</Text>
 
         {/* Recent Moves */}
-        <SectionHeader title="Recent Moves" onSeeAll={() => router.push('/(tabs)/(library)' as never)} />
+        <SectionHeader title="Recent Moves" onSeeAll={() => router.push({ pathname: '/(tabs)/(library)', params: { segment: 'Moves' } } as never)} />
         {recentMoves.length === 0 ? (
           <Text style={styles.empty}>No moves yet — add one from the Add tab!</Text>
         ) : (
@@ -106,7 +106,7 @@ export default function HomeScreen() {
         {/* Practice These */}
         {practiceMoves.length > 0 && (
           <>
-            <SectionHeader title="Practice These" onSeeAll={() => router.push('/(tabs)/(library)' as never)} />
+            <SectionHeader title="Practice These" onSeeAll={() => router.push({ pathname: '/(tabs)/(library)', params: { segment: 'Moves' } } as never)} />
             {practiceMoves.map((move) => (
               <MoveRow
                 key={move.id}
