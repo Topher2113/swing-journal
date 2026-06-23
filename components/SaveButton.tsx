@@ -34,6 +34,7 @@ export function SaveButton({ label, saving, disabled, onPress }: Props) {
   const isDisabled = saving || disabled;
   return (
     <Pressable
+      role="button"
       style={({ pressed }) => [
         styles.btn,
         isDisabled && styles.btnDisabled,

@@ -6,4 +6,7 @@ export const supabase = {
       eq: jest.fn(() => Promise.resolve({ error: null })),
     })),
   })),
+  auth: {
+    resend: jest.fn().mockResolvedValue({ error: null }),
+  },
 };
