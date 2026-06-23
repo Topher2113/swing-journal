@@ -13,12 +13,6 @@ import { RADIUS } from '@/constants/theme';
 import { useTheme, ThemeMode } from '@/context/ThemeContext';
 import type { Difficulty } from '@/types/Move';
 
-const DIFFICULTY_COLORS: Record<Difficulty, string> = {
-  Beginner: '#22C55E',
-  Intermediate: '#F59E0B',
-  Advanced: '#EF4444',
-};
-
 const DANCE_PREF_LABELS = {
   swing: 'Swing',
   line_dancing: 'Line Dancing',
@@ -196,6 +190,12 @@ export default function ProfileScreen() {
     },
   }), [C]);
 
+  const difficultyColors = useMemo<Record<Difficulty, string>>(() => ({
+    Beginner: C.beginner.text,
+    Intermediate: C.intermediate.text,
+    Advanced: C.advanced.text,
+  }), [C]);
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
 
@@ -246,7 +246,7 @@ export default function ProfileScreen() {
         {byDifficulty.map(({ difficulty, count }) => (
           <View key={difficulty} style={styles.diffRow}>
             <View style={styles.diffLeft}>
-              <View style={[styles.diffDot, { backgroundColor: DIFFICULTY_COLORS[difficulty] }]} />
+              <View style={[styles.diffDot, { backgroundColor: difficultyColors[difficulty] }]} />
               <Text style={styles.catName}>{difficulty}</Text>
             </View>
             <Text style={styles.catCount}>{count}</Text>
@@ -259,7 +259,7 @@ export default function ProfileScreen() {
         {ldByDifficulty.map(({ difficulty, count }) => (
           <View key={difficulty} style={styles.diffRow}>
             <View style={styles.diffLeft}>
-              <View style={[styles.diffDot, { backgroundColor: DIFFICULTY_COLORS[difficulty] }]} />
+              <View style={[styles.diffDot, { backgroundColor: difficultyColors[difficulty] }]} />
               <Text style={styles.catName}>{difficulty}</Text>
             </View>
             <Text style={styles.catCount}>{count}</Text>

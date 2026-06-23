@@ -36,11 +36,11 @@ function createStyles(C: ColorPalette) {
     },
     textInputError: {
       borderWidth: 1.5,
-      borderColor: '#EF4444',
+      borderColor: C.deleteSwipe,
     },
     fieldError: {
       fontSize: 12,
-      color: '#EF4444',
+      color: C.deleteSwipe,
       marginTop: -6,
     },
     multiline: {
