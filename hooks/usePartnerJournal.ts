@@ -20,6 +20,7 @@ function fromRow(row: Record<string, unknown>): SharedMove {
     syncStatus: 'synced',
     partnerLinkId: row.partner_link_id as string,
     addedByUserId: row.added_by_user_id as string,
+    originalMoveId: (row.original_move_id as string | null) ?? null,
   };
 }
 
@@ -39,6 +40,7 @@ export function usePartnerJournal(partnerLinkId: string) {
     motion_data: m.motionData,
     created_at: m.createdAt,
     updated_at: m.updatedAt,
+    original_move_id: m.originalMoveId,
   });
 
   const storage = useSyncedStorage<SharedMove>({

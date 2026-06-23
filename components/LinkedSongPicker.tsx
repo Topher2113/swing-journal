@@ -67,6 +67,13 @@ export function LinkedSongPicker({ linkedSongId, onChange }: Props) {
   };
 
   const handleAddFromSpotify = async (track: SpotifyTrackResult) => {
+    if (adding) return;
+    const existing = songs.find((s) => s.spotifyTrackId === track.id);
+    if (existing) {
+      onChange(existing.id);
+      closePicker();
+      return;
+    }
     setAdding(true);
     try {
       const song = await addSong({
@@ -215,18 +222,20 @@ export function LinkedSongPicker({ linkedSongId, onChange }: Props) {
                 {!searchLoading && !adding && searchQuery.trim() !== '' && searchResults.length === 0 && (
                   <Text style={styles.emptyText}>No results found.</Text>
                 )}
-                <FlatList
-                  data={searchResults}
-                  keyExtractor={(t) => t.id}
-                  contentContainerStyle={styles.sheetList}
-                  keyboardShouldPersistTaps="handled"
-                  renderItem={({ item }) => (
-                    <SongSearchResultRow
-                      track={item}
-                      onPress={() => handleAddFromSpotify(item)}
-                    />
-                  )}
-                />
+                <View pointerEvents={adding ? 'none' : 'auto'}>
+                  <FlatList
+                    data={searchResults}
+                    keyExtractor={(t) => t.id}
+                    contentContainerStyle={styles.sheetList}
+                    keyboardShouldPersistTaps="handled"
+                    renderItem={({ item }) => (
+                      <SongSearchResultRow
+                        track={item}
+                        onPress={() => handleAddFromSpotify(item)}
+                      />
+                    )}
+                  />
+                </View>
               </>
             )}
 

@@ -59,13 +59,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [session?.user?.id]);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
+    supabase.auth.getSession().then(async ({ data }) => {
+      if (data.session) {
+        const { error } = await supabase.auth.getUser();
+        if (error) {
+          await supabase.auth.signOut();
+          setSession(null);
+          setLoading(false);
+          return;
+        }
+      }
       setSession(data.session);
       setLoading(false);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
       setSession(newSession);
+      if (newSession?.user?.id) {
+        setProfileLoading(true);
+      }
     });
 
     const handleDeepLink = async (url: string) => {
@@ -103,15 +115,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  // Load profile whenever the logged-in user changes
+  // Load profile whenever the logged-in user changes.
+  // Gate the else branch on !loading so profileLoading stays true during the
+  // window between auth state restoration and profile fetch — prevents a brief
+  // redirect to onboarding for returning users.
   useEffect(() => {
     if (session?.user?.id) {
       refreshProfile(session.user.id);
-    } else {
+    } else if (!loading) {
       setProfile(null);
       setProfileLoading(false);
     }
-  }, [session?.user?.id]);
+  }, [session?.user?.id, loading]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <AuthContext.Provider value={{

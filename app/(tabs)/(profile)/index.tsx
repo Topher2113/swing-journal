@@ -100,7 +100,7 @@ export default function ProfileScreen() {
             key={category}
             style={({ pressed }) => [styles.catItem, { opacity: pressed ? 0.7 : 1 }]}
             android_ripple={{ color: 'transparent' }}
-            onPress={() => router.push({ pathname: '/category/[category]', params: { category } })}
+            onPress={() => router.push({ pathname: '/profile-category/[category]', params: { category } })}
           >
             <View style={styles.catRow}>
               <Text style={styles.catName}>{category}</Text>
@@ -145,7 +145,15 @@ export default function ProfileScreen() {
       </View>
 
       {/* ── Profile ── */}
-      <Text style={styles.sectionTitle}>Profile</Text>
+      <View style={styles.sectionTitleRow}>
+        <Text style={styles.sectionTitle}>Profile</Text>
+        <Pressable
+          onPress={() => router.push('/edit-profile' as never)}
+          style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1, padding: 4 })}
+        >
+          <Ionicons name="pencil-outline" size={18} color={C.accent} />
+        </Pressable>
+      </View>
       <View style={styles.card}>
         <View style={styles.profileRow}>
           <Ionicons name="person-outline" size={18} color={C.textSecondary} />
@@ -299,14 +307,20 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.card,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#7F1D1D44',
+    borderColor: C.errorBorder,
   },
   logoutBtnPressed: {
     opacity: 0.7,
   },
   logoutText: {
-    color: '#FCA5A5',
+    color: C.error,
     fontSize: 15,
     fontWeight: '600',
+  },
+  sectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: -8,
   },
 });

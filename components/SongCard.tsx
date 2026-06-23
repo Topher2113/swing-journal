@@ -5,7 +5,8 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { AlbumArt } from './AlbumArt';
 import { SwipeActions } from './SwipeActions';
 import { Song } from '@/types/Song';
-import { C, RADIUS } from '@/constants/theme';
+import { C } from '@/constants/theme';
+import { cs } from '@/constants/commonStyles';
 
 type Props = {
   song: Song;
@@ -40,7 +41,7 @@ export function SongCard({ song, onPress, onEdit, onDelete }: Props) {
       overshootRight={false}
     >
       <Pressable
-        style={({ pressed }) => [styles.card, { opacity: pressed ? 0.85 : 1 }]}
+        style={({ pressed }) => [cs.listCard, { opacity: pressed ? 0.85 : 1 }]}
         android_ripple={{ color: 'transparent' }}
         onPress={onPress}
       >
@@ -51,7 +52,7 @@ export function SongCard({ song, onPress, onEdit, onDelete }: Props) {
         </View>
         <View style={styles.trailingIcons}>
           {song.spotifyUrl && <MaterialCommunityIcons name="spotify" size={18} color="#1DB954" />}
-          <Ionicons name="chevron-forward" size={20} color="#636366" />
+          <Ionicons name="chevron-forward" size={20} color={C.chevron} />
         </View>
       </Pressable>
     </ReanimatedSwipeable>
@@ -59,17 +60,6 @@ export function SongCard({ song, onPress, onEdit, onDelete }: Props) {
 }
 
 const styles = StyleSheet.create({
-  card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: C.surface,
-    borderRadius: RADIUS.card,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    marginBottom: 6,
-    gap: 12,
-    minHeight: 68,
-  },
   info: {
     flex: 1,
     gap: 4,

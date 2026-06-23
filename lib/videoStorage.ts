@@ -12,17 +12,18 @@ export async function uploadVideo(
   userId: string,
 ): Promise<string | null> {
   try {
-    const ext = localUri.split('.').pop()?.split('?')[0] ?? 'mp4';
+    const ext = (localUri.split('.').pop()?.split('?')[0] ?? 'mp4').toLowerCase();
+    const contentType = ext === 'mov' ? 'video/quicktime' : 'video/mp4';
     const path = `${userId}/${Crypto.randomUUID()}.${ext}`;
 
     const response = await fetch(localUri);
     if (!response.ok) return null;
-    const blob = await response.blob();
+    const arrayBuffer = await response.arrayBuffer();
 
     const { error } = await supabase.storage
       .from(BUCKET)
-      .upload(path, blob, {
-        contentType: blob.type || 'video/mp4',
+      .upload(path, arrayBuffer, {
+        contentType,
         upsert: false,
       });
 

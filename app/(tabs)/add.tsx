@@ -21,7 +21,8 @@ import { usePartnerJournal } from '@/hooks/usePartnerJournal';
 import { useAuth } from '@/context/AuthContext';
 import { uploadVideo, isLocalUri } from '@/lib/videoStorage';
 import { useSongSearch } from '@/hooks/useSongSearch';
-import { useVideoRecorder } from '@/hooks/useVideoRecorder';
+import { useVideoPickerHandlers } from '@/hooks/useVideoPickerHandlers';
+import { useDebounceSearch } from '@/hooks/useDebounceSearch';
 import { useMotionRecorder } from '@/hooks/useMotionRecorder';
 import { AlbumArt } from '@/components/AlbumArt';
 import { SaveButton } from '@/components/SaveButton';
@@ -31,14 +32,15 @@ import { VideoPickerButtons } from '@/components/VideoPickerButtons';
 import { StepListEditor } from '@/components/StepListEditor';
 import { LinkedSongPicker } from '@/components/LinkedSongPicker';
 import { MotionRecorderButton } from '@/components/MotionRecorderButton';
+import { MoveFormFields } from '@/components/MoveFormFields';
+import { LineDanceFormFields } from '@/components/LineDanceFormFields';
 import { Ionicons } from '@expo/vector-icons';
-import { CATEGORIES, DIFFICULTIES, CATEGORY_SHORT, Category, Difficulty, SharedMove } from '@/types/Move';
+import { CATEGORIES, CATEGORY_LABELS, CATEGORY_SHORT, DIFFICULTIES, Category, Difficulty, SharedMove } from '@/types/Move';
 import { LineDanceStep } from '@/types/LineDance';
 import { SpotifyTrackResult } from '@/types/Song';
 import { C, RADIUS } from '@/constants/theme';
 import { MOTION_TRACKING_ENABLED } from '@/constants/features';
 
-const CATEGORY_LABELS = CATEGORIES.map((c) => CATEGORY_SHORT[c]);
 const ADD_SEGMENTS = ['Move', 'Line Dance', 'Song'];
 type AddSegment = 'Move' | 'Line Dance' | 'Song';
 
@@ -51,7 +53,6 @@ export default function AddScreen() {
   const { upsertLocal: shareToJournal } = usePartnerJournal(link?.id ?? '');
   const { user } = useAuth();
   const { search: searchSpotify, loading: searchLoading } = useSongSearch();
-  const { recordVideo, pickVideo } = useVideoRecorder();
   const { isRecording, frames, start: startMotion, stop: stopMotion, clear: clearMotion } =
     useMotionRecorder();
 
@@ -70,12 +71,16 @@ export default function AddScreen() {
   const [saveToJournal, setSaveToJournal] = useState(false);
 
   // Song form state
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<SpotifyTrackResult[]>([]);
+  const {
+    query: searchQuery,
+    results: searchResults,
+    setResults: setSearchResults,
+    setQuery: setSearchQuery,
+    handleChange: handleSearchQueryChange,
+  } = useDebounceSearch<SpotifyTrackResult>(searchSpotify);
   const [attachedTrack, setAttachedTrack] = useState<SpotifyTrackResult | null>(null);
   const [songNotes, setSongNotes] = useState('');
   const [songSaving, setSongSaving] = useState(false);
-  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Line Dance form state
   const [ldName, setLdName] = useState('');
@@ -111,27 +116,17 @@ export default function AddScreen() {
       setLdLinkedSongId(null);
       setLdNotes('');
       setSaveToJournal(false);
-      return () => {
-        if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
-      };
     }, [clearMotion, segmentParam])
   );
 
   // ── Move handlers ────────────────────────────────────────────────────────────
 
+  const { handleRecord, handlePick } = useVideoPickerHandlers(setVideoUri);
+  const { handleRecord: handleLdRecord, handlePick: handleLdPick } = useVideoPickerHandlers(setLdVideoUri);
+
   const handleCategoryChange = (label: string) => {
     const full = CATEGORIES[CATEGORY_LABELS.indexOf(label)];
     if (full) setCategory(full);
-  };
-
-  const handleRecord = async () => {
-    const uri = await recordVideo();
-    if (uri) setVideoUri(uri);
-  };
-
-  const handlePick = async () => {
-    const uri = await pickVideo();
-    if (uri) setVideoUri(uri);
   };
 
   const handleClear = useCallback(() => setVideoUri(null), []);
@@ -170,11 +165,12 @@ export default function AddScreen() {
           id: Crypto.randomUUID(),
           partnerLinkId: link!.id,
           addedByUserId: user!.id,
+          originalMoveId: move.id,
         };
         await shareToJournal(sharedMove);
       }
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      router.replace('/(tabs)');
+      router.replace('/(tabs)/(library)' as never);
     } finally {
       setSaving(false);
     }
@@ -183,17 +179,8 @@ export default function AddScreen() {
   // ── Song handlers ────────────────────────────────────────────────────────────
 
   const handleSearchChange = (text: string) => {
-    setSearchQuery(text);
     if (attachedTrack) setAttachedTrack(null);
-    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
-    if (text.trim()) {
-      searchDebounceRef.current = setTimeout(async () => {
-        const results = await searchSpotify(text);
-        setSearchResults(results);
-      }, 400);
-    } else {
-      setSearchResults([]);
-    }
+    handleSearchQueryChange(text);
   };
 
   const handleAttachTrack = (track: SpotifyTrackResult) => {
@@ -214,23 +201,13 @@ export default function AddScreen() {
         notes: songNotes.trim(),
       });
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      router.replace('/(tabs)');
+      router.replace('/(tabs)/(library)' as never);
     } finally {
       setSongSaving(false);
     }
   };
 
   // ── Line Dance handlers ──────────────────────────────────────────────────────
-
-  const handleLdRecord = async () => {
-    const uri = await recordVideo();
-    if (uri) setLdVideoUri(uri);
-  };
-
-  const handleLdPick = async () => {
-    const uri = await pickVideo();
-    if (uri) setLdVideoUri(uri);
-  };
 
   const handleLdClear = useCallback(() => setLdVideoUri(null), []);
 
@@ -252,7 +229,7 @@ export default function AddScreen() {
         practiceCount: 0,
       });
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      router.replace('/(tabs)');
+      router.replace('/(tabs)/(library)' as never);
     } finally {
       setLdSaving(false);
     }
@@ -288,63 +265,26 @@ export default function AddScreen() {
               contentContainerStyle={styles.content}
               keyboardShouldPersistTaps="handled"
             >
-              <Text style={styles.label}>Move name</Text>
-              <TextInput
-                style={[styles.input, nameError ? styles.inputError : null]}
-                value={name}
-                onChangeText={(t) => { setName(t); if (nameError) setNameError(null); }}
-                placeholder="e.g. Triple Dip"
-                placeholderTextColor={C.textSecondary}
-                returnKeyType="done"
-              />
-              {nameError && <Text style={styles.fieldError}>{nameError}</Text>}
-
-              <Text style={styles.label}>Category</Text>
-              <SegmentedControl
-                options={CATEGORY_LABELS}
-                value={CATEGORY_SHORT[category]}
-                onChange={handleCategoryChange}
-              />
-
-              <Text style={styles.label}>Difficulty</Text>
-              <SegmentedControl
-                options={DIFFICULTIES}
-                value={difficulty}
-                onChange={(v) => setDifficulty(v as Difficulty)}
-              />
-
-              <Text style={styles.label}>Notes</Text>
-              <TextInput
-                style={[styles.input, styles.multiline]}
-                value={notes}
-                onChangeText={setNotes}
-                placeholder="Cues, timing, things to remember…"
-                placeholderTextColor={C.textSecondary}
-                multiline
-                numberOfLines={4}
-                textAlignVertical="top"
-              />
-
-              <Text style={styles.label}>Video (optional)</Text>
-              <VideoPickerButtons
+              <MoveFormFields
+                name={name}
+                onNameChange={(t) => { setName(t); if (nameError) setNameError(null); }}
+                nameError={nameError}
+                category={category}
+                onCategoryChange={handleCategoryChange}
+                difficulty={difficulty}
+                onDifficultyChange={setDifficulty}
+                notes={notes}
+                onNotesChange={setNotes}
                 videoUri={videoUri}
                 onRecord={handleRecord}
                 onPick={handlePick}
-                onClear={handleClear}
+                onClearVideo={handleClear}
+                isRecording={isRecording}
+                motionFrames={frames}
+                onStartMotion={startMotion}
+                onStopMotion={stopMotion}
+                onDiscardMotion={clearMotion}
               />
-
-              {MOTION_TRACKING_ENABLED && (
-                <>
-                  <Text style={styles.label}>Motion Capture (optional)</Text>
-                  <MotionRecorderButton
-                    isRecording={isRecording}
-                    frames={frames}
-                    onStart={startMotion}
-                    onStop={stopMotion}
-                    onDiscard={clearMotion}
-                  />
-                </>
-              )}
 
               {link?.status === 'linked' && (
                 <Pressable
@@ -451,48 +391,22 @@ export default function AddScreen() {
               contentContainerStyle={styles.content}
               keyboardShouldPersistTaps="handled"
             >
-              <Text style={styles.label}>Name</Text>
-              <TextInput
-                style={[styles.input, ldNameError ? styles.inputError : null]}
-                value={ldName}
-                onChangeText={(t) => { setLdName(t); if (ldNameError) setLdNameError(null); }}
-                placeholder="e.g. Cotton Eye Joe"
-                placeholderTextColor={C.textSecondary}
-                returnKeyType="done"
-              />
-              {ldNameError && <Text style={styles.fieldError}>{ldNameError}</Text>}
-
-              <Text style={styles.label}>Difficulty</Text>
-              <SegmentedControl
-                options={DIFFICULTIES}
-                value={ldDifficulty}
-                onChange={(v) => setLdDifficulty(v as Difficulty)}
-              />
-
-              <Text style={styles.label}>Steps (optional)</Text>
-              <StepListEditor steps={ldSteps} onChange={setLdSteps} />
-
-              <Text style={styles.label}>Video (optional)</Text>
-              <VideoPickerButtons
+              <LineDanceFormFields
+                name={ldName}
+                onNameChange={(t) => { setLdName(t); if (ldNameError) setLdNameError(null); }}
+                nameError={ldNameError}
+                difficulty={ldDifficulty}
+                onDifficultyChange={setLdDifficulty}
+                steps={ldSteps}
+                onStepsChange={setLdSteps}
                 videoUri={ldVideoUri}
                 onRecord={handleLdRecord}
                 onPick={handleLdPick}
-                onClear={handleLdClear}
-              />
-
-              <Text style={styles.label}>Linked Song (optional)</Text>
-              <LinkedSongPicker linkedSongId={ldLinkedSongId} onChange={setLdLinkedSongId} />
-
-              <Text style={styles.label}>Notes (optional)</Text>
-              <TextInput
-                style={[styles.input, styles.multiline]}
-                value={ldNotes}
-                onChangeText={setLdNotes}
-                placeholder="Cues, styling notes, things to remember…"
-                placeholderTextColor={C.textSecondary}
-                multiline
-                numberOfLines={4}
-                textAlignVertical="top"
+                onClearVideo={handleLdClear}
+                linkedSongId={ldLinkedSongId}
+                onLinkedSongChange={setLdLinkedSongId}
+                notes={ldNotes}
+                onNotesChange={setLdNotes}
               />
 
               <SaveButton label="Save Line Dance" saving={ldSaving} onPress={handleSaveLineDance} />
@@ -521,7 +435,7 @@ const styles = StyleSheet.create({
   content: {
     padding: 20,
     gap: 12,
-    paddingBottom: 40,
+    paddingBottom: 100,
   },
   label: {
     fontSize: 15,
@@ -538,15 +452,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: C.textPrimary,
     minHeight: 50,
-  },
-  inputError: {
-    borderWidth: 1.5,
-    borderColor: '#EF4444',
-  },
-  fieldError: {
-    fontSize: 12,
-    color: '#EF4444',
-    marginTop: -6,
   },
   multiline: {
     minHeight: 120,

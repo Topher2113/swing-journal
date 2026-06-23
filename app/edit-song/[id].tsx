@@ -14,11 +14,13 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useSong } from '@/hooks/useSong';
 import { useSongSearch } from '@/hooks/useSongSearch';
+import { useDebounceSearch } from '@/hooks/useDebounceSearch';
 import { AlbumArt } from '@/components/AlbumArt';
 import { SaveButton } from '@/components/SaveButton';
 import { SongSearchResultRow } from '@/components/SongSearchResultRow';
 import { SpotifyTrackResult } from '@/types/Song';
 import { C, RADIUS } from '@/constants/theme';
+import { cs } from '@/constants/commonStyles';
 
 export default function EditSongScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -33,11 +35,15 @@ export default function EditSongScreen() {
   const [trackSpotifyTrackId, setTrackSpotifyTrackId] = useState<string | null>(null);
   const [notes, setNotes] = useState('');
   const [searchMode, setSearchMode] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<SpotifyTrackResult[]>([]);
+  const {
+    query: searchQuery,
+    results: searchResults,
+    setResults: setSearchResults,
+    setQuery: setSearchQuery,
+    handleChange: handleSearchChange,
+  } = useDebounceSearch<SpotifyTrackResult>(searchSpotify);
   const [saving, setSaving] = useState(false);
   const seeded = useRef(false);
-  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!song || seeded.current) return;
@@ -49,19 +55,6 @@ export default function EditSongScreen() {
     setTrackSpotifyTrackId(song.spotifyTrackId);
     setNotes(song.notes);
   }, [song]);
-
-  const handleSearchChange = (text: string) => {
-    setSearchQuery(text);
-    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
-    if (text.trim()) {
-      searchDebounceRef.current = setTimeout(async () => {
-        const results = await searchSpotify(text);
-        setSearchResults(results);
-      }, 400);
-    } else {
-      setSearchResults([]);
-    }
-  };
 
   const handleSelectTrack = (track: SpotifyTrackResult) => {
     setTrackTitle(track.name);
@@ -98,19 +91,19 @@ export default function EditSongScreen() {
     <>
       <Stack.Screen options={{ title: 'Edit Song' }} />
       <KeyboardAvoidingView
-        style={styles.flex}
+        style={cs.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <ScrollView
-          style={styles.container}
-          contentContainerStyle={styles.content}
+          style={cs.container}
+          contentContainerStyle={cs.content}
           keyboardShouldPersistTaps="handled"
         >
           {searchMode ? (
             <>
-              <Text style={styles.label}>Search Spotify</Text>
+              <Text style={cs.label}>Search Spotify</Text>
               <TextInput
-                style={styles.input}
+                style={cs.textInput}
                 value={searchQuery}
                 onChangeText={handleSearchChange}
                 placeholder="Song title or artist…"
@@ -143,7 +136,7 @@ export default function EditSongScreen() {
             </>
           ) : (
             <>
-              <Text style={styles.label}>Track</Text>
+              <Text style={cs.label}>Track</Text>
               <View style={styles.attachedRow}>
                 <AlbumArt url={trackArtUrl} size={44} />
                 <View style={styles.attachedInfo}>
@@ -159,9 +152,9 @@ export default function EditSongScreen() {
                 </Pressable>
               </View>
 
-              <Text style={styles.label}>Notes (optional)</Text>
+              <Text style={cs.label}>Notes (optional)</Text>
               <TextInput
-                style={[styles.input, styles.multiline]}
+                style={[cs.textInput, styles.multiline]}
                 value={notes}
                 onChangeText={setNotes}
                 placeholder="Why you love this song, what you dance to it…"
@@ -181,35 +174,6 @@ export default function EditSongScreen() {
 }
 
 const styles = StyleSheet.create({
-  flex: {
-    flex: 1,
-    backgroundColor: C.bg,
-  },
-  container: {
-    flex: 1,
-    backgroundColor: C.bg,
-  },
-  content: {
-    padding: 20,
-    gap: 12,
-    paddingBottom: 40,
-  },
-  label: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: C.textPrimary,
-    marginTop: 6,
-    marginBottom: 2,
-  },
-  input: {
-    backgroundColor: C.surface,
-    borderRadius: RADIUS.control,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 16,
-    color: C.textPrimary,
-    minHeight: 50,
-  },
   multiline: {
     minHeight: 120,
   },

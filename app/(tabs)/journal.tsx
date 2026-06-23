@@ -1,6 +1,6 @@
 import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
-import { Stack, useRouter } from 'expo-router';
-import { useState } from 'react';
+import { Stack, useFocusEffect, useRouter } from 'expo-router';
+import { useCallback, useState } from 'react';
 import { usePartnerLink } from '@/hooks/usePartnerLink';
 import { usePartnerJournal } from '@/hooks/usePartnerJournal';
 import { useAuth } from '@/context/AuthContext';
@@ -10,45 +10,14 @@ import { SharedMoveCard } from '@/components/SharedMoveCard';
 import { SortDropdown } from '@/components/SortDropdown';
 import { EmptyState } from '@/components/EmptyState';
 import { PartnerLink } from '@/types/Auth';
-import { SharedMove } from '@/types/Move';
-import { SortDir } from '@/hooks/useSortedMoves';
+import { useSortedSharedMoves, JOURNAL_SORT_OPTIONS } from '@/hooks/useSortedSharedMoves';
 import { C } from '@/constants/theme';
 
-const SORT_OPTIONS = [
-  { key: 'createdAt', label: 'Date added' },
-  { key: 'name', label: 'A–Z' },
-  { key: 'difficulty', label: 'Difficulty' },
-  { key: 'practiceCount', label: 'Practice' },
-];
-
-const DIFF_ORDER: Record<string, number> = { Beginner: 0, Intermediate: 1, Advanced: 2 };
-
-function applySortJournal(items: SharedMove[], key: string, dir: SortDir): SharedMove[] {
-  return [...items].sort((a, b) => {
-    let cmp = 0;
-    switch (key) {
-      case 'name':
-        cmp = a.name.localeCompare(b.name);
-        break;
-      case 'difficulty':
-        cmp = (DIFF_ORDER[a.difficulty] ?? 0) - (DIFF_ORDER[b.difficulty] ?? 0);
-        break;
-      case 'practiceCount':
-        cmp = a.practiceCount - b.practiceCount;
-        break;
-      case 'createdAt':
-      default:
-        cmp = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-        break;
-    }
-    return dir === 'asc' ? cmp : -cmp;
-  });
-}
 
 export default function JournalScreen() {
   const { link, loading, generateInviteCode, redeemInviteCode, cancelInviteCode } = usePartnerLink();
 
-  if (loading) return null;
+  if (loading) return <View style={styles.container} />;
 
   if (!link || link.status !== 'linked') {
     return (
@@ -70,11 +39,19 @@ export default function JournalScreen() {
 function JournalLinked({ link }: { link: PartnerLink }) {
   const router = useRouter();
   const { user } = useAuth();
-  const { items, syncing, sync } = usePartnerJournal(link.id);
-  const [sortKey, setSortKey] = useState('createdAt');
-  const [sortDir, setSortDir] = useState<SortDir>('desc');
+  const { items, syncing, sync, reload } = usePartnerJournal(link.id);
 
-  const sorted = applySortJournal(items, sortKey, sortDir);
+  // Reload from AsyncStorage whenever this screen regains focus so removals
+  // made in the shared-move detail screen are reflected immediately.
+  useFocusEffect(
+    useCallback(() => {
+      reload();
+    }, [reload])
+  );
+  const [sortKey, setSortKey] = useState('createdAt');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+
+  const sorted = useSortedSharedMoves(items, sortKey, sortDir);
 
   const isUserA = user?.email === link.userEmailA;
   const partnerEmail = isUserA ? (link.userEmailB ?? 'Partner') : link.userEmailA;
@@ -82,7 +59,7 @@ function JournalLinked({ link }: { link: PartnerLink }) {
 
   return (
     <View style={styles.container}>
-      <Stack.Screen options={{ title: 'Journal', headerShown: true }} />
+      <Stack.Screen options={{ title: 'Partner Journal', headerShown: true }} />
       <PartnerJournalHeader
         partnerEmail={partnerEmail}
         partnerName={partnerName}
@@ -93,7 +70,7 @@ function JournalLinked({ link }: { link: PartnerLink }) {
         <SortDropdown
           sortKey={sortKey}
           sortDir={sortDir}
-          options={SORT_OPTIONS}
+          options={JOURNAL_SORT_OPTIONS}
           onSort={(key, dir) => { setSortKey(key); setSortDir(dir); }}
         />
       </View>

@@ -27,6 +27,7 @@ export type Move = {
 export type SharedMove = Move & {
   partnerLinkId: string;
   addedByUserId: string;
+  originalMoveId: string | null;
 };
 
 export const CATEGORIES: Category[] = [
@@ -44,6 +45,8 @@ export const CATEGORY_SHORT: Record<Category, string> = {
   'Dips & Drops': 'Dips',
   'Lifts & Tricks': 'Lifts',
 };
+
+export const CATEGORY_LABELS = CATEGORIES.map((c) => CATEGORY_SHORT[c]);
 
 export const DIFFICULTY_ORDER: Record<Difficulty, number> = {
   Beginner: 0,

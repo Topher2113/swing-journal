@@ -10,6 +10,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import { C, RADIUS } from '@/constants/theme';
@@ -30,11 +31,12 @@ const LEVELS: { value: Level; label: string; description: string }[] = [
   { value: 'advanced', label: 'Advanced', description: 'Been dancing a while' },
 ];
 
-export default function OnboardingScreen() {
-  const { user, refreshProfile } = useAuth();
-  const [name, setName] = useState('');
-  const [dancePref, setDancePref] = useState<DancePref>('both');
-  const [level, setLevel] = useState<Level>('beginner');
+export default function EditProfileScreen() {
+  const router = useRouter();
+  const { user, profile, refreshProfile } = useAuth();
+  const [name, setName] = useState(profile?.name ?? '');
+  const [dancePref, setDancePref] = useState<DancePref>(profile?.dancePreference ?? 'both');
+  const [level, setLevel] = useState<Level>(profile?.level ?? 'beginner');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -47,14 +49,13 @@ export default function OnboardingScreen() {
     setError(null);
     setSaving(true);
     try {
-      const { error: err } = await supabase.from('user_profiles').insert({
-        id: user.id,
-        name: name.trim(),
-        dance_preference: dancePref,
-        level,
-      });
+      const { error: err } = await supabase
+        .from('user_profiles')
+        .update({ name: name.trim(), dance_preference: dancePref, level })
+        .eq('id', user.id);
       if (err) throw err;
       await refreshProfile();
+      router.back();
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Could not save profile. Please try again.');
       setSaving(false);
@@ -71,12 +72,9 @@ export default function OnboardingScreen() {
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
       >
-        <Text style={styles.title}>Welcome!</Text>
-        <Text style={styles.subtitle}>Tell us a bit about yourself to get started.</Text>
-
         {/* Name */}
         <View style={styles.section}>
-          <Text style={styles.label}>What's your name?</Text>
+          <Text style={styles.label}>Your name</Text>
           <TextInput
             style={styles.input}
             placeholder="Your name"
@@ -145,10 +143,11 @@ export default function OnboardingScreen() {
           onPress={handleSave}
           disabled={saving}
         >
-          {saving
-            ? <ActivityIndicator color={C.textPrimary} />
-            : <Text style={styles.buttonText}>Get Started</Text>
-          }
+          {saving ? (
+            <ActivityIndicator color={C.textPrimary} />
+          ) : (
+            <Text style={styles.buttonText}>Save Changes</Text>
+          )}
         </Pressable>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -162,20 +161,9 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 24,
-    paddingTop: 48,
+    paddingTop: 28,
     gap: 28,
     paddingBottom: 48,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: C.textPrimary,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: C.textSecondary,
-    marginTop: -16,
-    lineHeight: 22,
   },
   section: {
     gap: 12,

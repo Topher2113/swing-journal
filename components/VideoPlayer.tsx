@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, View, ViewStyle } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, View, ViewStyle } from 'react-native';
 import { VideoView, useVideoPlayer } from 'expo-video';
 import { useEvent } from 'expo';
 import { Ionicons } from '@expo/vector-icons';
@@ -12,6 +12,9 @@ export function VideoPlayer({ uri, style }: Props) {
   });
 
   const { isPlaying } = useEvent(player, 'playingChange', { isPlaying: false });
+  const { status } = useEvent(player, 'statusChange', { status: 'loading' as const });
+
+  const isReady = status === 'readyToPlay';
 
   const toggle = () => {
     if (isPlaying) {
@@ -29,7 +32,12 @@ export function VideoPlayer({ uri, style }: Props) {
         contentFit="contain"
         nativeControls={false}
       />
-      {!isPlaying && (
+      {!isReady && (
+        <View style={styles.skeleton}>
+          <ActivityIndicator size="large" color="rgba(255,255,255,0.5)" />
+        </View>
+      )}
+      {isReady && !isPlaying && (
         <View style={styles.overlay}>
           <Ionicons name="play-circle" size={56} color="rgba(255,255,255,0.85)" />
         </View>
@@ -48,6 +56,12 @@ const styles = StyleSheet.create({
   },
   video: {
     flex: 1,
+  },
+  skeleton: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#111',
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,

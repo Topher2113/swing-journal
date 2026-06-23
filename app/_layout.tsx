@@ -2,7 +2,8 @@ import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SystemUI from 'expo-system-ui';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 import { C } from '@/constants/theme';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 
@@ -16,6 +17,7 @@ function RootLayoutInner() {
   const { session, loading, profile, profileLoading } = useAuth();
   const segments = useSegments();
   const router = useRouter();
+  const [navReady, setNavReady] = useState(false);
 
   useEffect(() => {
     if (loading || profileLoading) return;
@@ -25,14 +27,16 @@ function RootLayoutInner() {
     if (!session && !inAuthGroup) {
       router.replace('/(auth)/sign-in' as never);
     } else if (session && !profile && !onOnboarding) {
-      // Logged in but hasn't completed onboarding yet
       router.replace('/(auth)/onboarding' as never);
     } else if (session && profile && inAuthGroup) {
-      router.replace('/(tabs)');
+      router.replace('/(tabs)/home' as never);
     }
+    setNavReady(true);
   }, [session, loading, profile, profileLoading, segments]);
 
   return (
+    <>
+    {!navReady && <View style={styles.splash} />}
     <Stack
       screenOptions={{
         headerStyle,
@@ -45,7 +49,6 @@ function RootLayoutInner() {
       <Stack.Screen name="(auth)/verify-email" options={{ headerShown: false }} />
       <Stack.Screen name="(auth)/onboarding" options={{ headerShown: false }} />
       <Stack.Screen name="move/[id]" options={{ headerBackTitle: 'Moves' }} />
-      <Stack.Screen name="category/[category]" options={{ headerBackTitle: 'My Moves' }} />
       <Stack.Screen name="edit/[id]" options={{ title: 'Edit Move', headerBackTitle: 'Detail' }} />
       <Stack.Screen name="motion-trail/[id]" options={{ headerBackTitle: 'Detail' }} />
       <Stack.Screen name="song/[id]" options={{ headerBackTitle: 'Library' }} />
@@ -53,9 +56,19 @@ function RootLayoutInner() {
       <Stack.Screen name="line-dance/[id]" options={{ headerBackTitle: 'Library' }} />
       <Stack.Screen name="edit-line-dance/[id]" options={{ title: 'Edit Line Dance', headerBackTitle: 'Detail' }} />
       <Stack.Screen name="shared-move/[id]" options={{ title: '', headerBackTitle: 'Journal' }} />
+      <Stack.Screen name="edit-profile" options={{ title: 'Edit Profile', headerBackTitle: 'Profile' }} />
     </Stack>
+    </>
   );
 }
+
+const styles = StyleSheet.create({
+  splash: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: C.bg,
+    zIndex: 1,
+  },
+});
 
 export default function RootLayout() {
   return (

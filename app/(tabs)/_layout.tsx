@@ -5,6 +5,7 @@ import { C } from '@/constants/theme';
 
 type TabIconProps = { color: string; size: number };
 
+const HomeIcon = ({ color, size }: TabIconProps) => <Ionicons name="home-outline" size={size} color={color} />;
 const LibraryIcon = ({ color, size }: TabIconProps) => <Ionicons name="library" size={size} color={color} />;
 const AddIcon = ({ color, size }: TabIconProps) => <Ionicons name="add-circle" size={size} color={color} />;
 const JournalIcon = ({ color, size }: TabIconProps) => <Ionicons name="people" size={size} color={color} />;
@@ -47,8 +48,12 @@ export default function TabLayout() {
       }}
     >
       <Tabs.Screen
-        name="index"
-        options={{ title: 'Library', tabBarIcon: LibraryIcon }}
+        name="home"
+        options={{ title: 'Home', tabBarIcon: HomeIcon }}
+      />
+      <Tabs.Screen
+        name="(library)"
+        options={{ title: 'Library', headerShown: false, tabBarIcon: LibraryIcon }}
       />
       <Tabs.Screen
         name="add"
@@ -56,11 +61,11 @@ export default function TabLayout() {
       />
       <Tabs.Screen
         name="journal"
-        options={{ title: 'Journal', tabBarIcon: JournalIcon }}
+        options={{ title: 'Partner', tabBarIcon: JournalIcon }}
       />
       <Tabs.Screen
-        name="stats"
-        options={{ title: 'Profile', tabBarIcon: ProfileIcon }}
+        name="(profile)"
+        options={{ title: 'Profile', headerShown: false, tabBarIcon: ProfileIcon }}
       />
     </Tabs>
   );

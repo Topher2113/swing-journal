@@ -12,6 +12,7 @@ type Props = {
   onPressMove: (id: string) => void;
   onEditMove: (id: string) => void;
   onDeleteMove: (id: string) => void;
+  sharedMoveIds?: Set<string>;
 };
 
 const PREVIEW_COUNT = 3;
@@ -23,6 +24,7 @@ export function CategorySection({
   onPressMove,
   onEditMove,
   onDeleteMove,
+  sharedMoveIds,
 }: Props) {
   const isEmpty = moves.length === 0;
   const sorted = useMemo(
@@ -62,6 +64,7 @@ export function CategorySection({
               onPress={() => onPressMove(move.id)}
               onEdit={() => onEditMove(move.id)}
               onDelete={() => onDeleteMove(move.id)}
+              isShared={sharedMoveIds?.has(move.id)}
             />
           ))}
           {remaining > 0 && (

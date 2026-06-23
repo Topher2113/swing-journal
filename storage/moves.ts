@@ -3,15 +3,6 @@ import { Move } from '@/types/Move';
 
 const KEY = '@moves';
 
-// Serialize all writes so concurrent callers never produce a lost update.
-let writeQueue: Promise<void> = Promise.resolve();
-
-function enqueue(fn: () => Promise<void>): Promise<void> {
-  const next = writeQueue.then(fn);
-  writeQueue = next.catch(() => {}); // keep queue alive if a write fails
-  return next;
-}
-
 export async function getAllMoves(): Promise<Move[]> {
   const json = await AsyncStorage.getItem(KEY);
   if (!json) return [];
@@ -25,12 +16,20 @@ export async function getMove(id: string): Promise<Move | null> {
   return moves.find((m) => m.id === id) ?? null;
 }
 
-export async function saveMove(move: Move): Promise<void> {
+let writeQueue = Promise.resolve();
+
+function enqueue(fn: () => Promise<void>): Promise<void> {
+  const next = writeQueue.then(fn, fn);
+  writeQueue = next;
+  return next;
+}
+
+export function saveMove(move: Move): Promise<void> {
   return enqueue(async () => {
     const moves = await getAllMoves();
-    const index = moves.findIndex((m) => m.id === move.id);
-    if (index >= 0) {
-      moves[index] = move;
+    const idx = moves.findIndex((m) => m.id === move.id);
+    if (idx >= 0) {
+      moves[idx] = move;
     } else {
       moves.push(move);
     }
@@ -38,9 +37,11 @@ export async function saveMove(move: Move): Promise<void> {
   });
 }
 
-export async function deleteMoveById(id: string): Promise<void> {
+export function deleteMoveById(id: string): Promise<void> {
   return enqueue(async () => {
     const moves = await getAllMoves();
-    await AsyncStorage.setItem(KEY, JSON.stringify(moves.filter((m) => m.id !== id)));
+    const filtered = moves.filter((m) => m.id !== id);
+    await AsyncStorage.setItem(KEY, JSON.stringify(filtered));
   });
 }
+
