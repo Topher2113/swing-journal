@@ -1,7 +1,9 @@
+import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { VideoPlayer } from './VideoPlayer';
-import { C, RADIUS } from '@/constants/theme';
+import { RADIUS } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 
 type Props = {
   videoUri: string | null;
@@ -11,6 +13,67 @@ type Props = {
 };
 
 export function VideoPickerButtons({ videoUri, onRecord, onPick, onClear }: Props) {
+  const { colors: C } = useTheme();
+
+  const styles = useMemo(() => StyleSheet.create({
+    buttonsRow: {
+      flexDirection: 'row',
+      gap: 10,
+    },
+    pickBtn: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      backgroundColor: C.surface,
+      borderRadius: RADIUS.control,
+      paddingVertical: 12,
+      minHeight: 44,
+    },
+    pickBtnText: {
+      fontSize: 14,
+      color: C.accent,
+      fontWeight: '500',
+    },
+    previewContainer: {
+      gap: 10,
+    },
+    changeRow: {
+      flexDirection: 'row',
+      gap: 10,
+    },
+    changeBtn: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 6,
+      backgroundColor: C.surface,
+      borderRadius: RADIUS.control,
+      paddingVertical: 10,
+      minHeight: 44,
+    },
+    changeBtnText: {
+      fontSize: 13,
+      color: C.accent,
+      fontWeight: '500',
+    },
+    removeBtn: {
+      paddingHorizontal: 14,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: C.surface,
+      borderRadius: RADIUS.control,
+      minHeight: 44,
+    },
+    removeBtnText: {
+      fontSize: 13,
+      color: C.deleteSwipe,
+      fontWeight: '500',
+    },
+  }), [C]);
+
   if (videoUri) {
     return (
       <View style={styles.previewContainer}>
@@ -65,62 +128,3 @@ export function VideoPickerButtons({ videoUri, onRecord, onPick, onClear }: Prop
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  buttonsRow: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  pickBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: C.surface,
-    borderRadius: RADIUS.control,
-    paddingVertical: 12,
-    minHeight: 44,
-  },
-  pickBtnText: {
-    fontSize: 14,
-    color: C.accent,
-    fontWeight: '500',
-  },
-  previewContainer: {
-    gap: 10,
-  },
-  changeRow: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  changeBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    backgroundColor: C.surface,
-    borderRadius: RADIUS.control,
-    paddingVertical: 10,
-    minHeight: 44,
-  },
-  changeBtnText: {
-    fontSize: 13,
-    color: C.accent,
-    fontWeight: '500',
-  },
-  removeBtn: {
-    paddingHorizontal: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: C.surface,
-    borderRadius: RADIUS.control,
-    minHeight: 44,
-  },
-  removeBtnText: {
-    fontSize: 13,
-    color: C.deleteSwipe,
-    fontWeight: '500',
-  },
-});

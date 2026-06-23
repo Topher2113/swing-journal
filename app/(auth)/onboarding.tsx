@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -12,7 +12,8 @@ import {
 } from 'react-native';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
-import { C, RADIUS } from '@/constants/theme';
+import { RADIUS } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 import type { UserProfile } from '@/types/Auth';
 
 type DancePref = UserProfile['dancePreference'];
@@ -31,6 +32,7 @@ const LEVELS: { value: Level; label: string; description: string }[] = [
 ];
 
 export default function OnboardingScreen() {
+  const { colors: C } = useTheme();
   const { user, refreshProfile } = useAuth();
   const [name, setName] = useState('');
   const [dancePref, setDancePref] = useState<DancePref>('both');
@@ -60,6 +62,139 @@ export default function OnboardingScreen() {
       setSaving(false);
     }
   };
+
+  const styles = useMemo(() => StyleSheet.create({
+    flex: {
+      flex: 1,
+      backgroundColor: C.bg,
+    },
+    content: {
+      padding: 24,
+      paddingTop: 48,
+      gap: 28,
+      paddingBottom: 48,
+    },
+    title: {
+      fontSize: 32,
+      fontWeight: '700',
+      color: C.textPrimary,
+    },
+    subtitle: {
+      fontSize: 16,
+      color: C.textSecondary,
+      marginTop: -16,
+      lineHeight: 22,
+    },
+    section: {
+      gap: 12,
+    },
+    label: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: C.textPrimary,
+    },
+    input: {
+      backgroundColor: C.surface,
+      borderRadius: RADIUS.control,
+      padding: 14,
+      fontSize: 16,
+      color: C.textPrimary,
+      borderWidth: 1,
+      borderColor: C.border,
+    },
+    chipRow: {
+      flexDirection: 'row',
+      gap: 10,
+    },
+    chip: {
+      flex: 1,
+      paddingVertical: 12,
+      borderRadius: RADIUS.control,
+      backgroundColor: C.surface,
+      borderWidth: 1,
+      borderColor: C.border,
+      alignItems: 'center',
+    },
+    chipSelected: {
+      backgroundColor: C.accent,
+      borderColor: C.accent,
+    },
+    chipPressed: {
+      opacity: 0.75,
+    },
+    chipText: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: C.textSecondary,
+    },
+    chipTextSelected: {
+      color: C.textPrimary,
+    },
+    levelList: {
+      gap: 10,
+    },
+    levelCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 14,
+      backgroundColor: C.surface,
+      borderRadius: RADIUS.card,
+      padding: 16,
+      borderWidth: 1,
+      borderColor: C.border,
+    },
+    levelCardSelected: {
+      borderColor: C.accent,
+      backgroundColor: C.accent + '1A',
+    },
+    radio: {
+      width: 20,
+      height: 20,
+      borderRadius: 10,
+      borderWidth: 2,
+      borderColor: C.border,
+    },
+    radioSelected: {
+      borderColor: C.accent,
+      backgroundColor: C.accent,
+    },
+    levelText: {
+      flex: 1,
+      gap: 2,
+    },
+    levelLabel: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: C.textSecondary,
+    },
+    levelLabelSelected: {
+      color: C.textPrimary,
+    },
+    levelDesc: {
+      fontSize: 13,
+      color: C.textSecondary,
+    },
+    error: {
+      color: C.error,
+      fontSize: 14,
+      textAlign: 'center',
+    },
+    button: {
+      backgroundColor: C.accent,
+      borderRadius: RADIUS.control,
+      padding: 16,
+      alignItems: 'center',
+      marginTop: 4,
+    },
+    buttonPressed: {
+      backgroundColor: C.accentDark,
+    },
+    buttonText: {
+      color: C.textPrimary,
+      fontSize: 16,
+      fontWeight: '600',
+    },
+  }), [C]);
 
   return (
     <KeyboardAvoidingView
@@ -154,136 +289,3 @@ export default function OnboardingScreen() {
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  flex: {
-    flex: 1,
-    backgroundColor: C.bg,
-  },
-  content: {
-    padding: 24,
-    paddingTop: 48,
-    gap: 28,
-    paddingBottom: 48,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: C.textPrimary,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: C.textSecondary,
-    marginTop: -16,
-    lineHeight: 22,
-  },
-  section: {
-    gap: 12,
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: C.textPrimary,
-  },
-  input: {
-    backgroundColor: C.surface,
-    borderRadius: RADIUS.control,
-    padding: 14,
-    fontSize: 16,
-    color: C.textPrimary,
-    borderWidth: 1,
-    borderColor: C.border,
-  },
-  chipRow: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  chip: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: RADIUS.control,
-    backgroundColor: C.surface,
-    borderWidth: 1,
-    borderColor: C.border,
-    alignItems: 'center',
-  },
-  chipSelected: {
-    backgroundColor: C.accent,
-    borderColor: C.accent,
-  },
-  chipPressed: {
-    opacity: 0.75,
-  },
-  chipText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: C.textSecondary,
-  },
-  chipTextSelected: {
-    color: C.textPrimary,
-  },
-  levelList: {
-    gap: 10,
-  },
-  levelCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-    backgroundColor: C.surface,
-    borderRadius: RADIUS.card,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: C.border,
-  },
-  levelCardSelected: {
-    borderColor: C.accent,
-    backgroundColor: C.accent + '1A',
-  },
-  radio: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: C.border,
-  },
-  radioSelected: {
-    borderColor: C.accent,
-    backgroundColor: C.accent,
-  },
-  levelText: {
-    flex: 1,
-    gap: 2,
-  },
-  levelLabel: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: C.textSecondary,
-  },
-  levelLabelSelected: {
-    color: C.textPrimary,
-  },
-  levelDesc: {
-    fontSize: 13,
-    color: C.textSecondary,
-  },
-  error: {
-    color: C.error,
-    fontSize: 14,
-    textAlign: 'center',
-  },
-  button: {
-    backgroundColor: C.accent,
-    borderRadius: RADIUS.control,
-    padding: 16,
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  buttonPressed: {
-    backgroundColor: C.accentDark,
-  },
-  buttonText: {
-    color: C.textPrimary,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-});

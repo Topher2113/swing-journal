@@ -9,16 +9,18 @@ import { useMoves } from '@/hooks/useMoves';
 import { usePartnerLink } from '@/hooks/usePartnerLink';
 import { usePartnerJournal } from '@/hooks/usePartnerJournal';
 import { useAuth } from '@/context/AuthContext';
+import { useTheme } from '@/context/ThemeContext';
 import { uploadVideo, isLocalUri } from '@/lib/videoStorage';
 import { VideoPlayer } from '@/components/VideoPlayer';
 import { DifficultyBadge } from '@/components/DifficultyBadge';
 import { NotesBox } from '@/components/NotesBox';
 import { PracticeCounter } from '@/components/PracticeCounter';
 import { SharedMove } from '@/types/Move';
-import { C, RADIUS } from '@/constants/theme';
+import { RADIUS } from '@/constants/theme';
 import { MOTION_TRACKING_ENABLED } from '@/constants/features';
 
 export default function MoveDetailScreen() {
+  const { colors: C } = useTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { move, setMove } = useMove(id);
@@ -84,6 +86,88 @@ export default function MoveDetailScreen() {
     }
   };
 
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: C.bg,
+    },
+    content: {
+      padding: 16,
+      gap: 16,
+      paddingBottom: 40,
+    },
+    name: {
+      fontSize: 26,
+      fontWeight: '700',
+      color: C.textPrimary,
+    },
+    badges: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+    },
+    categoryBadge: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: C.accent,
+      backgroundColor: C.accentDark + '33',
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: RADIUS.badge,
+      overflow: 'hidden',
+    },
+    motionBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      backgroundColor: C.surface,
+      borderRadius: RADIUS.card,
+      padding: 16,
+      minHeight: 56,
+    },
+    motionBtnText: {
+      flex: 1,
+      fontSize: 15,
+      fontWeight: '600',
+      color: C.textPrimary,
+    },
+    motionChevron: {
+      marginLeft: 'auto' as any,
+    },
+    shareBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      backgroundColor: C.surface,
+      borderRadius: RADIUS.card,
+      padding: 16,
+      minHeight: 52,
+      borderWidth: 1,
+      borderColor: C.border,
+    },
+    shareBtnText: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: C.accent,
+    },
+    sharedBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      backgroundColor: C.successBg + '33',
+      borderRadius: RADIUS.card,
+      padding: 16,
+      minHeight: 52,
+      borderWidth: 1,
+      borderColor: C.successBg,
+    },
+    sharedBadgeText: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: C.success,
+    },
+  }), [C]);
+
   const headerRight = useCallback(() => (
     <Pressable
       onPress={() => router.push({ pathname: '/edit/[id]', params: { id } })}
@@ -127,7 +211,7 @@ export default function MoveDetailScreen() {
             {!linkLoading && !journalLoading && link?.status === 'linked' && !savedFromJournal && (
               isShared ? (
                 <View style={styles.sharedBadge}>
-                  <Ionicons name="checkmark-circle-outline" size={18} color="#86EFAC" />
+                  <Ionicons name="checkmark-circle-outline" size={18} color={C.success} />
                   <Text style={styles.sharedBadgeText}>Shared to journal</Text>
                 </View>
               ) : (
@@ -160,84 +244,3 @@ export default function MoveDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: C.bg,
-  },
-  content: {
-    padding: 16,
-    gap: 16,
-    paddingBottom: 40,
-  },
-  name: {
-    fontSize: 26,
-    fontWeight: '700',
-    color: C.textPrimary,
-  },
-  badges: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  categoryBadge: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: C.accent,
-    backgroundColor: C.accentDark + '33',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: RADIUS.badge,
-    overflow: 'hidden',
-  },
-  motionBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    backgroundColor: C.surface,
-    borderRadius: RADIUS.card,
-    padding: 16,
-    minHeight: 56,
-  },
-  motionBtnText: {
-    flex: 1,
-    fontSize: 15,
-    fontWeight: '600',
-    color: C.textPrimary,
-  },
-  motionChevron: {
-    marginLeft: 'auto' as any,
-  },
-  shareBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    backgroundColor: C.surface,
-    borderRadius: RADIUS.card,
-    padding: 16,
-    minHeight: 52,
-    borderWidth: 1,
-    borderColor: C.border,
-  },
-  shareBtnText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: C.accent,
-  },
-  sharedBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    backgroundColor: C.successBg + '33',
-    borderRadius: RADIUS.card,
-    padding: 16,
-    minHeight: 52,
-    borderWidth: 1,
-    borderColor: C.successBg,
-  },
-  sharedBadgeText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: C.success,
-  },
-});

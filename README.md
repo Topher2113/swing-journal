@@ -43,3 +43,4 @@ A personal dance move journal for swing dancers. Log moves you've learned, categ
 - Added line dances and songs as options in the app. I changed the "Moves" section to a "Library" section and you can switch between the regular dance moves, line dances, and songs. The add screen and stats screen were also changed to reflect this. 
 - Added a partner dancing feature. You can link up with a partner's account and share/save moves between each other. I also added a spotify link and supabase connection so that you can link your songs directly to spotify, and the move data can be transferred properly. Also set up a supabase s3 bucket. This also required a full auth and profile system. 
 - Added a home page and some editing capability. The home screen shows recent moves and partner moves. It also has a welcome message. I though it was a nice touch. 
+- Performed a significant amount of UI fixes and user testing. 

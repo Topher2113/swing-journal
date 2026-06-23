@@ -1,18 +1,68 @@
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { Stack, useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
 import { useSong } from '@/hooks/useSong';
+import { useTheme } from '@/context/ThemeContext';
 import { Skeleton } from '@/components/Skeleton';
 import { NotesBox } from '@/components/NotesBox';
 import { SpotifyLinkButton } from '@/components/SpotifyLinkButton';
 import { Image } from 'expo-image';
-import { C, RADIUS } from '@/constants/theme';
+import { RADIUS } from '@/constants/theme';
 
 export default function SongDetailScreen() {
+  const { colors: C } = useTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { song, loading } = useSong(id);
+  const { song, loading, reload } = useSong(id);
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: C.bg,
+    },
+    content: {
+      padding: 16,
+      gap: 16,
+      paddingBottom: 40,
+    },
+    art: {
+      width: '100%',
+      aspectRatio: 1,
+      borderRadius: RADIUS.card,
+    },
+    artPlaceholder: {
+      backgroundColor: C.surface,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    title: {
+      fontSize: 26,
+      fontWeight: '700',
+      color: C.textPrimary,
+    },
+    artist: {
+      fontSize: 17,
+      color: C.textSecondary,
+      marginTop: -8,
+    },
+    notFound: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingTop: 80,
+    },
+    notFoundText: {
+      fontSize: 16,
+      color: C.textSecondary,
+    },
+  }), [C]);
+
+  useFocusEffect(
+    useCallback(() => {
+      reload();
+    }, [reload])
+  );
 
   const headerRight = useCallback(() => (
     <Pressable
@@ -61,44 +111,3 @@ export default function SongDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: C.bg,
-  },
-  content: {
-    padding: 16,
-    gap: 16,
-    paddingBottom: 40,
-  },
-  art: {
-    width: '100%',
-    aspectRatio: 1,
-    borderRadius: RADIUS.card,
-  },
-  artPlaceholder: {
-    backgroundColor: C.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  title: {
-    fontSize: 26,
-    fontWeight: '700',
-    color: C.textPrimary,
-  },
-  artist: {
-    fontSize: 17,
-    color: C.textSecondary,
-    marginTop: -8,
-  },
-  notFound: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingTop: 80,
-  },
-  notFoundText: {
-    fontSize: 16,
-    color: C.textSecondary,
-  },
-});

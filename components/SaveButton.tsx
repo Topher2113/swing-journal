@@ -1,5 +1,7 @@
+import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text } from 'react-native';
-import { C, RADIUS } from '@/constants/theme';
+import { RADIUS } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 
 type Props = {
   label: string;
@@ -9,6 +11,26 @@ type Props = {
 };
 
 export function SaveButton({ label, saving, disabled, onPress }: Props) {
+  const { colors: C } = useTheme();
+
+  const styles = useMemo(() => StyleSheet.create({
+    btn: {
+      backgroundColor: C.accent,
+      borderRadius: RADIUS.card,
+      paddingVertical: 18,
+      alignItems: 'center',
+      marginTop: 16,
+    },
+    btnDisabled: {
+      opacity: 0.5,
+    },
+    label: {
+      fontSize: 17,
+      fontWeight: '600',
+      color: C.textPrimary,
+    },
+  }), [C]);
+
   const isDisabled = saving || disabled;
   return (
     <Pressable
@@ -25,21 +47,3 @@ export function SaveButton({ label, saving, disabled, onPress }: Props) {
     </Pressable>
   );
 }
-
-const styles = StyleSheet.create({
-  btn: {
-    backgroundColor: C.accent,
-    borderRadius: RADIUS.card,
-    paddingVertical: 18,
-    alignItems: 'center',
-    marginTop: 16,
-  },
-  btnDisabled: {
-    opacity: 0.5,
-  },
-  label: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: C.textPrimary,
-  },
-});

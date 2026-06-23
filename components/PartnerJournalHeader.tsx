@@ -1,6 +1,7 @@
+import { useMemo } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { C } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 
 type Props = {
   partnerEmail: string;
@@ -10,7 +11,38 @@ type Props = {
 };
 
 export function PartnerJournalHeader({ partnerEmail, partnerName, syncing, onSync }: Props) {
+  const { colors: C } = useTheme();
   const display = partnerName ?? partnerEmail;
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      backgroundColor: C.surface,
+      borderBottomWidth: 0.5,
+      borderBottomColor: C.border,
+      gap: 8,
+    },
+    left: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    label: {
+      fontSize: 13,
+      color: C.textSecondary,
+      flex: 1,
+    },
+    email: {
+      color: C.textPrimary,
+      fontWeight: '500',
+    },
+  }), [C]);
+
   return (
     <View style={styles.container}>
       <View style={styles.left}>
@@ -32,32 +64,3 @@ export function PartnerJournalHeader({ partnerEmail, partnerName, syncing, onSyn
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    backgroundColor: C.surface,
-    borderBottomWidth: 0.5,
-    borderBottomColor: C.border,
-    gap: 8,
-  },
-  left: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  label: {
-    fontSize: 13,
-    color: C.textSecondary,
-    flex: 1,
-  },
-  email: {
-    color: C.textPrimary,
-    fontWeight: '500',
-  },
-});

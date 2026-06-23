@@ -1,7 +1,8 @@
+import { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
-import { C } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 
 type Props = {
   url: string | null;
@@ -11,6 +12,16 @@ type Props = {
 };
 
 export function AlbumArt({ url, size, borderRadius = 6, iconSize }: Props) {
+  const { colors: C } = useTheme();
+
+  const styles = useMemo(() => StyleSheet.create({
+    placeholder: {
+      backgroundColor: C.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+  }), [C]);
+
   const style = { width: size, height: size, borderRadius };
 
   if (url) {
@@ -23,11 +34,3 @@ export function AlbumArt({ url, size, borderRadius = 6, iconSize }: Props) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  placeholder: {
-    backgroundColor: C.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});

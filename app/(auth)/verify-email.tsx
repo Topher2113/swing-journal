@@ -1,14 +1,16 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
-import { C, RADIUS } from '@/constants/theme';
+import { RADIUS } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 
 const COOLDOWN_SECONDS = 60;
 
 export default function VerifyEmailScreen() {
+  const { colors: C } = useTheme();
   const { email } = useLocalSearchParams<{ email: string }>();
   const { linkError, clearLinkError } = useAuth();
   const [cooldown, setCooldown] = useState(0);
@@ -70,6 +72,90 @@ export default function VerifyEmailScreen() {
     }
   };
 
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: C.bg,
+    },
+    inner: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: 32,
+      gap: 14,
+    },
+    iconWrap: {
+      marginBottom: 4,
+    },
+    title: {
+      fontSize: 28,
+      fontWeight: '700',
+      color: C.textPrimary,
+      textAlign: 'center',
+    },
+    body: {
+      fontSize: 16,
+      color: C.textSecondary,
+      textAlign: 'center',
+      lineHeight: 24,
+    },
+    emailHighlight: {
+      color: C.textPrimary,
+      fontWeight: '600',
+    },
+    hint: {
+      fontSize: 14,
+      color: C.textSecondary,
+      textAlign: 'center',
+      lineHeight: 20,
+    },
+    error: {
+      color: C.error,
+      fontSize: 14,
+      textAlign: 'center',
+    },
+    successText: {
+      color: C.success,
+      fontSize: 14,
+      textAlign: 'center',
+    },
+    button: {
+      backgroundColor: C.accent,
+      borderRadius: RADIUS.control,
+      paddingVertical: 14,
+      paddingHorizontal: 32,
+      alignItems: 'center',
+      minWidth: 200,
+      marginTop: 8,
+    },
+    buttonDisabled: {
+      backgroundColor: C.surface,
+      borderWidth: 1,
+      borderColor: C.border,
+    },
+    buttonPressed: {
+      backgroundColor: C.accentDark,
+    },
+    buttonText: {
+      color: C.textPrimary,
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    buttonTextMuted: {
+      color: C.textSecondary,
+    },
+    backRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      marginTop: 8,
+    },
+    backLink: {
+      color: C.textSecondary,
+      fontSize: 14,
+    },
+  }), [C]);
+
   return (
     <View style={styles.container}>
       <View style={styles.inner}>
@@ -123,87 +209,3 @@ export default function VerifyEmailScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: C.bg,
-  },
-  inner: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 32,
-    gap: 14,
-  },
-  iconWrap: {
-    marginBottom: 4,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: C.textPrimary,
-    textAlign: 'center',
-  },
-  body: {
-    fontSize: 16,
-    color: C.textSecondary,
-    textAlign: 'center',
-    lineHeight: 24,
-  },
-  emailHighlight: {
-    color: C.textPrimary,
-    fontWeight: '600',
-  },
-  hint: {
-    fontSize: 14,
-    color: C.textSecondary,
-    textAlign: 'center',
-    lineHeight: 20,
-  },
-  error: {
-    color: C.error,
-    fontSize: 14,
-    textAlign: 'center',
-  },
-  successText: {
-    color: C.success,
-    fontSize: 14,
-    textAlign: 'center',
-  },
-  button: {
-    backgroundColor: C.accent,
-    borderRadius: RADIUS.control,
-    paddingVertical: 14,
-    paddingHorizontal: 32,
-    alignItems: 'center',
-    minWidth: 200,
-    marginTop: 8,
-  },
-  buttonDisabled: {
-    backgroundColor: C.surface,
-    borderWidth: 1,
-    borderColor: C.border,
-  },
-  buttonPressed: {
-    backgroundColor: C.accentDark,
-  },
-  buttonText: {
-    color: C.textPrimary,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  buttonTextMuted: {
-    color: C.textSecondary,
-  },
-  backRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginTop: 8,
-  },
-  backLink: {
-    color: C.textSecondary,
-    fontSize: 14,
-  },
-});

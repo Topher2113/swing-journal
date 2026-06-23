@@ -1,6 +1,6 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { Animated, DimensionValue, StyleSheet, View } from 'react-native';
-import { C } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 
 type Props = {
   width?: DimensionValue;
@@ -10,6 +10,7 @@ type Props = {
 };
 
 export function Skeleton({ width = '100%', height, borderRadius = 8, style }: Props) {
+  const { colors: C } = useTheme();
   const opacity = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
@@ -29,13 +30,13 @@ export function Skeleton({ width = '100%', height, borderRadius = 8, style }: Pr
 }
 
 export function SkeletonRow({ children }: { children: React.ReactNode }) {
+  const styles = useMemo(() => StyleSheet.create({
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+    },
+  }), []);
+
   return <View style={styles.row}>{children}</View>;
 }
-
-const styles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-});

@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SortDir } from '@/hooks/useSortedMoves';
-import { C, RADIUS } from '@/constants/theme';
+import { RADIUS } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 
 const DEFAULT_OPTIONS: { key: string; label: string }[] = [
   { key: 'name', label: 'A–Z' },
@@ -19,6 +20,7 @@ type Props = {
 };
 
 export function SortDropdown({ sortKey, sortDir, onSort, options = DEFAULT_OPTIONS }: Props) {
+  const { colors: C } = useTheme();
   const [open, setOpen] = useState(false);
   const currentLabel = options.find((o) => o.key === sortKey)?.label ?? options[0]?.label;
   const dirArrow = sortDir === 'asc' ? '↑' : '↓';
@@ -30,6 +32,61 @@ export function SortDropdown({ sortKey, sortDir, onSort, options = DEFAULT_OPTIO
       onSort(key, 'asc');
     }
   };
+
+  const styles = useMemo(() => StyleSheet.create({
+    wrapper: {
+      marginHorizontal: 16,
+      marginBottom: 4,
+    },
+    trigger: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      backgroundColor: C.surface,
+      borderRadius: RADIUS.control,
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+      minHeight: 44,
+    },
+    triggerText: {
+      fontSize: 15,
+      color: C.textSecondary,
+    },
+    triggerActive: {
+      color: C.accent,
+      fontWeight: '600',
+    },
+    dropdown: {
+      backgroundColor: C.surface,
+      borderRadius: RADIUS.control,
+      marginTop: 4,
+      padding: 12,
+    },
+    pillGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 8,
+    },
+    pill: {
+      paddingHorizontal: 16,
+      paddingVertical: 9,
+      borderRadius: RADIUS.chip,
+      borderWidth: 0.5,
+      borderColor: C.border,
+    },
+    pillActive: {
+      backgroundColor: C.accentDark,
+      borderColor: C.accent,
+    },
+    pillLabel: {
+      fontSize: 14,
+      fontWeight: '500',
+      color: C.textSecondary,
+    },
+    pillLabelActive: {
+      color: C.textPrimary,
+    },
+  }), [C]);
 
   return (
     <View style={styles.wrapper}>
@@ -77,58 +134,3 @@ export function SortDropdown({ sortKey, sortDir, onSort, options = DEFAULT_OPTIO
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  wrapper: {
-    marginHorizontal: 16,
-    marginBottom: 4,
-  },
-  trigger: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: C.surface,
-    borderRadius: RADIUS.control,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    minHeight: 44,
-  },
-  triggerText: {
-    fontSize: 15,
-    color: C.textSecondary,
-  },
-  triggerActive: {
-    color: C.accent,
-    fontWeight: '600',
-  },
-  dropdown: {
-    backgroundColor: C.surface,
-    borderRadius: RADIUS.control,
-    marginTop: 4,
-    padding: 12,
-  },
-  pillGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  pill: {
-    paddingHorizontal: 16,
-    paddingVertical: 9,
-    borderRadius: RADIUS.chip,
-    borderWidth: 0.5,
-    borderColor: '#3C3C43',
-  },
-  pillActive: {
-    backgroundColor: C.accentDark,
-    borderColor: C.accent,
-  },
-  pillLabel: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: C.textSecondary,
-  },
-  pillLabelActive: {
-    color: C.textPrimary,
-  },
-});

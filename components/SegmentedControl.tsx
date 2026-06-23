@@ -1,5 +1,6 @@
+import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { C } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 
 type Props = {
   options: string[];
@@ -8,6 +9,39 @@ type Props = {
 };
 
 export function SegmentedControl({ options, value, onChange }: Props) {
+  const { colors: C } = useTheme();
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flexDirection: 'row',
+      backgroundColor: C.border,
+      borderRadius: 10,
+      padding: 3,
+      gap: 2,
+    },
+    option: {
+      flex: 1,
+      alignItems: 'center',
+      paddingVertical: 11,
+      borderRadius: 8,
+      minHeight: 42,
+      justifyContent: 'center',
+    },
+    activeIndicator: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: C.accent,
+      borderRadius: 8,
+    },
+    label: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: C.textSecondary,
+    },
+    labelActive: {
+      color: C.textPrimary,
+    },
+  }), [C]);
+
   return (
     <View style={styles.container}>
       {options.map((opt) => {
@@ -29,34 +63,3 @@ export function SegmentedControl({ options, value, onChange }: Props) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    backgroundColor: C.border,
-    borderRadius: 10,
-    padding: 3,
-    gap: 2,
-  },
-  option: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: 11,
-    borderRadius: 8,
-    minHeight: 42,
-    justifyContent: 'center',
-  },
-  activeIndicator: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: C.accent,
-    borderRadius: 8,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: C.textSecondary,
-  },
-  labelActive: {
-    color: C.textPrimary,
-  },
-});

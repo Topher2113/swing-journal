@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -38,13 +38,15 @@ import { Ionicons } from '@expo/vector-icons';
 import { CATEGORIES, CATEGORY_LABELS, CATEGORY_SHORT, DIFFICULTIES, Category, Difficulty, SharedMove } from '@/types/Move';
 import { LineDanceStep } from '@/types/LineDance';
 import { SpotifyTrackResult } from '@/types/Song';
-import { C, RADIUS } from '@/constants/theme';
+import { RADIUS } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 import { MOTION_TRACKING_ENABLED } from '@/constants/features';
 
 const ADD_SEGMENTS = ['Move', 'Line Dance', 'Song'];
 type AddSegment = 'Move' | 'Line Dance' | 'Song';
 
 export default function AddScreen() {
+  const { colors: C } = useTheme();
   const router = useRouter();
   const { addMove } = useMoves();
   const { addSong } = useSongs();
@@ -222,7 +224,7 @@ export default function AddScreen() {
       await addLineDance({
         name: ldName.trim(),
         difficulty: ldDifficulty,
-        steps: ldSteps.filter((s) => s.name.trim()).map((s, i) => ({ ...s, order: i + 1 })),
+        steps: ldSteps.filter((s) => s.name.trim() || s.description.trim()).map((s, i) => ({ ...s, order: i + 1 })),
         videoUri: ldVideoUri,
         linkedSongId: ldLinkedSongId,
         notes: ldNotes.trim(),
@@ -240,6 +242,110 @@ export default function AddScreen() {
   const headerTitle =
     segment === 'Move' ? 'Add Move' : segment === 'Song' ? 'Add Song' : 'Add Line Dance';
   const attachedArtUrl = attachedTrack?.album.images[0]?.url ?? null;
+
+  const styles = useMemo(() => StyleSheet.create({
+    flex: {
+      flex: 1,
+      backgroundColor: C.bg,
+    },
+    segmentWrap: {
+      paddingHorizontal: 20,
+      paddingTop: 12,
+      paddingBottom: 8,
+    },
+    container: {
+      flex: 1,
+      backgroundColor: C.bg,
+    },
+    content: {
+      padding: 20,
+      gap: 12,
+      paddingBottom: 100,
+    },
+    label: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: C.textPrimary,
+      marginTop: 6,
+      marginBottom: 2,
+    },
+    input: {
+      backgroundColor: C.surface,
+      borderRadius: RADIUS.control,
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      fontSize: 16,
+      color: C.textPrimary,
+      minHeight: 50,
+    },
+    multiline: {
+      minHeight: 120,
+    },
+    loader: {
+      marginVertical: 16,
+    },
+    noResults: {
+      fontSize: 14,
+      color: C.textSecondary,
+      textAlign: 'center',
+      marginTop: 16,
+    },
+    attachedRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: C.surface,
+      borderRadius: RADIUS.card,
+      padding: 12,
+      gap: 12,
+    },
+    attachedInfo: {
+      flex: 1,
+      gap: 3,
+    },
+    attachedTitle: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: C.textPrimary,
+    },
+    attachedArtist: {
+      fontSize: 13,
+      color: C.textSecondary,
+    },
+    changeBtn: {
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      backgroundColor: C.border,
+      borderRadius: RADIUS.chip,
+    },
+    changeBtnText: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: C.textPrimary,
+    },
+    journalToggle: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      paddingVertical: 4,
+    },
+    checkbox: {
+      width: 20,
+      height: 20,
+      borderRadius: 4,
+      borderWidth: 1.5,
+      borderColor: C.textSecondary,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    checkboxChecked: {
+      backgroundColor: C.accent,
+      borderColor: C.accent,
+    },
+    journalToggleText: {
+      fontSize: 14,
+      color: C.textSecondary,
+    },
+  }), [C]);
 
   return (
     <>
@@ -417,107 +523,3 @@ export default function AddScreen() {
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  flex: {
-    flex: 1,
-    backgroundColor: C.bg,
-  },
-  segmentWrap: {
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 8,
-  },
-  container: {
-    flex: 1,
-    backgroundColor: C.bg,
-  },
-  content: {
-    padding: 20,
-    gap: 12,
-    paddingBottom: 100,
-  },
-  label: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: C.textPrimary,
-    marginTop: 6,
-    marginBottom: 2,
-  },
-  input: {
-    backgroundColor: C.surface,
-    borderRadius: RADIUS.control,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 16,
-    color: C.textPrimary,
-    minHeight: 50,
-  },
-  multiline: {
-    minHeight: 120,
-  },
-  loader: {
-    marginVertical: 16,
-  },
-  noResults: {
-    fontSize: 14,
-    color: C.textSecondary,
-    textAlign: 'center',
-    marginTop: 16,
-  },
-  attachedRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: C.surface,
-    borderRadius: RADIUS.card,
-    padding: 12,
-    gap: 12,
-  },
-  attachedInfo: {
-    flex: 1,
-    gap: 3,
-  },
-  attachedTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: C.textPrimary,
-  },
-  attachedArtist: {
-    fontSize: 13,
-    color: C.textSecondary,
-  },
-  changeBtn: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    backgroundColor: C.border,
-    borderRadius: RADIUS.chip,
-  },
-  changeBtnText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: C.textPrimary,
-  },
-  journalToggle: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    paddingVertical: 4,
-  },
-  checkbox: {
-    width: 20,
-    height: 20,
-    borderRadius: 4,
-    borderWidth: 1.5,
-    borderColor: C.textSecondary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  checkboxChecked: {
-    backgroundColor: C.accent,
-    borderColor: C.accent,
-  },
-  journalToggleText: {
-    fontSize: 14,
-    color: C.textSecondary,
-  },
-});

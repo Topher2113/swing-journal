@@ -4,20 +4,24 @@ import * as SystemUI from 'expo-system-ui';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { C } from '@/constants/theme';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
+import { ThemeProvider, useTheme } from '@/context/ThemeContext';
 
-SystemUI.setBackgroundColorAsync(C.bg);
-
-const headerStyle = { backgroundColor: C.bg };
-const contentStyle = { backgroundColor: C.bg };
 const rootStyle = { flex: 1 };
 
 function RootLayoutInner() {
   const { session, loading, profile, profileLoading } = useAuth();
+  const { colors, isDark } = useTheme();
   const segments = useSegments();
   const router = useRouter();
   const [navReady, setNavReady] = useState(false);
+
+  useEffect(() => {
+    SystemUI.setBackgroundColorAsync(colors.bg);
+  }, [colors.bg]);
+
+  const headerStyle = { backgroundColor: colors.bg };
+  const contentStyle = { backgroundColor: colors.bg };
 
   useEffect(() => {
     if (loading || profileLoading) return;
@@ -36,11 +40,12 @@ function RootLayoutInner() {
 
   return (
     <>
-    {!navReady && <View style={styles.splash} />}
+    {!navReady && <View style={[styles.splash, { backgroundColor: colors.bg }]} />}
+    <StatusBar style={isDark ? 'light' : 'dark'} />
     <Stack
       screenOptions={{
         headerStyle,
-        headerTintColor: C.textPrimary,
+        headerTintColor: colors.textPrimary,
         contentStyle,
       }}
     >
@@ -65,7 +70,6 @@ function RootLayoutInner() {
 const styles = StyleSheet.create({
   splash: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: C.bg,
     zIndex: 1,
   },
 });
@@ -73,10 +77,11 @@ const styles = StyleSheet.create({
 export default function RootLayout() {
   return (
     <GestureHandlerRootView style={rootStyle}>
-      <StatusBar style="light" />
-      <AuthProvider>
-        <RootLayoutInner />
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <RootLayoutInner />
+        </AuthProvider>
+      </ThemeProvider>
     </GestureHandlerRootView>
   );
 }

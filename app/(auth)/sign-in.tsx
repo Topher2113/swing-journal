@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   ScrollView,
   Text,
@@ -13,7 +13,8 @@ import { router } from 'expo-router';
 import * as Linking from 'expo-linking';
 import { signIn, signUp } from '@/lib/auth';
 import { useAuth } from '@/context/AuthContext';
-import { C, RADIUS } from '@/constants/theme';
+import { RADIUS } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 
 type Mode = 'signin' | 'signup';
 
@@ -37,6 +38,7 @@ function friendlyError(msg: string): string {
 }
 
 export default function SignInScreen() {
+  const { colors: C } = useTheme();
   const { linkError, clearLinkError } = useAuth();
   const [mode, setMode] = useState<Mode>('signin');
   const [email, setEmail] = useState('');
@@ -109,6 +111,67 @@ export default function SignInScreen() {
     }
   };
 
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: C.bg,
+    },
+    inner: {
+      flexGrow: 1,
+      justifyContent: 'center',
+      paddingHorizontal: 24,
+      gap: 12,
+    },
+    title: {
+      fontSize: 32,
+      fontWeight: '700',
+      color: C.textPrimary,
+      textAlign: 'center',
+      marginBottom: 4,
+    },
+    subtitle: {
+      fontSize: 16,
+      color: C.textSecondary,
+      textAlign: 'center',
+      marginBottom: 8,
+    },
+    input: {
+      backgroundColor: C.surface,
+      borderRadius: RADIUS.control,
+      padding: 14,
+      fontSize: 16,
+      color: C.textPrimary,
+      borderWidth: 1,
+      borderColor: C.border,
+    },
+    error: {
+      color: C.error,
+      fontSize: 14,
+      textAlign: 'center',
+    },
+    button: {
+      backgroundColor: C.accent,
+      borderRadius: RADIUS.control,
+      padding: 16,
+      alignItems: 'center',
+      marginTop: 4,
+    },
+    buttonPressed: {
+      backgroundColor: C.accentDark,
+    },
+    buttonText: {
+      color: C.textPrimary,
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    toggleText: {
+      color: C.textSecondary,
+      fontSize: 14,
+      textAlign: 'center',
+      marginTop: 8,
+    },
+  }), [C]);
+
   return (
     <KeyboardAvoidingView
       style={styles.container}
@@ -180,64 +243,3 @@ export default function SignInScreen() {
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: C.bg,
-  },
-  inner: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-    gap: 12,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: C.textPrimary,
-    textAlign: 'center',
-    marginBottom: 4,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: C.textSecondary,
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  input: {
-    backgroundColor: C.surface,
-    borderRadius: RADIUS.control,
-    padding: 14,
-    fontSize: 16,
-    color: C.textPrimary,
-    borderWidth: 1,
-    borderColor: C.border,
-  },
-  error: {
-    color: C.error,
-    fontSize: 14,
-    textAlign: 'center',
-  },
-  button: {
-    backgroundColor: C.accent,
-    borderRadius: RADIUS.control,
-    padding: 16,
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  buttonPressed: {
-    backgroundColor: C.accentDark,
-  },
-  buttonText: {
-    color: C.textPrimary,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  toggleText: {
-    color: C.textSecondary,
-    fontSize: 14,
-    textAlign: 'center',
-    marginTop: 8,
-  },
-});
