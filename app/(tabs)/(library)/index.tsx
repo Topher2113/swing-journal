@@ -146,6 +146,13 @@ export default function LibraryScreen() {
               <Ionicons name="musical-notes-outline" size={64} color={C.textSecondary} />
               <Text style={styles.emptyTitle}>No songs yet</Text>
               <Text style={styles.emptyBody}>Search Spotify from the Add tab to save your first song.</Text>
+              <Pressable
+                style={({ pressed }) => [styles.emptyBtn, { opacity: pressed ? 0.8 : 1 }]}
+                android_ripple={{ color: 'transparent' }}
+                onPress={() => router.push('/(tabs)/add')}
+              >
+                <Text style={styles.emptyBtnText}>Add your first song</Text>
+              </Pressable>
             </View>
           ) : (
             <View style={styles.flex}>
