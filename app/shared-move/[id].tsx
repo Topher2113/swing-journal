@@ -120,7 +120,7 @@ export default function SharedMoveDetailScreen() {
             <Ionicons
               name={isSaved ? 'checkmark-circle-outline' : 'bookmark-outline'}
               size={18}
-              color={isSaved ? '#86EFAC' : C.accent}
+              color={isSaved ? C.success : C.accent}
             />
             <Text style={[styles.saveBtnText, isSaved && styles.saveBtnTextDone]}>
               {isSaved ? 'Saved to your library' : 'Save to my library'}
@@ -211,8 +211,8 @@ const styles = StyleSheet.create({
     borderColor: C.border,
   },
   saveBtnDone: {
-    borderColor: '#14532D',
-    backgroundColor: '#14532D33',
+    borderColor: C.successBg,
+    backgroundColor: C.successBg + '33',
   },
   saveBtnText: {
     fontSize: 15,
@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
     color: C.accent,
   },
   saveBtnTextDone: {
-    color: '#86EFAC',
+    color: C.success,
   },
   removeBtn: {
     flexDirection: 'row',
@@ -231,11 +231,11 @@ const styles = StyleSheet.create({
     padding: 16,
     minHeight: 52,
     borderWidth: 1,
-    borderColor: '#7F1D1D44',
+    borderColor: C.errorBorder,
   },
   removeBtnText: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#FCA5A5',
+    color: C.error,
   },
 });

@@ -75,6 +75,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
       setSession(newSession);
+      if (newSession?.user?.id) {
+        setProfileLoading(true);
+      }
     });
 
     const handleDeepLink = async (url: string) => {

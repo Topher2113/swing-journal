@@ -11,6 +11,11 @@ export const C = {
   advanced: { bg: '#7F1D1D', text: '#FCA5A5' },
   editSwipe: '#3B82F6',
   deleteSwipe: '#EF4444',
+  success: '#86EFAC',
+  successBg: '#14532D',
+  error: '#FCA5A5',
+  errorBorder: '#7F1D1D44',
+  chevron: '#636366',
 };
 
 export const RADIUS = {

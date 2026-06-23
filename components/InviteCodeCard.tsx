@@ -247,7 +247,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   error: {
-    color: '#FCA5A5',
+    color: C.error,
     fontSize: 14,
     textAlign: 'center',
     marginTop: 8,
@@ -262,7 +262,7 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   cancelText: {
-    color: '#FCA5A5',
+    color: C.error,
     fontSize: 15,
     fontWeight: '500',
   },

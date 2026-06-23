@@ -17,14 +17,12 @@ export function MotionRecorderButton({ isRecording, frames, onStart, onStop, onD
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const pulseLoop = useRef<Animated.CompositeAnimation | null>(null);
 
-  // Elapsed timer during recording
   useEffect(() => {
     if (!isRecording) { setElapsed(0); return; }
     const interval = setInterval(() => setElapsed((e) => e + 1), 1000);
     return () => clearInterval(interval);
   }, [isRecording]);
 
-  // Pulse animation on the recording dot
   useEffect(() => {
     if (isRecording) {
       pulseLoop.current = Animated.loop(
@@ -89,7 +87,6 @@ export function MotionRecorderButton({ isRecording, frames, onStart, onStop, onD
     );
   }
 
-  // Idle — no recording yet
   return (
     <View style={styles.card}>
       <Text style={styles.hint}>Hold the phone in your lead hand and tap to record.</Text>

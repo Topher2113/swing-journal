@@ -162,12 +162,12 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   error: {
-    color: '#FCA5A5',
+    color: C.error,
     fontSize: 14,
     textAlign: 'center',
   },
   successText: {
-    color: '#86EFAC',
+    color: C.success,
     fontSize: 14,
     textAlign: 'center',
   },

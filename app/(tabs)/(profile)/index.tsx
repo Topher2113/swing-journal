@@ -307,13 +307,13 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.card,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#7F1D1D44',
+    borderColor: C.errorBorder,
   },
   logoutBtnPressed: {
     opacity: 0.7,
   },
   logoutText: {
-    color: '#FCA5A5',
+    color: C.error,
     fontSize: 15,
     fontWeight: '600',
   },

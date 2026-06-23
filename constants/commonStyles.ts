@@ -43,4 +43,39 @@ export const cs = StyleSheet.create({
   multiline: {
     minHeight: 120,
   },
+  listCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: C.surface,
+    borderRadius: RADIUS.card,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    marginBottom: 6,
+    gap: 12,
+    minHeight: 68,
+  },
+  videoDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    flexShrink: 0,
+  },
+  cardInfo: {
+    flex: 1,
+    gap: 6,
+  },
+  cardName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: C.textPrimary,
+  },
+  cardMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  metaText: {
+    fontSize: 13,
+    color: C.textSecondary,
+  },
 });

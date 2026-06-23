@@ -5,7 +5,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { DifficultyBadge } from './DifficultyBadge';
 import { SwipeActions } from './SwipeActions';
 import { Move } from '@/types/Move';
-import { C, RADIUS } from '@/constants/theme';
+import { C } from '@/constants/theme';
+import { cs } from '@/constants/commonStyles';
 
 type Props = {
   move: Move;
@@ -41,24 +42,24 @@ export function MoveCard({ move, onPress, onEdit, onDelete, isShared }: Props) {
       overshootRight={false}
     >
       <Pressable
-        style={({ pressed }) => [styles.card, { opacity: pressed ? 0.85 : 1 }]}
+        style={({ pressed }) => [cs.listCard, { opacity: pressed ? 0.85 : 1 }]}
         android_ripple={{ color: 'transparent' }}
         onPress={onPress}
       >
-        <View style={[styles.dot, { backgroundColor: move.videoUri ? C.accent : C.border }]} />
-        <View style={styles.info}>
+        <View style={[cs.videoDot, { backgroundColor: move.videoUri ? C.accent : C.border }]} />
+        <View style={cs.cardInfo}>
           <View style={styles.nameRow}>
             {isShared && <Ionicons name="link-outline" size={13} color={C.accent} />}
-            <Text style={styles.name} numberOfLines={1}>{move.name}</Text>
+            <Text style={cs.cardName} numberOfLines={1}>{move.name}</Text>
           </View>
-          <View style={styles.meta}>
+          <View style={cs.cardMeta}>
             <DifficultyBadge difficulty={move.difficulty} />
-            <Text style={styles.practice}>↻ {move.practiceCount}</Text>
+            <Text style={cs.metaText}>↻ {move.practiceCount}</Text>
           </View>
         </View>
         <View style={styles.trailingIcons}>
           <Ionicons name="ellipsis-horizontal" size={16} color={C.textSecondary} />
-          <Ionicons name="chevron-forward" size={20} color="#636366" />
+          <Ionicons name="chevron-forward" size={20} color={C.chevron} />
         </View>
       </Pressable>
     </ReanimatedSwipeable>
@@ -66,46 +67,10 @@ export function MoveCard({ move, onPress, onEdit, onDelete, isShared }: Props) {
 }
 
 const styles = StyleSheet.create({
-  card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: C.surface,
-    borderRadius: RADIUS.card,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    marginBottom: 6,
-    gap: 12,
-    minHeight: 68,
-  },
-  dot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    flexShrink: 0,
-  },
-  info: {
-    flex: 1,
-    gap: 6,
-  },
   nameRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-  },
-  name: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: C.textPrimary,
-    flexShrink: 1,
-  },
-  meta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  practice: {
-    fontSize: 13,
-    color: C.textSecondary,
   },
   trailingIcons: {
     flexDirection: 'row',

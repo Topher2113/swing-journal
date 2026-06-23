@@ -267,7 +267,7 @@ const styles = StyleSheet.create({
     color: C.textSecondary,
   },
   error: {
-    color: '#FCA5A5',
+    color: C.error,
     fontSize: 14,
     textAlign: 'center',
   },
