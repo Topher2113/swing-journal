@@ -46,7 +46,7 @@ export function SearchBar({ value, onChange, placeholder = 'Search…' }: Props)
         returnKeyType="search"
       />
       {value.length > 0 && (
-        <Pressable onPress={() => onChange('')} hitSlop={8}>
+        <Pressable onPress={() => onChange('')} hitSlop={8} accessibilityLabel="Clear search">
           <Ionicons name="close-circle" size={16} color={C.textSecondary} />
         </Pressable>
       )}
