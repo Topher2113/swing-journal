@@ -177,15 +177,13 @@ describe('VerifyEmailScreen', () => {
     const user = userEvent.setup();
     await render(<VerifyEmailScreen />);
 
-    expect(screen.queryByText(/Too many resend attempts/)).toBeNull();
+    expect(screen.queryByText(/Too many resend attempts/)).not.toBeOnTheScreen();
 
     await user.press(screen.getByText('Resend Email'));
 
-    await waitFor(() => {
-      expect(
-        screen.getByText('Too many resend attempts. Please wait a few minutes before trying again.'),
-      ).toBeOnTheScreen();
-    });
+    expect(
+      await screen.findByText('Too many resend attempts. Please wait a few minutes before trying again.'),
+    ).toBeOnTheScreen();
   });
 
   it('displays a linkError from AuthContext on mount without user action', async () => {
@@ -205,7 +203,10 @@ describe('VerifyEmailScreen', () => {
 
     await user.press(screen.getByText('Back to sign in'));
 
-    expect(router.replace).toHaveBeenCalledWith('/(auth)/sign-in');
+    // waitFor: correct use — asserting a mock side-effect, not a DOM element
+    await waitFor(() => {
+      expect(router.replace).toHaveBeenCalledWith('/(auth)/sign-in');
+    });
   });
 
   it('shows a generic error when the resend call fails for a non-rate-limit reason', async () => {
