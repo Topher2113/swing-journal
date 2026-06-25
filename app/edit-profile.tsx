@@ -73,7 +73,7 @@ export default function EditProfileScreen() {
       padding: 24,
       paddingTop: 28,
       gap: 28,
-      paddingBottom: 48,
+      paddingBottom: 100,
     },
     section: {
       gap: 12,
@@ -189,11 +189,12 @@ export default function EditProfileScreen() {
   return (
     <KeyboardAvoidingView
       style={styles.flex}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView
         style={styles.flex}
         contentContainerStyle={styles.content}
+        keyboardDismissMode="on-drag"
         keyboardShouldPersistTaps="handled"
       >
         {/* Name */}

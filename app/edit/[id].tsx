@@ -108,6 +108,7 @@ export default function EditMoveScreen() {
         <ScrollView
           style={cs.container}
           contentContainerStyle={cs.content}
+          keyboardDismissMode="on-drag"
           keyboardShouldPersistTaps="handled"
         >
           <MoveFormFields

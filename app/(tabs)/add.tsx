@@ -373,6 +373,7 @@ export default function AddScreen() {
               ref={scrollRef}
               style={styles.container}
               contentContainerStyle={styles.content}
+              keyboardDismissMode="on-drag"
               keyboardShouldPersistTaps="handled"
             >
               <MoveFormFields
@@ -417,6 +418,7 @@ export default function AddScreen() {
             <ScrollView
               style={styles.container}
               contentContainerStyle={styles.content}
+              keyboardDismissMode="on-drag"
               keyboardShouldPersistTaps="handled"
             >
               <LineDanceFormFields
@@ -446,6 +448,7 @@ export default function AddScreen() {
             <ScrollView
               style={styles.container}
               contentContainerStyle={styles.content}
+              keyboardDismissMode="on-drag"
               keyboardShouldPersistTaps="handled"
             >
               {!attachedTrack ? (

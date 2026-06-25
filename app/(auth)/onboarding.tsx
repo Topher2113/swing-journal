@@ -72,7 +72,7 @@ export default function OnboardingScreen() {
       padding: 24,
       paddingTop: 48,
       gap: 28,
-      paddingBottom: 48,
+      paddingBottom: 100,
     },
     title: {
       fontSize: 32,
@@ -199,11 +199,12 @@ export default function OnboardingScreen() {
   return (
     <KeyboardAvoidingView
       style={styles.flex}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView
         style={styles.flex}
         contentContainerStyle={styles.content}
+        keyboardDismissMode="on-drag"
         keyboardShouldPersistTaps="handled"
       >
         <Text style={styles.title}>Welcome!</Text>
