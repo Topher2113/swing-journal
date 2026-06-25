@@ -156,6 +156,7 @@ export default function EditSongScreen() {
         <ScrollView
           style={cs.container}
           contentContainerStyle={cs.content}
+          keyboardDismissMode="on-drag"
           keyboardShouldPersistTaps="handled"
         >
           {searchMode ? (

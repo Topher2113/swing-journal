@@ -79,6 +79,7 @@ export default function EditLineDanceScreen() {
         <ScrollView
           style={cs.container}
           contentContainerStyle={cs.content}
+          keyboardDismissMode="on-drag"
           keyboardShouldPersistTaps="handled"
         >
           <LineDanceFormFields

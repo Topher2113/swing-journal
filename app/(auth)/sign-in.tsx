@@ -175,9 +175,13 @@ export default function SignInScreen() {
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <ScrollView contentContainerStyle={styles.inner} keyboardShouldPersistTaps="handled">
+      <ScrollView
+        contentContainerStyle={styles.inner}
+        keyboardDismissMode="on-drag"
+        keyboardShouldPersistTaps="handled"
+      >
         <Text style={styles.title}>Dance Journal</Text>
         <Text style={styles.subtitle}>
           {mode === 'signin' ? 'Sign in to your account' : 'Create an account'}
